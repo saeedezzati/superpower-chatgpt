@@ -5,6 +5,10 @@
 // Initial state
 let userChatIsActuallySaved = false;
 function addExpandButton() {
+  const nav = document.querySelector('nav');
+  if (nav) {
+    nav.style.overflow = 'hidden';
+  }
   const conversationListParent = document.querySelector('#conversation-list').parentElement;
   conversationListParent.style.transition = 'all 1s ease-in-out';
   conversationListParent.style.position = 'relative';

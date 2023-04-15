@@ -190,6 +190,7 @@ function addProgressBar() {
   const nav = document.querySelector('nav');
   if (!nav) return;
   nav.style.position = 'relative';
+  nav.style.overflow = 'hidden';
   const progressBar = document.createElement('div');
   progressBar.classList = 'absolute bottom-0 left-0 z-50 animate-pulse';
   progressBar.style = 'height:1px;width: 100%; background-color: #00aaff;margin:0;';
