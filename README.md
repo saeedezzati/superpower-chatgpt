@@ -177,7 +177,7 @@ I appreciate your interest in supporting this extension. Here are some ways you 
 
 
 ## Copyright
-Superpower ChatGPT, Non-Permissive License
+Superpower ChatGPT
 
 Copyright (C) 2023 Fancy Dino
 
