@@ -1,0 +1,220 @@
+/* checkbox */
+input[type="checkbox"],
+input[type="checkbox"]:hover,
+input[type="checkbox"]:focus {
+  background-color: lightgray;
+}
+input[type="checkbox"]:checked,
+input[type="checkbox"]:checked:hover,
+input[type="checkbox"]:checked:focus {
+  background-color: gold;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg viewBox='0 0 16 16' fill='%23808080' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12.207 4.793a1 1 0 0 1 0 1.414l-5 5a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L6.5 9.086l4.293-4.293a1 1 0 0 1 1.414 0z'/%3E%3C/svg%3E");
+}
+/* sortable */
+.sortable-ghost {
+  background-color: #ffd70050 !important;
+}
+/* tailwind custom*/
+.dark .dark\:bg-pinned {
+  background-color: #ffd70010;
+}
+.bg-pinned {
+  background-color: #ffd70030;
+}
+.dark .dark\:border-l-pinned {
+  border-left: solid 2px #f0b232 !important;
+}
+.border-l-pinned {
+  border-left: solid 2px #f0b232 !important;
+}
+.opacity-40 {
+  opacity: 0.4;
+}
+.opacity-100 {
+  opacity: 1;
+}
+.rounded-b-md {
+  border-bottom-left-radius: .375rem;
+  border-bottom-right-radius: .375rem
+}
+
+/* toggle switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 24px;
+  margin: 0 8px;
+}
+
+.switch input { 
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: gold;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px gold;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(16px);
+  -ms-transform: translateX(16px);
+  transform: translateX(16px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 24px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+/* loading animation */
+
+.lds-grid {
+  display: inline-block;
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+.lds-grid div {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #778899;
+  animation: lds-grid 1.2s linear infinite;
+}
+.lds-grid div:nth-child(1) {
+  top: 8px;
+  left: 8px;
+  animation-delay: 0s;
+}
+.lds-grid div:nth-child(2) {
+  top: 8px;
+  left: 32px;
+  animation-delay: -0.4s;
+}
+.lds-grid div:nth-child(3) {
+  top: 8px;
+  left: 56px;
+  animation-delay: -0.8s;
+}
+.lds-grid div:nth-child(4) {
+  top: 32px;
+  left: 8px;
+  animation-delay: -0.4s;
+}
+.lds-grid div:nth-child(5) {
+  top: 32px;
+  left: 32px;
+  animation-delay: -0.8s;
+}
+.lds-grid div:nth-child(6) {
+  top: 32px;
+  left: 56px;
+  animation-delay: -1.2s;
+}
+.lds-grid div:nth-child(7) {
+  top: 56px;
+  left: 8px;
+  animation-delay: -0.8s;
+}
+.lds-grid div:nth-child(8) {
+  top: 56px;
+  left: 32px;
+  animation-delay: -1.2s;
+}
+.lds-grid div:nth-child(9) {
+  top: 56px;
+  left: 56px;
+  animation-delay: -1.6s;
+}
+@keyframes lds-grid {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* For IE, Edge and Firefox */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* announcement */
+#modal-content-newsletter img,
+#modal-content-general img,
+[id^="modal-content-release-note"] img {
+  max-width: 600px;
+  border-radius: 8px;
+  margin: 16px 0;
+  box-shadow: 0 0 8px rgb(162, 154, 106);
+}
+
+#modal-content-newsletter video,
+#modal-content-general video,
+[id^="modal-content-release-note"] video {
+  max-width: 600px;
+  border-radius: 8px;
+  margin: 16px 0;
+  box-shadow: 0 0 8px rgb(162, 154, 106);
+}
+
+#modal-content-newsletter iframe,
+#modal-content-general iframe,
+[id^="modal-content-release-note"] iframe {
+  border-radius: 16px;
+  margin: 16px 0;
+  box-shadow: 0 0 8px rgb(162, 154, 106);
+}
+
+#modal-content-newsletter a,
+#modal-content-general a,
+[id^="modal-content-release-note"] a {
+  color: gold;
+  text-decoration: none;
+}
+#modal-content-newsletter a:hover,
+#modal-content-general a:hover,
+[id^="modal-content-release-note"] a:hover {
+  text-decoration: underline;
+}

@@ -1,0 +1,106 @@
+{
+  "manifest_version": 3,
+  "name": "Superpower ChatGPT",
+  "version": "3.0.3",
+  "description": "ChatGPT with superpowers! Sync/search history locally, create folders, export all chats, pin messages, access thousands of prompts",
+  "icons": {
+    "16": "images/icon-16.png",
+    "32": "images/icon-32.png",
+    "48": "images/icon-48.png",
+    "128": "images/icon-128.png"
+  },
+  "action": {
+    "16": "images/icon-16.png",
+    "32": "images/icon-32.png",
+    "48": "images/icon-48.png",
+    "128": "images/icon-128.png"
+  },
+  "permissions": [
+    "scripting",
+    "storage",
+    "unlimitedStorage",
+    "webRequest"
+  ],
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+U",
+        "mac": "Command+U"
+      }
+    }
+  },
+  "host_permissions": [
+    "https://chat.openai.com/*"
+  ],
+  "content_scripts": [
+    {
+      "js": [
+        "scripts/thirdParty/FileSaver.js",
+        "scripts/thirdParty/jszip.js",
+        "scripts/thirdParty/markdown-it.js",
+        "scripts/thirdParty/turndown.js",
+        "scripts/thirdParty/highlight.js",
+        "scripts/thirdParty/sortable.js",
+        "scripts/thirdParty/sse.js",
+        "scripts/content/contentMessageListeners.js",
+        "scripts/content/rowAssistant.js",
+        "scripts/content/rowUser.js",
+        "scripts/content/newChatPage.js",
+        "scripts/content/modelSwitcher.js",
+        "scripts/content/pluginsDropdown.js",
+        "scripts/content/dropdown.js",
+        "scripts/content/feedbackModal.js",
+        "scripts/content/toneList.js",
+        "scripts/content/writingStyleList.js",
+        "scripts/content/languageList.js",
+        "scripts/content/reportReasonList.js",
+        "scripts/content/categoryList.js",
+        "scripts/content/sortByList.js",
+        "scripts/content/api.js",
+        "scripts/content/global.js",
+        "scripts/content/instructions.js",
+        "scripts/content/navbar.js",
+        "scripts/content/modal.js",
+        "scripts/content/announcement.js",
+        "scripts/content/releaseNote.js",
+        "scripts/content/newsletterList.js",
+        "scripts/content/timestamp.js",
+        "scripts/content/continue.js",
+        "scripts/content/syncBanner.js",
+        "scripts/content/conversationElement.js",
+        "scripts/content/folderElement.js",
+        "scripts/content/clearConversations.js",
+        "scripts/content/export.js",
+        "scripts/content/copyAndCounter.js",
+        "scripts/content/addToPromptLibrary.js",
+        "scripts/content/promptLibrary.js",
+        "scripts/content/promptHistory.js",
+        "scripts/content/settings.js",
+        "scripts/content/autoSave.js",
+        "scripts/content/regenerateResponse.js",
+        "scripts/content/stopGeneratingResponse.js",
+        "scripts/content/conversation.js",
+        "scripts/content/conversationList.js"
+      ],
+      "css": [
+        "scripts/styles/global.css"
+      ],
+      "matches": [
+        "https://chat.openai.com/*"
+      ]
+    }
+  ],
+  "background": {
+    "service_worker": "scripts/background/background.js"
+  },
+  "web_accessible_resources": [
+    {
+      "matches": [
+        "https://chat.openai.com/*"
+      ],
+      "resources": [
+        "icons/*"
+      ]
+    }
+  ]
+}

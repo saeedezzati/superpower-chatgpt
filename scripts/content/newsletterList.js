@@ -1,0 +1,97 @@
+/* global createModal, incrementOpenRate, settingsModalActions, getNewsletters, getNewsletter, createAnnouncementModal */
+
+// eslint-disable-next-line no-unused-vars
+function createNewsletterListModal(version) {
+  const bodyContent = newsletterListModalContent(version);
+  const actionsBarContent = newsletterListModalActions();
+  createModal('Newsletter Archive', 'You can find all of our previous newsletters here', bodyContent, actionsBarContent);
+}
+
+function newsletterListModalContent() {
+  // create newsletterList modal content
+  const content = document.createElement('div');
+  content.id = 'modal-content-newsletter-list';
+  content.style = 'overflow-y: hidden;position: relative;height:100%; width:100%';
+  content.classList = 'markdown prose-invert';
+  const logoWatermark = document.createElement('img');
+  logoWatermark.src = chrome.runtime.getURL('icons/logo.png');
+  logoWatermark.style = 'position: fixed; top: 50%; right: 50%; width: 400px; height: 400px; opacity: 0.07; transform: translate(50%, -50%);box-shadow:none !important;';
+  content.appendChild(logoWatermark);
+  const newsletterListText = document.createElement('article');
+  newsletterListText.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; height: 100%; width: 100%; white-space: break-spaces; overflow-wrap: break-word;padding: 16px;position: relative;z-index:10;color: #fff;';
+  getNewsletters().then((data) => {
+    const newsletterList = data;
+    if (newsletterList.length === 0) {
+      newsletterListText.innerHTML = '<div style="font-size:1em;">Coming soon!</div>';
+    }
+    chrome.storage.local.get(['readNewsletterIds'], (result) => {
+      const readNewsletterIds = result.readNewsletterIds || [];
+      for (let i = 0; i < newsletterList.length; i += 1) {
+        const newsletter = newsletterList[i];
+        const releaseDate = new Date(newsletter.release_date);
+        const releaseDateWithOffset = new Date(releaseDate.getTime() + (releaseDate.getTimezoneOffset() * 60000));
+        const newsletterLine = document.createElement('div');
+        newsletterLine.style = `font-size:1em;display:flex;margin:8px 0;align-items:flex-start; ${readNewsletterIds.includes(newsletter.id) ? 'opacity:0.5;' : ''}`;
+        const newsletterDate = document.createElement('div');
+        newsletterDate.style = 'border: solid 1px gold;border-radius:4px;padding:4px;color:gold;cursor:pointer;margin-right:8px;min-width:144px; text-align:center;';
+        newsletterDate.textContent = releaseDateWithOffset.toDateString();
+        newsletterDate.addEventListener('click', () => {
+          getNewsletter(newsletter.id).then((newsletterData) => {
+            createAnnouncementModal(newsletterData);
+            chrome.storage.local.get(['readNewsletterIds'], (res) => {
+              const oldReadNewsletterIds = res.readNewsletterIds || [];
+              if (!oldReadNewsletterIds.includes(newsletter.id)) {
+                incrementOpenRate(newsletter.id);
+              }
+              chrome.storage.local.set({ readNewsletterIds: [...oldReadNewsletterIds, newsletter.id] }, () => {
+                newsletterLine.style = 'font-size:1em;display:flex;margin:8px 0;align-items:flex-start; opacity:0.5;';
+              });
+            });
+          });
+        });
+        const newsletterTitle = document.createElement('div');
+        newsletterTitle.style = 'align-self:center;';
+        newsletterTitle.textContent = newsletter.title;
+        newsletterLine.appendChild(newsletterDate);
+        newsletterLine.appendChild(newsletterTitle);
+        newsletterListText.appendChild(newsletterLine);
+      }
+    });
+  });
+  content.appendChild(newsletterListText);
+  return content;
+}
+
+function newsletterListModalActions() {
+  return settingsModalActions();
+}
+function addNewsletterButton() {
+  const nav = document.querySelector('nav');
+  if (!nav) return;
+  const allNavButtons = Array.from(nav.querySelectorAll('a'));
+
+  const logoutButton = allNavButtons.find((button) => button.textContent.toLocaleLowerCase() === 'log out');
+  // check if the setting button is already added
+  if (document.querySelector('#newsletter-button')) return;
+  // create the setting button by copying the nav button
+  const newsletterButton = logoutButton.cloneNode(true);
+  newsletterButton.textContent = 'Newsletter Archive';
+
+  const newsletterButtonIcon = document.createElement('img');
+  newsletterButtonIcon.style = 'width: 16px; height: 16px;';
+  newsletterButtonIcon.src = chrome.runtime.getURL('icons/newsletter.png');
+  newsletterButton.id = 'newsletter-button';
+  newsletterButton.prepend(newsletterButtonIcon);
+  newsletterButton.style = `${newsletterButton.style.cssText}; width: 100%;`;
+  // Add click event listener to setting button
+  newsletterButton.addEventListener('click', () => {
+    // open the setting modal
+    createNewsletterListModal();
+  });
+  // add the setting button right before the logout button
+  nav.insertBefore(newsletterButton, logoutButton);
+}
+// eslint-disable-next-line no-unused-vars
+function initializeNewsletter() {
+  addNewsletterButton();
+}

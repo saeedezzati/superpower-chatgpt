@@ -1,0 +1,382 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable no-restricted-globals */
+/* global formatDate, showAllCheckboxes, hideAllButLastCheckboxes, deleteConversation, renameConversation, loadConversation, highlight, showNewChatPage, createSearchBox, emptyFolderElement */
+
+const notSelectedClassList = 'flex py-3 px-3 pr-3 w-full items-center gap-3 relative rounded-md hover:bg-[#2A2B32] cursor-pointer break-all hover:pr-14 group';
+const selectedClassList = 'flex py-3 px-3 pr-3 w-full items-center gap-3 relative rounded-md cursor-pointer break-all hover:pr-14 bg-gray-800 hover:bg-gray-800 group selected';
+
+function getConversationElementClassList(conversation) {
+  const { pathname } = new URL(window.location.toString());
+  const conversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
+  return conversationId === conversation.id ? selectedClassList : notSelectedClassList;
+}
+function createConversation(conversation, conversationTimestamp = false, searchValue = '') {
+  const conversationElement = document.createElement('a');
+  // conversationElement.href = 'javascript:';
+  conversationElement.id = `conversation-button-${conversation.id}`;
+
+  conversationElement.classList = getConversationElementClassList(conversation);
+  if (conversation.archived) {
+    conversationElement.style.opacity = 0.7;
+    conversationElement.classList.remove('hover:pr-14');
+  }
+  // eslint-disable-next-line no-loop-func
+  conversationElement.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const { pathname } = new URL(window.location.toString());
+    const conversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
+    if (e.metaKey || e.ctrlKey) {
+      window.open(`https://chat.openai.com/c/${conversation.id}`, '_blank');
+      return;
+    }
+    if (searchValue || conversationId !== conversation.id) {
+      window.history.pushState({}, '', `https://chat.openai.com/c/${conversation.id}`);
+      // set conversations with class selected to not selected
+      const focusedConversations = document.querySelectorAll('.selected');
+      focusedConversations.forEach((c) => {
+        c.classList = notSelectedClassList;
+        c.style.backgroundColor = '';
+      });
+      // set selected conversation
+      conversationElement.classList = selectedClassList;
+      if (conversation.archived) {
+        conversationElement.classList.remove('hover:pr-14');
+      }
+      loadConversation(conversation.id, searchValue);
+    }
+  });
+  const conversationElementIcon = document.createElement('img');
+  conversationElementIcon.classList = 'w-4 h-4';
+  if (conversation.archived) {
+    conversationElementIcon.src = chrome.runtime.getURL('icons/trash.png');
+  } else {
+    conversationElementIcon.src = chrome.runtime.getURL('icons/bubble.png');
+  }
+  conversationElement.appendChild(conversationElementIcon);
+  const conversationTitle = document.createElement('div');
+  conversationTitle.id = `conversation-title-${conversation.id}`;
+  conversationTitle.classList = 'flex-1 text-ellipsis max-h-5 overflow-hidden break-all relative';
+  conversationTitle.style = 'position: relative; bottom: 5px;';
+  conversationTitle.innerHTML = highlight(conversation.title, searchValue);
+  conversationElement.title = conversation.title;
+  conversationElement.appendChild(conversationTitle);
+  // add timestamp
+  const timestamp = document.createElement('div');
+  timestamp.id = 'timestamp';
+  timestamp.style = 'font-size: 10px; color: lightslategray; position: absolute; bottom: 0px; left: 40px;';
+  const createTime = conversationTimestamp
+    ? new Date(conversation.mapping[conversation.current_node].message.create_time * 1000)
+    : new Date(conversation.create_time * 1000);
+  const conversationCreateTime = formatDate(new Date(createTime));
+
+  timestamp.innerHTML = conversationCreateTime;
+
+  conversationElement.appendChild(timestamp);
+  // action icons
+  if (!conversation.archived) {
+    conversationElement.appendChild(conversationActions(conversation.id));
+    // add checkbox
+    addCheckboxToConversationElement(conversationElement, conversation);
+  }
+  return conversationElement;
+}
+function conversationActions(conversationId) {
+  const actionsWrapper = document.createElement('div');
+  actionsWrapper.id = `actions-wrapper-${conversationId}`;
+  actionsWrapper.classList = 'absolute flex right-1 z-10 text-gray-300 invisible group-hover:visible';
+  const editConversationNameButton = document.createElement('button');
+  editConversationNameButton.classList = 'p-1 hover:text-white';
+  editConversationNameButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>';
+  editConversationNameButton.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    chrome.storage.local.get(['conversations'], (result) => {
+      const { conversations } = result;
+      const textInput = document.createElement('input');
+      const conversationTitle = document.querySelector(`#conversation-title-${conversationId}`);
+      textInput.id = `conversation-rename-${conversationId}`;
+      textInput.classList = 'border-0 bg-transparent p-0 focus:ring-0 focus-visible:ring-0';
+      textInput.style = 'position: relative; bottom: 5px;max-width:140px;';
+      textInput.value = conversations[conversationId].title;
+      conversationTitle.parentElement.replaceChild(textInput, conversationTitle);
+      textInput.focus();
+      textInput.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        textInput.focus();
+      });
+      // replace action buttons with save and cancel buttons
+      actionsWrapper.replaceWith(confirmActions(conversations[conversationId], 'edit'));
+    });
+  });
+  const deleteConversationButton = document.createElement('button');
+  deleteConversationButton.classList = 'p-1 hover:text-white';
+  deleteConversationButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
+  deleteConversationButton.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    chrome.storage.local.get(['conversations'], (result) => {
+      const { conversations } = result;
+      actionsWrapper.replaceWith(confirmActions(conversations[conversationId], 'delete'));
+    });
+    // remove all other visible cancel buttons
+    // get all cancel buttons with last part of id not equal to this conversation id and click on them
+    const cancelButtons = document.querySelectorAll(`button[id^="cancel-"]:not(#cancel-${conversationId})`);
+    cancelButtons.forEach((button) => {
+      button.click();
+    });
+  });
+  actionsWrapper.appendChild(editConversationNameButton);
+  actionsWrapper.appendChild(deleteConversationButton);
+  return actionsWrapper;
+}
+function confirmActions(conversation, action) {
+  let skipBlur = false;
+  const conversationElement = document.querySelector(`#conversation-button-${conversation.id}`);
+  conversationElement.classList.replace('pr-3', 'pr-14');
+  const actionsWrapper = document.createElement('div');
+  actionsWrapper.id = `actions-wrapper-${conversation.id}`;
+  actionsWrapper.classList = 'absolute flex right-1 z-10 text-gray-300';
+  const confirmButton = document.createElement('button');
+  confirmButton.id = `confirm-${conversation.id}`;
+  confirmButton.classList = 'p-1 hover:text-white';
+  confirmButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+  confirmButton.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (action === 'edit') {
+      const textInput = document.querySelector(`#conversation-rename-${conversation.id}`);
+      const conversationTitle = document.createElement('div');
+      const newValue = textInput.value || conversation.title;
+      conversationTitle.id = `conversation-title-${conversation.id}`;
+      conversationTitle.classList = 'flex-1 text-ellipsis max-h-5 overflow-hidden break-all relative';
+      conversationTitle.style = 'position: relative; bottom: 5px;';
+      conversationTitle.innerText = newValue;
+      textInput.parentElement.replaceChild(conversationTitle, textInput);
+      actionsWrapper.replaceWith(conversationActions(conversation.id));
+      skipBlur = false;
+
+      renameConversation(conversation.id, newValue);
+      syncLocalConversation(conversation.id, 'title', newValue);
+    } else if (action === 'delete') {
+      deleteConversation(conversation.id).then((data) => {
+        if (data.success) {
+          syncLocalConversation(conversation.id, 'archived', true);
+          chrome.storage.local.get(['conversationsOrder'], (res) => {
+            const { conversationsOrder } = res;
+            const trashFolder = conversationsOrder.find((folder) => folder.id === 'trash');
+
+            actionsWrapper.remove();
+            conversationElement.querySelector('[id^=checkbox-wrapper-]').remove();
+            if (conversationElement.classList.contains('selected')) {
+              showNewChatPage();
+            }
+            conversationElement.classList = notSelectedClassList;
+            conversationElement.style.opacity = 0.7;
+            conversationElement.classList.remove('hover:pr-14');
+            // replace bubble icon with trash
+            const conversationElementIcon = conversationElement.querySelector('img');
+            conversationElementIcon.src = chrome.runtime.getURL('icons/trash.png');
+            // move conversation to trash
+            const trashFolderContent = document.querySelector('#folder-content-trash');
+            if (trashFolderContent) {
+              const emptyFolderElement = trashFolderContent.querySelector('#empty-folder-trash');
+              if (emptyFolderElement) emptyFolderElement.remove();
+              // prepend conversation to trash folder
+              trashFolderContent.prepend(conversationElement);
+            }
+
+            // remove conversationId from conversationsOrder
+            let conversationOrderIndex = conversationsOrder.findIndex((id) => id === conversation.id);
+            if (conversationOrderIndex !== -1) {
+              conversationsOrder.splice(conversationOrderIndex, 1);
+            } else { // if not found, look into folders
+              const conersationFolder = conversationsOrder.find((f) => (f.id !== 'trash') && (f.conversationIds.includes(conversation.id)));
+              if (conersationFolder) {
+                conversationOrderIndex = conersationFolder.conversationIds.findIndex((id) => id === conversation.id);
+                conersationFolder.conversationIds.splice(conversationOrderIndex, 1);
+                // if folder is empty now, add empty folder element
+                if (conersationFolder.conversationIds.length === 0) {
+                  const folderContent = document.querySelector(`#folder-content-${conersationFolder.id}`);
+                  folderContent.appendChild(emptyFolderElement(conersationFolder.id));
+                }
+              }
+            }
+            // update trash folder
+            if (!trashFolder.conversationIds.includes(conversation.id)) {
+              conversationsOrder.find((folder) => folder.id === 'trash').conversationIds.unshift(conversation.id);
+            }
+            // update conversationsOrder
+            chrome.storage.local.set({
+              conversationsOrder,
+            });
+          });
+        }
+      }, () => { });
+    }
+    conversationElement.classList.replace('pr-14', 'pr-3');
+  });
+  const cancelButton = document.createElement('button');
+  cancelButton.id = `cancel-${conversation.id}`;
+  cancelButton.classList = 'p-1 hover:text-white';
+  cancelButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+  cancelButton.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (action === 'edit') {
+      const textInput = document.querySelector(`#conversation-rename-${conversation.id}`);
+      const conversationTitle = document.createElement('div');
+      conversationTitle.id = `conversation-title-${conversation.id}`;
+      conversationTitle.classList = 'flex-1 text-ellipsis max-h-5 overflow-hidden break-all relative';
+      conversationTitle.style = 'position: relative; bottom: 5px;';
+      conversationTitle.innerText = conversation.title;
+      textInput.parentElement.replaceChild(conversationTitle, textInput);
+    }
+    actionsWrapper.replaceWith(conversationActions(conversation.id));
+    conversationElement.classList.replace('pr-14', 'pr-3');
+  });
+  actionsWrapper.appendChild(confirmButton);
+  actionsWrapper.appendChild(cancelButton);
+  const textInput = document.querySelector(`#conversation-rename-${conversation.id}`);
+  if (textInput) {
+    textInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.which === 13) {
+        skipBlur = true;
+        confirmButton.click();
+      } else if (e.key === 'Escape') {
+        cancelButton.click();
+      }
+      conversationElement.classList.replace('pr-14', 'pr-3');
+    });
+    textInput.addEventListener('blur', (e) => {
+      if (skipBlur) return;
+      if (e.relatedTarget?.id === `confirm-${conversation.id}`) return;
+      cancelButton.click();
+      conversationElement.classList.replace('pr-14', 'pr-3');
+    });
+  }
+  return actionsWrapper;
+}
+
+function addCheckboxToConversationElement(conversationElement, conversation) {
+  chrome.storage.local.get(['selectedConversations'], (result) => {
+    const selectedConvs = result.selectedConversations;
+    const checkboxWrapper = document.createElement('div');
+    checkboxWrapper.style = 'position: absolute; top: 0px; left: 0px; z-index:10; display:none;cursor: pointer;width:40px;height: 100%;border:none;border-radius:6px;';
+    checkboxWrapper.id = `checkbox-wrapper-${conversation.id}`;
+    checkboxWrapper.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const checkbox = conversationElement.querySelector('#checkbox');
+      checkbox.click();
+    });
+    conversationElement.appendChild(checkboxWrapper);
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = 'checkbox';
+    checkbox.style = 'position: absolute; top: 12px; left: 12px; z-index:11; cursor: pointer;';
+    checkbox.checked = false;
+    checkboxWrapper.appendChild(checkbox);
+    if (selectedConvs?.length > 0) {
+      checkboxWrapper.style.display = 'block';
+      checkboxWrapper.style.width = '100%';
+      if (selectedConvs.map((c) => c.id).includes(conversation.id)) {
+        checkbox.checked = true;
+      }
+    }
+
+    checkbox.addEventListener('click', (event) => {
+      event.stopPropagation();
+    });
+
+    conversationElement.addEventListener('mouseenter', () => {
+      checkboxWrapper.style.display = 'block';
+    });
+    conversationElement.addEventListener('mouseleave', () => {
+      chrome.storage.local.get(['selectedConversations'], (res) => {
+        const { selectedConversations } = res;
+        if (selectedConversations.length === 0) {
+          checkboxWrapper.style.display = 'none';
+        }
+      });
+    });
+    checkbox.addEventListener('change', () => {
+      chrome.storage.local.get(['selectedConversations'], (res) => {
+        const { selectedConversations } = res;
+        let newSelectedConversations = selectedConversations;
+        const nav = document.querySelector('nav');
+        const newChatButton = nav.querySelector('a');
+        if (checkbox.checked) {
+          newSelectedConversations = [...selectedConversations, conversation];
+
+          chrome.storage.local.set({ selectedConversations: newSelectedConversations });
+          if (newSelectedConversations.length === 1) {
+            showAllCheckboxes();
+          }
+          // chenge export all to export selected
+          const exportAllButton = document.querySelector('#export-all-button');
+          if (exportAllButton) {
+            // keep export all icon, but change the text
+            if (newSelectedConversations.length === 1) {
+              exportAllButton.innerHTML = exportAllButton.innerHTML.replace('Export All', `Export ${newSelectedConversations.length} Selected`);
+            } else {
+              exportAllButton.innerHTML = exportAllButton.innerHTML.replace(`Export ${newSelectedConversations.length - 1} Selected`, `Export ${newSelectedConversations.length} Selected`);
+            }
+          }
+          const deleteConversationsButton = document.querySelector('#delete-conversations-button');
+          if (deleteConversationsButton) {
+            // keep export all icon, but change the text
+            if (newSelectedConversations.length === 1) {
+              deleteConversationsButton.innerHTML = deleteConversationsButton.innerHTML.replace('Delete All', `Delete ${newSelectedConversations.length} Selected`);
+            } else {
+              deleteConversationsButton.innerHTML = deleteConversationsButton.innerHTML.replace(`Delete ${newSelectedConversations.length - 1} Selected`, `Delete ${newSelectedConversations.length} Selected`);
+            }
+          }
+        } else {
+          newSelectedConversations = selectedConversations.filter((conv) => conv.id !== conversation.id);
+          chrome.storage.local.set({ selectedConversations: newSelectedConversations });
+          if (newSelectedConversations.length === 0) {
+            hideAllButLastCheckboxes(conversation.id);
+          }
+          // chenge export selected to export all
+          const exportAllButton = document.querySelector('#export-all-button');
+          if (exportAllButton) {
+            if (newSelectedConversations.length === 0) {
+              exportAllButton.innerHTML = exportAllButton.innerHTML.replace('Export 1 Selected', 'Export All');
+            } else {
+              exportAllButton.innerHTML = exportAllButton.innerHTML.replace(`Export ${newSelectedConversations.length + 1} Selected`, `Export ${newSelectedConversations.length} Selected`);
+            }
+          }
+          const deleteConversationsButton = document.querySelector('#delete-conversations-button');
+          if (deleteConversationsButton) {
+            if (newSelectedConversations.length === 0) {
+              deleteConversationsButton.innerHTML = deleteConversationsButton.innerHTML.replace('Delete 1 Selected', 'Delete All');
+            } else {
+              deleteConversationsButton.innerHTML = deleteConversationsButton.innerHTML.replace(`Delete ${newSelectedConversations.length + 1} Selected`, `Delete ${newSelectedConversations.length} Selected`);
+            }
+          }
+        }
+        if (newSelectedConversations.length > 0) {
+          // show an x svg followed by clear selection
+          newChatButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>Clear selection';
+        } else {
+          // show a plus svg followed by new chat
+          newChatButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>New chat';
+        }
+      });
+    });
+  });
+}
+function syncLocalConversation(conversationId, key, value) {
+  chrome.storage.local.get(['conversations'], (result) => {
+    const { conversations } = result;
+    conversations[conversationId][key] = value;
+    chrome.storage.local.set({ conversations }, () => {
+      if (key === 'archived' && value === true) {
+        createSearchBox();
+      }
+    });
+  });
+}
