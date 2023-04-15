@@ -16,7 +16,7 @@ A browser extension to add the missing features like **Folders**, **Search**, an
 [![Mozilla Add-on](https://img.shields.io/amo/rating/superpower-chatgpt.svg)]([link-firefox])
 
 [![Discord](https://img.shields.io/discord/1060110102188797992?color=green&label=Discord&logo=discord)](https://discord.gg/Ma9VpTSct2)
-[![Twitter Follow](https://img.shields.io/twitter/follow/eeeziii?label=follow%20me&style=social)](https://twitter.com/eeeziii)
+[![Twitter Follow](https://img.shields.io/twitter/follow/eeeziii?label=follow%20me&style=social)](https://twitter.com/intent/user?screen_name=eeeziii)
 
 <div align="center">
 
@@ -29,7 +29,7 @@ https://user-images.githubusercontent.com/574142/232172841-50f1b114-ef47-4533-a6
 
 # Features
 
-## Chat Management for ChatGPT:
+## Chat Management for ChatGPT
 
 🗂 Folders and reordering for your chats: Create folders easily and organize your chats in folders. Drag and drop files to reorder them or add/remove them to folders. Drop a file in the Trash to automatically delete it.
 
@@ -49,7 +49,7 @@ https://user-images.githubusercontent.com/574142/232172841-50f1b114-ef47-4533-a6
 
 🔻More sidebar space: Easily minimize the bottom section of the sidebar for more space to see your conversation list
 
-## Prompt Management for ChatGPT:
+## Prompt Management for ChatGPT
 
 🔙 Input History: Every prompt you have ever used is saved privately on your computer. Click on My Prompt History to scroll through all your ChatGPT prompt history, mark them as favorites, or share them with the community
 
@@ -91,7 +91,7 @@ https://user-images.githubusercontent.com/574142/232172841-50f1b114-ef47-4533-a6
 
 🆕 GPT4 Support: Support GPT4 and shows the number GPT4 requests made based on latest limit from OpenAI
 
-## Newsletter inside ChatGPT:
+## Newsletter inside ChatGPT
 
 📰 AI Newsletter: Read our popular daily AI newsletter right inside ChatGPT
 
@@ -171,4 +171,21 @@ I appreciate your interest in supporting this extension. Here are some ways you 
 [![Donate with Stripe](https://img.shields.io/badge/stripe-donate-blue.svg)](https://buy.stripe.com/6oE6s0dQS7y2bjG9AA)
 
 [![Discord](https://img.shields.io/discord/1060110102188797992?color=green&label=Discord&logo=discord)](https://discord.gg/Ma9VpTSct2)
-[![Twitter Follow](https://img.shields.io/twitter/follow/eeeziii?label=follow%20me&style=social)](https://twitter.com/eeeziii)
+[![Twitter Follow](https://img.shields.io/twitter/follow/eeeziii?label=follow%20me&style=social)](https://twitter.com/intent/user?screen_name=eeeziii)
+
+
+## Copyright
+Superpower ChatGPT, Non-Permissive License
+
+Copyright (C) 2023 Fancy Dino
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), for their own personal use or to contribute to the project, subject to the following conditions:
+
+1. The user is not permitted to redistribute the Software or any part of the Software, or the source code.
+2. The user is not permitted to use the source of the Software, or any part thereof, for any other projects or purposes, including competing with the project in any way.
+3. The user is not permitted to use the Software for any commercial purposes.
+4. The copyright holder reserves the right to change this license at any time without notice.
+
+Any contributions to the project, whether used or not, are subject to the same terms and conditions as outlined in this license, if the contribution is accepted, you agree to waive all rights to the contribution. You agree that if you contribute something, that does not follow these terms, you are fully liable for any damages.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
