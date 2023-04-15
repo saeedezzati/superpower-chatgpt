@@ -171,7 +171,7 @@ I appreciate your interest in supporting this extension. Here are some ways you 
 [![Donate with Stripe](https://img.shields.io/badge/stripe-donate-blue.svg)](https://buy.stripe.com/6oE6s0dQS7y2bjG9AA)
 
 
-[![visitors](https://visitor-badge.glitch.me/badge?page_id=qunash/chatgpt-advanced)](https://visitor-badge.glitch.me)
+[![visitors](https://visitor-badge.glitch.me/badge?page_id=saeedezzati/superpower-chatgpt)](https://visitor-badge.glitch.me)
 [![Discord](https://img.shields.io/discord/1060110102188797992?color=green&label=Discord&logo=discord)](https://discord.gg/Ma9VpTSct2)
 [![Twitter Follow](https://img.shields.io/twitter/follow/eeeziii?label=follow%20me&style=social)](https://twitter.com/intent/user?screen_name=eeeziii)
 
