@@ -26,10 +26,8 @@ function rowAssistant(conversation, node, childIndex, childCount, models, search
     </div>
     <div class="relative flex w-[calc(100%-50px)] flex-col gap-1 md:gap-3 lg:w-[calc(100%-115px)]">
       <div class="flex flex-grow flex-col gap-3">
-        <div class="min-h-[20px] flex flex-col items-start gap-4">
-          <div id="message-text-${id}" dir="auto" class="markdown prose w-full break-words dark:prose-invert dark">
+        <div id="message-text-${id}" dir="auto" class="min-h-[20px] flex flex-col items-start whitespace-pre-wrap markdown prose w-full break-words dark:prose-invert dark">
             ${messageContentPartsHTML}
-          </div>
           <div id="result-action-wrapper-${id}"
             style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; color: lightslategray; font-size: 0.7em; width: 100%; height: 40px;">
             <div id="result-counter-${id}">${charCount} chars / ${wordCount} words</div>

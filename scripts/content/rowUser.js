@@ -35,7 +35,7 @@ function rowUser(conversation, node, childIndex, childCount, name, avatar, searc
     </div>
     <div class="relative flex w-[calc(100%-50px)] flex-col gap-1 md:gap-3 lg:w-[calc(100%-115px)]">
       <div class="flex flex-grow flex-col gap-3">
-        <div id="message-text-${id}" dir="auto" class="min-h-[20px] flex-col items-start gap-4" style="white-space:pre-wrap;">${highlightedMessageContent}</div>
+        <div id="message-text-${id}" dir="auto" class="min-h-[20px] flex-col items-start gap-4 whitespace-pre-wrap">${highlightedMessageContent}</div>
       </div>
       <div
         class="text-gray-400 flex self-end lg:self-center justify-center mt-2 gap-3 md:gap-4 lg:gap-1 lg:absolute lg:top-0 lg:translate-x-full lg:right-0 lg:mt-0 lg:pl-2 visible">

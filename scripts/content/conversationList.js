@@ -189,7 +189,7 @@ function createSearchBox() {
 
         if (searchValue) {
           filteredConversations = allConversations.filter((c) => (
-            c.title.toLowerCase().includes(searchValue.toLowerCase())
+            c.title?.toLowerCase()?.includes(searchValue.toLowerCase())
             || Object.values(c.mapping).map((m) => m?.message?.content?.parts?.join(' ')?.replace(/## Instructions[\s\S]*## End Instructions\n\n/, ''))
               .join(' ')?.toLowerCase()
               .includes(searchValue.toLowerCase())));
