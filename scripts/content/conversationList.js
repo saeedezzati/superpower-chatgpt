@@ -9,6 +9,8 @@ function addExpandButton() {
   if (nav) {
     nav.style.overflow = 'hidden';
   }
+  const originalExpandButton = document.querySelector('#expand-sidebar-bottom-button');
+  if (originalExpandButton) originalExpandButton.remove();
   const conversationListParent = document.querySelector('#conversation-list').parentElement;
   conversationListParent.style.transition = 'all 1s ease-in-out';
   conversationListParent.style.position = 'relative';

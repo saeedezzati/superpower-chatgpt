@@ -15,6 +15,12 @@ input[type="checkbox"]:checked:focus {
   background-color: #ffd70050 !important;
 }
 /* tailwind custom*/
+.hover\:pr-20:hover {
+  padding-right: 5rem;
+}
+.pr-20 {
+  padding-right: 5rem;
+}
 .dark .dark\:bg-pinned {
   background-color: #ffd70010;
 }

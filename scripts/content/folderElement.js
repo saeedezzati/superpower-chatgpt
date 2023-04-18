@@ -13,7 +13,8 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
 
   const folderElement = document.createElement('div');
   folderElement.id = `folder-${folderId}`;
-  folderElement.classList = 'flex py-3 px-3 pr-3 w-full items-center gap-3 relative rounded-md hover:bg-[#2A2B32] cursor-pointer break-all hover:pr-14 group';
+  folderElement.classList = 'flex py-3 px-3 pr-3 w-full items-center gap-3 relative rounded-md hover:bg-[#2A2B32] cursor-pointer break-all hover:pr-20 group';
+  folderElement.style.backgroundColor = folder.color || 'transparent';
   // eslint-disable-next-line no-loop-func
 
   const folderIcon = document.createElement('img');
@@ -24,7 +25,7 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
 
   const folderTitle = document.createElement('div');
   folderTitle.id = `title-folder-${folderId}`;
-  folderTitle.classList = 'flex-1 text-ellipsis max-h-5 overflow-hidden break-all relative';
+  folderTitle.classList = 'flex-1 text-ellipsis max-h-5 overflow-hidden break-all relative text-white';
   folderTitle.innerHTML = folder.name;
   folderElement.title = folder.name;
   folderElement.appendChild(folderTitle);
@@ -32,6 +33,7 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
   const folderContent = document.createElement('div');
   folderContent.id = `folder-content-${folderId}`;
   folderContent.classList = 'w-full ml-4 border-l border-gray-500';
+  folderContent.style.borderColor = folder.color || '#8e8ea0';
   folderContent.style.borderBottomLeftRadius = '6px';
   folderContent.style.marginLeft = '16px';
   folderContent.style.display = folder.isOpen ? 'block' : 'none';
@@ -137,6 +139,21 @@ function folderActions(folderId) {
   const actionsWrapper = document.createElement('div');
   actionsWrapper.id = `actions-wrapper-${folderId}`;
   actionsWrapper.classList = 'absolute flex right-1 z-10 text-gray-300 invisible group-hover:visible';
+  const changeColorButton = document.createElement('button');
+  changeColorButton.id = `change-color-${folderId}`;
+  changeColorButton.classList = 'p-1 hover:text-white';
+  changeColorButton.innerHTML = '<svg stroke="currentColor" fill="currentColor" stroke-width="2" viewBox="0 0 512 512" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M160 255.1C160 273.7 145.7 287.1 128 287.1C110.3 287.1 96 273.7 96 255.1C96 238.3 110.3 223.1 128 223.1C145.7 223.1 160 238.3 160 255.1zM128 159.1C128 142.3 142.3 127.1 160 127.1C177.7 127.1 192 142.3 192 159.1C192 177.7 177.7 191.1 160 191.1C142.3 191.1 128 177.7 128 159.1zM288 127.1C288 145.7 273.7 159.1 256 159.1C238.3 159.1 224 145.7 224 127.1C224 110.3 238.3 95.1 256 95.1C273.7 95.1 288 110.3 288 127.1zM320 159.1C320 142.3 334.3 127.1 352 127.1C369.7 127.1 384 142.3 384 159.1C384 177.7 369.7 191.1 352 191.1C334.3 191.1 320 177.7 320 159.1zM441.9 319.1H344C317.5 319.1 296 341.5 296 368C296 371.4 296.4 374.7 297 377.9C299.2 388.1 303.5 397.1 307.9 407.8C313.9 421.6 320 435.3 320 449.8C320 481.7 298.4 510.5 266.6 511.8C263.1 511.9 259.5 512 256 512C114.6 512 0 397.4 0 256C0 114.6 114.6 0 256 0C397.4 0 512 114.6 512 256C512 256.9 511.1 257.8 511.1 258.7C511.6 295.2 478.4 320 441.9 320V319.1zM463.1 258.2C463.1 257.4 464 256.7 464 255.1C464 141.1 370.9 47.1 256 47.1C141.1 47.1 48 141.1 48 255.1C48 370.9 141.1 464 256 464C258.9 464 261.8 463.9 264.6 463.8C265.4 463.8 265.9 463.6 266.2 463.5C266.6 463.2 267.3 462.8 268.2 461.7C270.1 459.4 272 455.2 272 449.8C272 448.1 271.4 444.3 266.4 432.7C265.8 431.5 265.2 430.1 264.5 428.5C260.2 418.9 253.4 403.5 250.1 387.8C248.7 381.4 248 374.8 248 368C248 314.1 290.1 271.1 344 271.1H441.9C449.6 271.1 455.1 269.3 459.7 266.2C463 263.4 463.1 260.9 463.1 258.2V258.2z"/></svg>';
+  changeColorButton.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    chrome.storage.local.get(['conversationsOrder'], (result) => {
+      const { conversationsOrder } = result;
+      actionsWrapper.replaceWith(colorPicker(conversationsOrder.find((conv) => conv.id === folderId)));
+      const colorPickerElement = document.getElementById(`color-picker-${folderId}`);
+      colorPickerElement.focus();
+    });
+  });
+
   const editFolderNameButton = document.createElement('button');
   editFolderNameButton.id = `edit-folder-name-${folderId}`;
   editFolderNameButton.classList = 'p-1 hover:text-white';
@@ -180,16 +197,74 @@ function folderActions(folderId) {
       button.click();
     });
   });
+  actionsWrapper.appendChild(changeColorButton);
   if (folderId !== 'trash') {
     actionsWrapper.appendChild(editFolderNameButton);
   }
   actionsWrapper.appendChild(deleteFolderButton);
   return actionsWrapper;
 }
+function colorPicker(folder) {
+  const folderElement = document.querySelector(`#folder-${folder.id}`);
+  folderElement.classList.replace('pr-3', 'pr-14');
+  folderElement.classList.replace('hover:pr-20', 'hover:pr-14');
+  const colorPickerElement = document.createElement('div');
+  colorPickerElement.id = `actions-wrapper-${folder.id}`;
+  colorPickerElement.tabIndex = 0;
+  colorPickerElement.contentEditable = true;
+  colorPickerElement.classList = 'absolute flex right-1 z-10 cursor-pointer flex items-center';
+  colorPickerElement.innerHTML = `<svg stroke="currentColor" fill="currentColor" stroke-width="2" viewBox="0 0 512 512" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-2" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M496 40v160C496 213.3 485.3 224 472 224h-160C298.8 224 288 213.3 288 200s10.75-24 24-24h100.5C382.8 118.3 322.5 80 256 80C158.1 80 80 158.1 80 256s78.97 176 176 176c41.09 0 81.09-14.47 112.6-40.75c10.16-8.5 25.31-7.156 33.81 3.062c8.5 10.19 7.125 25.31-3.062 33.81c-40.16 33.44-91.17 51.77-143.5 51.77C132.4 479.9 32 379.5 32 256s100.4-223.9 223.9-223.9c79.85 0 152.4 43.46 192.1 109.1V40c0-13.25 10.75-24 24-24S496 26.75 496 40z"/></svg><input type="color" class="w-6 border-gray-300 border rounded-md" id="color-picker-${folder.id}" style="cursor:pointer" value=${folder.color || '#5ea674'}>`;
+  colorPickerElement.addEventListener('click', (e) => {
+    e.stopPropagation();
+  });
+  colorPickerElement.lastChild.addEventListener('input', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    chrome.storage.local.get(['conversationsOrder'], (result) => {
+      const { conversationsOrder } = result;
+      const curFolderElement = document.querySelector(`#folder-${folder.id}`);
+      const folderContentElement = document.querySelector(`#folder-content-${folder.id}`);
+      const folderIndex = conversationsOrder.findIndex((f) => f.id === folder.id);
+      conversationsOrder[folderIndex].color = e.target.value;
+      chrome.storage.local.set({ conversationsOrder }, () => {
+        curFolderElement.style.backgroundColor = e.target.value;
+        folderContentElement.style.borderColor = e.target.value;
+      });
+    });
+  });
+
+  // reset click
+  colorPickerElement.firstChild.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    chrome.storage.local.get(['conversationsOrder'], (result) => {
+      const { conversationsOrder } = result;
+      const curFolderElement = document.querySelector(`#folder-${folder.id}`);
+      const folderContentElement = document.querySelector(`#folder-content-${folder.id}`);
+      const folderIndex = conversationsOrder.findIndex((f) => f.id === folder.id);
+      conversationsOrder[folderIndex].color = undefined;
+      chrome.storage.local.set({ conversationsOrder }, () => {
+        curFolderElement.style.backgroundColor = 'transparent';
+        folderContentElement.style.borderColor = '#8e8ea0';
+      });
+    });
+  });
+  colorPickerElement.addEventListener('focusout', (e) => {
+    if (colorPickerElement.contains(e.relatedTarget)) return;
+    const curFolderElement = document.querySelector(`#folder-${folder.id}`);
+    const folderContentElement = document.querySelector(`#folder-content-${folder.id}`);
+    colorPickerElement.replaceWith(folderActions(folder.id));
+    curFolderElement.classList.replace('pr-14', 'pr-3');
+    folderElement.classList.replace('hover:pr-14', 'hover:pr-20');
+  });
+
+  return colorPickerElement;
+}
 function folderConfirmActions(folder, action) {
   let skipBlur = false;
   const folderElement = document.querySelector(`#folder-${folder.id}`);
   folderElement.classList.replace('pr-3', 'pr-14');
+  folderElement.classList.replace('hover:pr-20', 'hover:pr-14');
   const actionsWrapper = document.createElement('div');
   actionsWrapper.id = `actions-wrapper-${folder.id}`;
   actionsWrapper.classList = 'absolute flex right-1 z-10 text-gray-300';
@@ -204,7 +279,7 @@ function folderConfirmActions(folder, action) {
       const textInput = document.querySelector(`#rename-folder-${folder.id}`);
       const folderTitle = document.createElement('div');
       folderTitle.id = `title-folder-${folder.id}`;
-      folderTitle.classList = 'flex-1 text-ellipsis max-h-5 overflow-hidden break-all relative';
+      folderTitle.classList = 'flex-1 text-ellipsis max-h-5 overflow-hidden break-all relative  text-white';
       folderTitle.innerText = textInput.value;
       textInput.parentElement.replaceChild(folderTitle, textInput);
       actionsWrapper.replaceWith(folderActions(folder.id));
@@ -216,6 +291,7 @@ function folderConfirmActions(folder, action) {
         chrome.storage.local.set({ conversationsOrder });
       });
       folderElement.classList.replace('pr-14', 'pr-3');
+      folderElement.classList.replace('hover:pr-14', 'hover:pr-20');
     } else if (action === 'delete') {
       if (folder.id === 'trash') {
         emptyTrash();
@@ -242,6 +318,7 @@ function folderConfirmActions(folder, action) {
     }
     actionsWrapper.replaceWith(folderActions(folder.id));
     folderElement.classList.replace('pr-14', 'pr-3');
+    folderElement.classList.replace('hover:pr-14', 'hover:pr-20');
   });
   actionsWrapper.appendChild(confirmButton);
   actionsWrapper.appendChild(cancelButton);
@@ -255,12 +332,14 @@ function folderConfirmActions(folder, action) {
         cancelButton.click();
       }
       folderElement.classList.replace('pr-14', 'pr-3');
+      folderElement.classList.replace('hover:pr-14', 'hover:pr-20');
     });
     textInput.addEventListener('blur', (e) => {
       if (skipBlur) return;
       if (e.relatedTarget?.id === `confirm-${folder.id}`) return;
       cancelButton.click();
       folderElement.classList.replace('pr-14', 'pr-3');
+      folderElement.classList.replace('hover:pr-14', 'hover:pr-20');
     });
   }
   return actionsWrapper;
