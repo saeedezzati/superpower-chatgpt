@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Superpower ChatGPT",
-  "version": "3.0.4",
+  "version": "3.0.5",
   "description": "ChatGPT with superpowers! Sync/search history locally, create folders, export all chats, pin messages, access thousands of prompts",
   "icons": {
     "16": "images/icon-16.png",
@@ -37,6 +37,8 @@
       "js": [
         "scripts/thirdParty/FileSaver.js",
         "scripts/thirdParty/jszip.js",
+        "scripts/thirdParty/katex.js",
+        "scripts/thirdParty/texmath.js",
         "scripts/thirdParty/markdown-it.js",
         "scripts/thirdParty/turndown.js",
         "scripts/thirdParty/highlight.js",
@@ -83,7 +85,8 @@
         "scripts/content/conversationList.js"
       ],
       "css": [
-        "scripts/styles/global.css"
+        "scripts/styles/global.css",
+        "scripts/styles/katex.css"
       ],
       "matches": [
         "https://chat.openai.com/*"

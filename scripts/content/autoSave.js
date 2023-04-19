@@ -27,11 +27,11 @@ async function addConversationToStorage(conv) {
   await getConversation(conv.id).then((conversation) => {
     if (!conversation) return;
     if (!conversation.create_time) return;
-    Object.keys(conversation.mapping).forEach((key) => {
-      if (localConversations[conv.id] && localConversations[conv.id]?.mapping[key] && localConversations[conv.id].mapping[key]?.pinned) {
-        conversation.mapping[key].pinned = true;
-      }
-    });
+    // Object.keys(conversation.mapping).forEach((key) => {
+    //   if (localConversations[conv.id] && localConversations[conv.id]?.mapping[key] && localConversations[conv.id].mapping[key]?.pinned) {
+    //     conversation.mapping[key].pinned = true;
+    //   }
+    // });
     localConversations[conv.id] = {
       id: conv.id,
       shouldRefresh: false,
@@ -71,11 +71,11 @@ async function addConversationToStorage(conv) {
 async function updateConversationInStorage(conv) {
   await getConversation(conv.id).then((conversation) => {
     if (!conversation) return;
-    Object.keys(conversation.mapping).forEach((key) => {
-      if (localConversations[conv.id].mapping[key] && localConversations[conv.id].mapping[key]?.pinned) {
-        conversation.mapping[key].pinned = true;
-      }
-    });
+    // Object.keys(conversation.mapping).forEach((key) => {
+    //   if (localConversations[conv.id].mapping[key] && localConversations[conv.id].mapping[key]?.pinned) {
+    //     conversation.mapping[key].pinned = true;
+    //   }
+    // });
     localConversations[conv.id] = {
       ...localConversations[conv.id],
       ...conversation,
@@ -344,7 +344,7 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
             localConversations[remoteConvIds[i]].archived = false;
           }
           if (!allVisibleConversationsOrderIds.includes(remoteConvIds[i])) {
-            if (!conversationsOrder) { // if conversationsOrder does not exist, add to the end of it right before trash folder (last element -1)
+            if (!conversationsOrder || conversationsOrder.length === 0) { // if conversationsOrder does not exist, add to the end of it right before trash folder (last element -1)
               newConversationsOrder.splice(newConversationsOrder.length - 1, 0, remoteConvIds[i]);
             } else { // if conversationsOrder exists, add to the begining of it
               newConversationsOrder.unshift(remoteConvIds[i]);

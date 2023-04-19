@@ -82,6 +82,7 @@ const markdown = (role, searchValue = '') => new markdownit({
     return `<pre dir="ltr" class="w-full"><div class="bg-black mb-4 rounded-md"><div id='code-header' class="flex items-center relative text-gray-200 ${role === 'user' ? 'bg-gray-900' : 'bg-gray-800'} px-4 py-2 text-xs font-sans rounded-t-md" style='border-top-left-radius:6px;border-top-right-radius:6px;'><span class="">${language}</span><button id='copy-code' data-initialized="false" class="flex ml-auto gap-2"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>Copy code</button></div><div class="p-4 overflow-y-auto"><code class="!whitespace-pre hljs language-${language}">${value}</code></div></div></pre>`;
   },
 });
+
 function escapeHtml(html) {
   return html
     .replace(/&/g, '&amp;')
@@ -124,7 +125,7 @@ function addScrollDetector(element) {
       if (element.scrollHeight - element.scrollTop === element.clientHeight) {
         scrolUpDetected = false;
       }
-    } else if (st < lastScrollTop - 20) { // 20 is the threshold
+    } else if (st < lastScrollTop - 3) { // 20 is the threshold
       // upscroll code
       scrolUpDetected = true;
     } // else was horizontal scroll
@@ -134,16 +135,16 @@ function addScrollDetector(element) {
 function addScrollButtons() {
   const scrollButtonWrapper = document.createElement('div');
   scrollButtonWrapper.id = 'scroll-button-wrapper';
-  scrollButtonWrapper.className = 'absolute flex items-center justify-center bg-gray-900 text-gray-200 text-xs font-sans cursor-pointer rounded-md z-10';
+  scrollButtonWrapper.className = 'absolute flex items-center justify-center bg-gray-100 dark:bg-gray-600 text-gray-200 text-xs font-sans cursor-pointer rounded-md z-10';
   scrollButtonWrapper.style = 'bottom: 6rem;right: 3rem;width: 2rem;height: 4rem;flex-wrap:wrap;';
 
   const scrollUpButton = document.createElement('button');
   scrollUpButton.id = 'scroll-up-button';
   scrollUpButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 48 48" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M24 44V4m20 20L24 4 4 24"></path></svg>';
-  scrollUpButton.className = 'flex items-center justify-center bg-gray-900 text-gray-200 text-xs font-sans cursor-pointer rounded-t-md z-10';
-  scrollUpButton.style = 'width: 2rem;height: 2rem;border-bottom: 1px solid #4a5568;';
+  scrollUpButton.className = 'flex items-center justify-center border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 hover:bg-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-900 dark:hover:text-gray-200 text-xs font-sans cursor-pointer rounded-t-md z-10';
+  scrollUpButton.style = 'width: 2rem;height: 2rem;border-bottom: 1px solid;';
   scrollUpButton.addEventListener('click', () => {
-    const conversationTop = document.querySelector('#conversation-top');
+    const conversationTop = document.querySelector('[id^=message-wrapper-]');
     if (!conversationTop) return;
     conversationTop.scrollIntoView({ behavior: 'smooth' });
   });
@@ -151,10 +152,11 @@ function addScrollButtons() {
   const scrollDownButton = document.createElement('button');
   scrollDownButton.id = 'scroll-down-button';
   scrollDownButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 48 48" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M24 4v40M4 24l20 20 20-20"></path></svg>';
-  scrollDownButton.className = 'flex items-center justify-center bg-gray-900 text-gray-200 text-xs font-sans cursor-pointer rounded-b-md z-10';
+  scrollDownButton.className = 'flex items-center justify-center border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 hover:bg-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-900 dark:hover:text-gray-200 text-xs font-sans cursor-pointer rounded-b-md z-10';
   scrollDownButton.style = 'width: 2rem;height: 2rem;';
   scrollDownButton.addEventListener('click', () => {
     const conversationBottom = document.querySelector('#conversation-bottom');
+
     if (!conversationBottom) return;
     conversationBottom.scrollIntoView({ behavior: 'smooth' });
   });
@@ -261,6 +263,9 @@ function showNewChatPage() {
     const { pathname, href, search } = new URL(window.location.toString());
     if (href !== 'https://chat.openai.com') {
       window.history.replaceState({}, '', 'https://chat.openai.com');
+      const inputForm = main.querySelector('form');
+      const textAreaElement = inputForm.querySelector('textarea');
+      textAreaElement.focus();
     }
     toggleTextAreaElemet();
     initializeRegenerateResponseButton();// basically just hide the button, so conversationId is not needed

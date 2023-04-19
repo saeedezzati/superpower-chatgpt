@@ -10,7 +10,14 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
   folderElementWrapper.id = `wrapper-folder-${folderId}`;
   folderElementWrapper.classList = 'flex w-full';
   folderElementWrapper.style = 'flex-wrap: wrap;';
-
+  folderElementWrapper.addEventListener('click', (e) => {
+    // if clicked element is not folder and not folder content,
+    if (!e.srcElement.id.startsWith('folder-') && !e.srcElement.id.startsWith('folder-content-')) {
+      const curFolderId = e.srcElement.id.split('wrapper-folder-')[1];
+      const curFolderElement = document.querySelector(`#folder-${curFolderId}`);
+      curFolderElement.click();
+    }
+  });
   const folderElement = document.createElement('div');
   folderElement.id = `folder-${folderId}`;
   folderElement.classList = 'flex py-3 px-3 pr-3 w-full items-center gap-3 relative rounded-md hover:bg-[#2A2B32] cursor-pointer break-all hover:pr-20 group';
@@ -32,11 +39,12 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
 
   const folderContent = document.createElement('div');
   folderContent.id = `folder-content-${folderId}`;
-  folderContent.classList = 'w-full ml-4 border-l border-gray-500';
+  folderContent.classList = 'w-full border-l border-gray-500';
   folderContent.style.borderColor = folder.color || '#8e8ea0';
   folderContent.style.borderBottomLeftRadius = '6px';
   folderContent.style.marginLeft = '16px';
   folderContent.style.display = folder.isOpen ? 'block' : 'none';
+
   if (folder.conversationIds.length > 0) {
     folder.conversationIds.forEach((conversationId) => {
       const conversation = conversations[conversationId];

@@ -95,9 +95,11 @@ function generalTabContent() {
     if (document.querySelector('html').classList.contains('dark')) {
       document.querySelector('html').classList.replace('dark', 'light');
       document.querySelector('html').style = 'color-scheme: light;';
+      window.localStorage.setItem('theme', 'light');
     } else {
       document.querySelector('html').classList.replace('light', 'dark');
       document.querySelector('html').style = 'color-scheme: dark;';
+      window.localStorage.setItem('theme', 'dark');
     }
   });
   const darkModeSlider = document.createElement('span');

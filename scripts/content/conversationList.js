@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global markdown, initializeNavbar, generateInstructions, generateChat, SSE, formatDate, loadConversation, resetSelection, rowUser, rowAssistant, updateOrCreateConversation, replaceTextAreaElemet, highlight, isGenerating:true, disableTextInput:true, generateTitle, debounce, initializeRegenerateResponseButton, initializeStopGeneratingResponseButton, toggleTextAreaElemet, showNewChatPage, chatStreamIsClosed:true, addCopyCodeButtonsEventListeners, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams */
+/* global markdown, initializeNavbar, generateInstructions, generateChat, SSE, formatDate, loadConversation, resetSelection, katex, texmath, rowUser, rowAssistant, updateOrCreateConversation, replaceTextAreaElemet, highlight, isGenerating:true, disableTextInput:true, generateTitle, debounce, initializeRegenerateResponseButton, initializeStopGeneratingResponseButton, toggleTextAreaElemet, showNewChatPage, chatStreamIsClosed:true, addCopyCodeButtonsEventListeners, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams */
 
 // Initial state
 let userChatIsActuallySaved = false;
@@ -595,19 +595,22 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
 
           const existingRowAssistant = document.querySelector(`[id="message-wrapper-${message.id}"][data-role="assistant"]`);
           if (existingRowAssistant) {
+            if (!scrolUpDetected) {
+              document.querySelector('#conversation-bottom').scrollIntoView();
+            }
             const existingRowAssistantTextWrapper = existingRowAssistant.querySelector(`#message-text-${message.id}`);
             const resultCounter = existingRowAssistant.querySelector(`#result-counter-${message.id}`);
             const searchValue = document.querySelector('#conversation-search')?.value;
             const messageContentParts = searchValue ? highlight(finalMessage.content.parts.join('\n'), searchValue) : finalMessage.content.parts.join('\n');
-            const messageContentPartsHTML = markdown('assistant').render(messageContentParts);
+            const messageContentPartsHTML = markdown('assistant').use(texmath, {
+              engine: katex,
+              delimiters: 'dollars',
+              katexOptions: { macros: { '\\RR': '\\mathbb{R}' } },
+            }).render(messageContentParts);
             const wordCount = messageContentParts.split(/[ /]/).length;
             const charCount = messageContentParts.length;
             existingRowAssistantTextWrapper.innerHTML = `${messageContentPartsHTML}`;
             resultCounter.innerHTML = `${charCount} chars / ${wordCount} words`;
-            const conversationBottom = document.querySelector('#conversation-bottom');
-            if (!scrolUpDetected) {
-              conversationBottom.scrollIntoView();
-            }
           } else {
             const lastMessageWrapper = [...document.querySelectorAll('[id^="message-wrapper-"]')].pop();
             if (lastMessageWrapper?.dataset?.role !== 'assistant') {
@@ -641,9 +644,26 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
       // submitButton.disabled = false;
       submitButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-1" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>';
       const error = JSON.parse(err.data);
-      const errorMessage = typeof error.detail === 'string' ? error.detail : error.detail.message;
+      const errorCode = error?.detail?.code;
+      let errorMessage = typeof error.detail === 'string' ? error.detail : error.detail.message;
+      if (errorCode === 'model_cap_exceeded') {
+        // seconds until cap is cleared
+        const clearsIn = error?.detail?.clears_in;
+        const date = new Date();
+        date.setSeconds(date.getSeconds() + clearsIn);
+        // print expire hour minute from local time
+        const hour = date.getHours();
+        const minute = date.getMinutes();
+        const ampm = hour >= 12 ? 'pm' : 'am';
+        const hour12 = hour % 12;
+        const hour12Display = hour12 || 12;
+        const minuteDisplay = minute < 10 ? `0${minute}` : minute;
+        const capExpiresAt = `${hour12Display}:${minuteDisplay}${ampm}`;
+        // chrome.storage.local.set({ capExpiresAt });
+        errorMessage = `You've reached the current usage cap for this model. You can continue with the default model now, or try again after ${capExpiresAt}.`;
+      }
       const conversationBottom = document.querySelector('#conversation-bottom');
-      const errorMessageElement = `<div class="py-2 px-3 my-2 border text-gray-600 rounded-md text-sm dark:text-gray-100 border-red-500 bg-red-500/10">${errorMessage}</div>`;
+      const errorMessageElement = `<div style="max-width:400px" class="py-2 px-3 my-2 border text-gray-600 rounded-md text-sm dark:text-gray-100 border-red-500 bg-red-500/10">${errorMessage}</div>`;
       conversationBottom.insertAdjacentHTML('beforebegin', errorMessageElement);
       conversationBottom.scrollIntoView({ behavior: 'smooth' });
     });

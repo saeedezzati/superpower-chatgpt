@@ -31,6 +31,7 @@ function generateChat(message, conversationId, messageId, parentMessageId, plugi
       model: res.settings.selectedModel.slug,
       parent_message_id: parentMessageId,
       timezone_offset_min: new Date().getTimezoneOffset(),
+      variant_purpose: 'none',
     };
     if (conversationId) {
       payload.conversation_id = conversationId;
@@ -182,7 +183,7 @@ function getAllConversations(forceRefresh = false) {
       const { conversations, conversationsAreSynced, settings } = res;
       const { autoSync } = settings;
       if (!forceRefresh && conversationsAreSynced && (typeof autoSync === 'undefined' || autoSync)) {
-        const visibleConversation = Object.values(conversations).filter((conversation) => !conversation.archived && !conversation.skipped);
+        const visibleConversation = Object.values(conversations);
         resolve(visibleConversation);
       } else {
         const allConversations = [];

@@ -1,4 +1,4 @@
-/* global markdown, highlight */
+/* global markdown, katex, texmath, highlight */
 // eslint-disable-next-line no-unused-vars
 function rowAssistant(conversation, node, childIndex, childCount, models, searchValue = '') {
   const { pinned, message } = node;
@@ -6,7 +6,11 @@ function rowAssistant(conversation, node, childIndex, childCount, models, search
   const modelSlug = metadata.model_slug;
   const modelTitle = models.find((m) => m.slug === modelSlug)?.title;
   const messageContentParts = highlight(message.content.parts.join('\n'), searchValue);
-  const messageContentPartsHTML = markdown('assistant', searchValue).render(messageContentParts);
+  const messageContentPartsHTML = markdown('assistant', searchValue).use(texmath, {
+    engine: katex,
+    delimiters: 'dollars',
+    katexOptions: { macros: { '\\RR': '\\mathbb{R}' } },
+  }).render(messageContentParts);
   const wordCount = messageContentParts.split(/[ /]/).length;
   const charCount = messageContentParts.length;
   return `<div id="message-wrapper-${id}" data-role="assistant"
@@ -26,15 +30,17 @@ function rowAssistant(conversation, node, childIndex, childCount, models, search
     </div>
     <div class="relative flex w-[calc(100%-50px)] flex-col gap-1 md:gap-3 lg:w-[calc(100%-115px)]">
       <div class="flex flex-grow flex-col gap-3">
-        <div id="message-text-${id}" dir="auto" class="min-h-[20px] flex flex-col items-start whitespace-pre-wrap markdown prose w-full break-words dark:prose-invert dark">
+        <div dir="auto" class="min-h-[20px] flex flex-col items-start whitespace-pre-wra">
+          <div id="message-text-${id}" class="markdown prose w-full break-words dark:prose-invert dark">
             ${messageContentPartsHTML}
+          </div>
           <div id="result-action-wrapper-${id}"
-            style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; color: lightslategray; font-size: 0.7em; width: 100%; height: 40px;">
+            style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; font-size: 0.7em; width: 100%; height: 40px;">
             <div id="result-counter-${id}">${charCount} chars / ${wordCount} words</div>
             <button id="result-copy-button-${id}"
-              class="btn flex justify-center gap-2 btn-neutral border-0 md:border" style="border-radius: 4px; border: 1px solid lightslategray; position: absolute; right: 0px; width: 64px; color: lightslategray; font-size:11px;padding:6px 12px;">Copy</button><div id="copy-result-menu-${id}" style="font-size: 10px; position: absolute; right: 0px; bottom: 49px;display:none;"><button id="result-markdown-copy-button-${id}"
-              class="btn flex justify-center gap-2 btn-neutral border-0 md:border" style="border-radius: 4px; border: 1px solid lightslategray; width: 64px; color: lightslategray; font-size:11px;padding:6px 12px;">Markdown</button><button id="result-html-copy-button-${id}"
-              class="btn flex justify-center gap-2 btn-neutral border-0 md:border" style="border-radius: 4px; border: 1px solid lightslategray; width: 64px; color: lightslategray; font-size:11px;padding:6px 12px;">HTML</button></div>
+              class="btn flex justify-center gap-2 btn-neutral border-0 md:border" style="border-radius: 4px; border: 1px solid lightslategray; position: absolute; right: 0px; width: 64px; font-size:11px;padding:6px 12px;">Copy</button><div id="copy-result-menu-${id}" style="font-size: 10px; position: absolute; right: 0px; bottom: 49px;display:none;"><button id="result-markdown-copy-button-${id}"
+              class="btn flex justify-center gap-2 btn-neutral border-0 md:border" style="border-radius: 4px; border: 1px solid lightslategray; width: 64px; font-size:11px;padding:6px 12px;">Markdown</button><button id="result-html-copy-button-${id}"
+              class="btn flex justify-center gap-2 btn-neutral border-0 md:border" style="border-radius: 4px; border: 1px solid lightslategray; width: 64px; font-size:11px;padding:6px 12px;">HTML</button></div>
           </div>
         </div>
       </div>
