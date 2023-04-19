@@ -31,7 +31,7 @@ https://user-images.githubusercontent.com/574142/232172841-50f1b114-ef47-4533-a6
 
 ## Chat Management for ChatGPT
 
-🗂 Folders and reordering for your chats: Create folders easily and organize your chats in folders. Drag and drop files to reorder them or add/remove them to folders. Drop a file in the Trash to automatically delete it.
+🗂 Folders and reordering for your chats: Create folders easily and organize your chats in folders. Assign a different color to each folder. Drag and drop files to reorder them or add/remove them to folders. Drop a file in the Trash to automatically delete it.
 
 🔁 Auto Sync: Never lose your chats. Automatically sync a copy of all your chats on ChatGPT to your computer
 
