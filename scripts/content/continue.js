@@ -154,6 +154,10 @@ function addContinueButton() {
     if (!textAreaElement) return;
     const textAreaElementWrapper = textAreaElement.parentNode;
     const nodeBeforetTextAreaElement = textAreaElementWrapper.previousSibling;
+    if (nodeBeforetTextAreaElement.classList.length === 0) {
+      nodeBeforetTextAreaElement.classList = nodeBeforetTextAreaElement.firstChild.classList;
+      nodeBeforetTextAreaElement.firstChild.remove();
+    }
     nodeBeforetTextAreaElement.style.minHeight = '38px';
     nodeBeforetTextAreaElement.appendChild(continueButtonWrapper);
   }
