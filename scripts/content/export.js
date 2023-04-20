@@ -516,6 +516,7 @@ function addExportAllButton() {
   const allNavButtons = Array.from(nav.querySelectorAll('a'));
 
   const logoutButton = allNavButtons.find((button) => button.textContent.toLocaleLowerCase() === 'log out');
+  if (!logoutButton) return;
   const navGap = nav.querySelector('div');
 
   // check if the export all button is already added

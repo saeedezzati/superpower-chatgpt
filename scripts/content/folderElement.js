@@ -48,8 +48,10 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
   if (folder.conversationIds.length > 0) {
     folder.conversationIds.forEach((conversationId) => {
       const conversation = conversations[conversationId];
-      const conversationElement = createConversation(conversation, conversationTimestamp);
-      folderContent.appendChild(conversationElement);
+      if (conversation) {
+        const conversationElement = createConversation(conversation, conversationTimestamp);
+        folderContent.appendChild(conversationElement);
+      }
     });
   } else {
     folderContent.appendChild(emptyFolderElement(folderId));

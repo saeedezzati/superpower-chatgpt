@@ -906,6 +906,7 @@ function addSettingsButton() {
   const allNavButtons = Array.from(nav.querySelectorAll('a'));
 
   const logoutButton = allNavButtons.find((button) => button.textContent.toLocaleLowerCase() === 'log out');
+  if (!logoutButton) return;
   // check if the setting button is already added
   if (document.querySelector('#settings-button')) return;
   // create the setting button by copying the nav button

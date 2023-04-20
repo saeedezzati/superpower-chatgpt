@@ -207,6 +207,10 @@ input:checked + .slider:before {
 }
 
 /* announcement */
+#modal-content-newsletter {
+ line-height:28px;
+}
+
 #modal-content-newsletter img,
 #modal-content-general img,
 [id^="modal-content-release-note"] img {
