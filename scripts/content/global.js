@@ -529,7 +529,7 @@ function addButtonToNavFooter(title, onClick) {
   if (!existingNavFooter) {
     navFooter = document.createElement('div');
     navFooter.id = 'nav-footer';
-    navFooter.style = 'margin-top:auto; margin:8px 0;padding-right:8px;width:100%;display:flex; flex-direction:column-reverse;justify-content:flex-start;align-items:center;min-height:108px;';
+    navFooter.style = 'margin:8px 0 0 0;padding-right:8px;width:100%;display:flex; flex-direction:column-reverse;justify-content:flex-start;align-items:center;min-height:108px;';
   }
   const navGap = nav.querySelector('div');
   navGap.style = `${navGap.style.cssText};display:flex;margin-right:-8px;`;
@@ -587,6 +587,8 @@ function addActionWrapperToResult(resultElement, index) {
 }
 function cleanNav() {
   const nav = document.querySelector('nav');
+  const userMenu = nav.lastChild;
+  userMenu.id = 'user-menu';
   if (!nav) return; const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
       if (mutation.type === 'childList') {

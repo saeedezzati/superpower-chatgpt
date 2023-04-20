@@ -513,16 +513,12 @@ function openExportAllModal() {
 function addExportAllButton() {
   const nav = document.querySelector('nav');
   if (!nav) return;
-  const allNavButtons = Array.from(nav.querySelectorAll('a'));
-
-  const logoutButton = allNavButtons.find((button) => button.textContent.toLocaleLowerCase() === 'log out');
-  if (!logoutButton) return;
-  const navGap = nav.querySelector('div');
 
   // check if the export all button is already added
   if (document.querySelector('#export-all-button')) return;
   // create the export all button by copying the nav button
-  const exportAllButton = logoutButton.cloneNode(true);
+  const exportAllButton = document.createElement('a');
+  exportAllButton.classList = 'flex py-3 px-3 items-center gap-3 rounded-md hover:bg-gray-500/10 transition-colors duration-200 text-white cursor-pointer text-sm';
   exportAllButton.id = 'export-all-button';
   chrome.storage.local.get(['selectedConversations'], (result) => {
     const { selectedConversations } = result;
@@ -548,7 +544,8 @@ function addExportAllButton() {
     openExportAllModal();
   });
   // add the export all button immediately after the navgap element
-  nav.insertBefore(exportAllButton, navGap.nextSibling);
+  const userMenu = nav.querySelector('#user-menu');
+  userMenu.prepend(exportAllButton);
 }
 
 // eslint-disable-next-line no-unused-vars

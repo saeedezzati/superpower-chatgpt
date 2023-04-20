@@ -2,16 +2,14 @@
 function replaceDeleteConversationButton() {
   const nav = document.querySelector('nav');
   if (!nav) return;
-  const allNavButtons = Array.from(nav.querySelectorAll('a'));
-  const logoutButton = allNavButtons.find((button) => button.textContent.toLocaleLowerCase() === 'log out');
 
-  if (!logoutButton) return;
-  const deleteConversationsButton = logoutButton.cloneNode(true);
+  const deleteConversationsButton = document.createElement('a');
+  deleteConversationsButton.classList = 'flex py-3 px-3 items-center gap-3 rounded-md hover:bg-gray-500/10 transition-colors duration-200 text-white cursor-pointer text-sm';
   // remove existing
   const existingDeleteConversationsButton = document.getElementById('delete-conversations-button');
   if (existingDeleteConversationsButton) existingDeleteConversationsButton.remove();
-  // insert deleteConversationsButton before logoutButton
-  nav.insertBefore(deleteConversationsButton, logoutButton);
+  const userMenu = nav.querySelector('#user-menu');
+  userMenu.prepend(deleteConversationsButton);
   deleteConversationsButton.id = 'delete-conversations-button';
   chrome.storage.local.get(['selectedConversations'], (result) => {
     let { selectedConversations } = result;

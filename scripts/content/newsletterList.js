@@ -68,14 +68,11 @@ function newsletterListModalActions() {
 function addNewsletterButton() {
   const nav = document.querySelector('nav');
   if (!nav) return;
-  const allNavButtons = Array.from(nav.querySelectorAll('a'));
-
-  const logoutButton = allNavButtons.find((button) => button.textContent.toLocaleLowerCase() === 'log out');
-  if (!logoutButton) return;
   // check if the setting button is already added
   if (document.querySelector('#newsletter-button')) return;
   // create the setting button by copying the nav button
-  const newsletterButton = logoutButton.cloneNode(true);
+  const newsletterButton = document.createElement('a');
+  newsletterButton.classList = 'flex py-3 px-3 items-center gap-3 rounded-md hover:bg-gray-500/10 transition-colors duration-200 text-white cursor-pointer text-sm';
   newsletterButton.textContent = 'Newsletter Archive';
 
   const newsletterButtonIcon = document.createElement('img');
@@ -89,8 +86,8 @@ function addNewsletterButton() {
     // open the setting modal
     createNewsletterListModal();
   });
-  // add the setting button right before the logout button
-  nav.insertBefore(newsletterButton, logoutButton);
+  const userMenu = nav.querySelector('#user-menu');
+  userMenu.prepend(newsletterButton);
 }
 // eslint-disable-next-line no-unused-vars
 function initializeNewsletter() {

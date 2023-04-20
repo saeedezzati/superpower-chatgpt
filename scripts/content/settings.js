@@ -903,14 +903,12 @@ function settingsModalActions() {
 function addSettingsButton() {
   const nav = document.querySelector('nav');
   if (!nav) return;
-  const allNavButtons = Array.from(nav.querySelectorAll('a'));
 
-  const logoutButton = allNavButtons.find((button) => button.textContent.toLocaleLowerCase() === 'log out');
-  if (!logoutButton) return;
   // check if the setting button is already added
   if (document.querySelector('#settings-button')) return;
   // create the setting button by copying the nav button
-  const settingsButton = logoutButton.cloneNode(true);
+  const settingsButton = document.createElement('a');
+  settingsButton.classList = 'flex py-3 px-3 items-center gap-3 rounded-md hover:bg-gray-500/10 transition-colors duration-200 text-white cursor-pointer text-sm';
   settingsButton.textContent = 'Settings';
 
   const settingsButtonIcon = document.createElement('img');
@@ -924,8 +922,8 @@ function addSettingsButton() {
     // open the setting modal
     createSettingsModal();
   });
-  // add the setting button right before the logout button
-  nav.insertBefore(settingsButton, logoutButton);
+  const userMenu = nav.querySelector('#user-menu');
+  userMenu.prepend(settingsButton);
 }
 // eslint-disable-next-line no-unused-vars
 function initializeSettings() {
