@@ -1,4 +1,4 @@
-/* global getAccount, getModels, getConversationLimit, initializeStorage, cleanNav, initializeContinue, initializeExport, initializeSettings, initializePromptHistory, initializePromptLibrary, initializeNewsletter, initializeAutoSave, addNavToggleButton, initializeAnnouncement, initializeReleaseNote, initializeReplaceDeleteConversationButton, initializeCopyAndCounter, initializeAddToPromptLibrary, initializeTimestamp, updateNewChatButtonNotSynced, addAsyncInputEvents, initializeContentMessageListeners, addScrollButtons, registerShortkeys, addDevIndicator */
+/* global getAccount, getModels, getConversationLimit, initializeStorage, cleanNav, initializeContinue, initializeExport, initializeSettings, initializePromptHistory, initializePromptLibrary, initializeNewsletter, initializeAutoSave, addNavToggleButton, initializeAnnouncement, initializeReleaseNote, initializeReplaceDeleteConversationButton, initializeCopyAndCounter, initializeAddToPromptLibrary, initializeTimestamp, updateNewChatButtonNotSynced, addAsyncInputEvents, initializeContentMessageListeners, registerShortkeys, addDevIndicator */
 
 // eslint-disable-next-line no-unused-vars
 function initialize() {
@@ -11,7 +11,6 @@ function initialize() {
       getAccount();
       getModels();
       getConversationLimit();
-      addScrollButtons();
       addNavToggleButton();
       initializeContentMessageListeners();
       cleanNav();

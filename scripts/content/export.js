@@ -563,7 +563,7 @@ function initializeExport() {
       addExportButton();
     }, 100);
   });
-  observer.observe(main, { childList: true, subtree: true });
+  observer.observe(main.parentElement.parentElement, { childList: true, subtree: true });
 
   addExportAllButton();
   // add event listener to dark mode button

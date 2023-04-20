@@ -306,12 +306,12 @@ function initializeAddToPromptLibrary() {
   const main = document.querySelector('main');
   if (!main) return;
   const contentWrapper = main.firstChild;
-  const scrllableArea = contentWrapper.firstChild;
-  // make scrllableArea scroll behavior smooth
-  scrllableArea.style.scrollBehavior = 'smooth';
+  const scrollableArea = contentWrapper.firstChild;
+  // make scrollableArea scroll behavior smooth
+  scrollableArea.style.scrollBehavior = 'smooth';
   selectedCategories = [];
   const observer = new MutationObserver(() => {
     addSubmitButtonToAllUserInputs();
   });
-  observer.observe(contentWrapper, { childList: true, subtree: true });
+  observer.observe(main.parentElement.parentElement, { childList: true, subtree: true });
 }

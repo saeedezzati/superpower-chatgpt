@@ -155,8 +155,8 @@ function addContinueButton() {
     const textAreaElementWrapper = textAreaElement.parentNode;
     const nodeBeforetTextAreaElement = textAreaElementWrapper.previousSibling;
     if (nodeBeforetTextAreaElement.classList.length === 0) {
-      nodeBeforetTextAreaElement.classList = nodeBeforetTextAreaElement.firstChild.classList;
-      nodeBeforetTextAreaElement.firstChild.remove();
+      nodeBeforetTextAreaElement.classList = 'h-full flex ml-1 md:w-full md:m-auto md:mb-2 gap-0 md:gap-2 justify-center';
+      nodeBeforetTextAreaElement.firstChild.classList = '';
     }
     nodeBeforetTextAreaElement.style.minHeight = '38px';
     nodeBeforetTextAreaElement.appendChild(continueButtonWrapper);
@@ -181,5 +181,5 @@ function initializeContinue() {
   const observer = new MutationObserver(() => {
     addContinueButton();
   });
-  observer.observe(main, { childList: true, subtree: true });
+  observer.observe(main.parentElement.parentElement, { childList: true, subtree: true });
 }

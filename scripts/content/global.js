@@ -133,11 +133,13 @@ function addScrollDetector(element) {
   }, false);
 }
 function addScrollButtons() {
+  const existingScrollButtonWrapper = document.getElementById('scroll-button-wrapper');
+  if (existingScrollButtonWrapper) existingScrollButtonWrapper.remove();
+
   const scrollButtonWrapper = document.createElement('div');
   scrollButtonWrapper.id = 'scroll-button-wrapper';
   scrollButtonWrapper.className = 'absolute flex items-center justify-center bg-gray-100 dark:bg-gray-600 text-gray-200 text-xs font-sans cursor-pointer rounded-md z-10';
   scrollButtonWrapper.style = 'bottom: 6rem;right: 3rem;width: 2rem;height: 4rem;flex-wrap:wrap;';
-
   const scrollUpButton = document.createElement('button');
   scrollUpButton.id = 'scroll-up-button';
   scrollUpButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 48 48" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M24 44V4m20 20L24 4 4 24"></path></svg>';
