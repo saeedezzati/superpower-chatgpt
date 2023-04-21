@@ -93,17 +93,8 @@
       ]
     }
   ],
-  "browser_specific_settings": {
-    "gecko": {
-      "id": "cjiggdeafkdppmdmlcdpfigbalcgbkpg@fancydino.com"
-    }
-  },
-  
   "background": {
-    "scripts": [
-      "scripts/background/initialize.js",
-      "scripts/background/login.js"
-    ]
+    "service_worker": "scripts/background/background.js"
   },
   "web_accessible_resources": [
     {
