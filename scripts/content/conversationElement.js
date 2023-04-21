@@ -164,7 +164,7 @@ function confirmActions(conversation, action) {
       deleteConversation(conversation.id).then((data) => {
         if (data.success) {
           syncLocalConversation(conversation.id, 'archived', true);
-          chrome.storage.local.get(['conversationsOrder'], (res) => {
+          chrome.storage.sync.get(['conversationsOrder'], (res) => {
             const { conversationsOrder } = res;
             const trashFolder = conversationsOrder.find((folder) => folder.id === 'trash');
 
@@ -209,7 +209,7 @@ function confirmActions(conversation, action) {
               conversationsOrder.find((folder) => folder.id === 'trash').conversationIds.unshift(conversation.id);
             }
             // update conversationsOrder
-            chrome.storage.local.set({
+            chrome.storage.sync.set({
               conversationsOrder,
             });
           });

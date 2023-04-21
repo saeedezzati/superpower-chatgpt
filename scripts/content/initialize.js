@@ -6,36 +6,39 @@ function initialize() {
 
   if (!historyButton) {
     setTimeout(() => {
-      initializeStorage();
-      registerShortkeys();
-      getAccount();
-      getModels();
-      getConversationLimit();
-      addNavToggleButton();
-      initializeContentMessageListeners();
-      cleanNav();
-      initializeContinue();
-      initializeNewsletter();
-      initializeExport();
-      initializeSettings();
-      initializeAnnouncement();
-      initializeReleaseNote();
-      initializePromptLibrary();
-      initializePromptHistory();
-      addDevIndicator();
-      chrome.storage.local.get(['settings'], (result) => {
-        const { settings } = result;
-        if (typeof settings?.autoSync === 'undefined' || settings?.autoSync) {
-          initializeAutoSave();
-        } else {
-          initializeCopyAndCounter();
-          initializeAddToPromptLibrary();
-          initializeTimestamp();
-          updateNewChatButtonNotSynced();
-          addAsyncInputEvents();
-        }
-        initializeReplaceDeleteConversationButton();
-      });
+      initializeStorage().then(() => {
+        registerShortkeys();
+        getAccount();
+        getModels();
+        getConversationLimit();
+        addNavToggleButton();
+        initializeContentMessageListeners();
+        cleanNav();
+        initializeContinue();
+        initializeNewsletter();
+        initializeExport();
+        initializeSettings();
+        initializeAnnouncement();
+        initializeReleaseNote();
+        initializePromptLibrary();
+        initializePromptHistory();
+        addDevIndicator();
+        setTimeout(() => {
+          chrome.storage.local.get(['settings'], (result) => {
+            const { settings } = result;
+            if (typeof settings?.autoSync === 'undefined' || settings?.autoSync) {
+              initializeAutoSave();
+            } else {
+              initializeCopyAndCounter();
+              initializeAddToPromptLibrary();
+              initializeTimestamp();
+              updateNewChatButtonNotSynced();
+              addAsyncInputEvents();
+            }
+            initializeReplaceDeleteConversationButton();
+          });
+        });
+      }, 100);
     }, 100);
   }
 }

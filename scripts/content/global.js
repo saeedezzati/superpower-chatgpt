@@ -46,30 +46,38 @@ function initializeStorage() {
   //   const allKeys = Object.keys(items);
   //   console.log('local', items);
   // });
-  chrome.storage.local.get(['selectedConversations', 'customModels'], (result) => {
-    chrome.storage.local.set({
-      selectedConversations: result.selectedConversations || [],
-      customModels: result.customModels || [],
-      unofficialModels: [
-        {
-          title: 'gpt-4-0314',
-          description: 'Previous snapshot of the GPT-4. The March 14th snapshot will be available until June 14th.',
-          slug: 'gpt-4-0314',
-          tags: ['Unofficial'],
-        },
-        {
-          title: 'gpt-4-32k',
-          description: 'GPT-4 with 32k token limit.',
-          slug: 'gpt-4-32k',
-          tags: ['Unofficial'],
-        },
-        {
-          title: 'gpt-4-32k-0314',
-          description: 'Previous snapshot of the GPT-4-32k. The March 14th snapshot will be available until June 14th.',
-          slug: 'gpt-4-32k-0314',
-          tags: ['Unofficial'],
-        },
-      ],
+  return chrome.storage.sync.get(['conversationsOrder']).then((res) => {
+    const syncConversationsOrder = res.conversationsOrder || [];
+    return chrome.storage.local.get(['selectedConversations', 'conversationsOrder', 'customModels']).then((result) => {
+      const localConversationsOrder = result.conversationsOrder || [];
+      return chrome.storage.sync.set({
+        conversationsOrder: [...new Set([...syncConversationsOrder, ...localConversationsOrder])],
+      }).then(() => chrome.storage.local.remove(['conversationsOrder']).then(() => {
+        chrome.storage.local.set({
+          selectedConversations: result.selectedConversations || [],
+          customModels: result.customModels || [],
+          unofficialModels: [
+            {
+              title: 'gpt-4-0314',
+              description: 'Previous snapshot of the GPT-4. The March 14th snapshot will be available until June 14th.',
+              slug: 'gpt-4-0314',
+              tags: ['Unofficial'],
+            },
+            {
+              title: 'gpt-4-32k',
+              description: 'GPT-4 with 32k token limit.',
+              slug: 'gpt-4-32k',
+              tags: ['Unofficial'],
+            },
+            {
+              title: 'gpt-4-32k-0314',
+              description: 'Previous snapshot of the GPT-4-32k. The March 14th snapshot will be available until June 14th.',
+              slug: 'gpt-4-32k-0314',
+              tags: ['Unofficial'],
+            },
+          ],
+        });
+      }));
     });
   });
 }
@@ -480,10 +488,14 @@ function registerShortkeys() {
     }
     // esc
     if (e.keyCode === 27) {
-      const stopGeneratingResponseButton = document.querySelector('#stop-generating-response-button');
-      if (stopGeneratingResponseButton) {
-        e.preventDefault();
-        stopGeneratingResponseButton.click();
+      if (document.querySelector('[id^=modal-close-button-]')) {
+        document.querySelector('[id^=modal-close-button-]').click();
+      } else {
+        const stopGeneratingResponseButton = document.querySelector('#stop-generating-response-button');
+        if (stopGeneratingResponseButton) {
+          e.preventDefault();
+          stopGeneratingResponseButton.click();
+        }
       }
     }
     // alt + n
@@ -498,6 +510,22 @@ function registerShortkeys() {
     // end key
     if (e.keyCode === 35) {
       document.querySelector('#scroll-down-button').click();
+    }
+    // cm/ctrl + shift + s
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.keyCode === 83) {
+      if (!document.querySelector('#modal-settings')) {
+        // open settings
+        e.preventDefault();
+        document.querySelector('#settings-button')?.click();
+      }
+    }
+    // cm/ctrl + shift + l
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.keyCode === 76) {
+      if (!document.querySelector('#modal-newsletter-archive')) {
+        // open newsletter
+        e.preventDefault();
+        document.querySelector('#newsletter-button')?.click();
+      }
     }
   });
 }
@@ -587,9 +615,10 @@ function addActionWrapperToResult(resultElement, index) {
 }
 function cleanNav() {
   const nav = document.querySelector('nav');
+  if (!nav) return;
   const userMenu = nav.lastChild;
   userMenu.id = 'user-menu';
-  if (!nav) return; const observer = new MutationObserver((mutations) => {
+  const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
       if (mutation.type === 'childList') {
         removeUnusedButtons();
