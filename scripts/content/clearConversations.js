@@ -51,6 +51,7 @@ function replaceDeleteConversationButton() {
                 chrome.storage.local.set({
                   conversations: newConversations,
                   selectedConversations: [],
+                  lastSelectedConversation: null,
                 });
                 // remove all children of conversationlist
                 const conversationList = document.querySelector('#conversation-list');
@@ -146,6 +147,7 @@ function replaceDeleteConversationButton() {
               const newValues = {
                 conversations: newConversations,
                 selectedConversations: [],
+                lastSelectedConversation: null,
               };
               // update conversationsOrder
               for (let i = 0; i < successfullyDeletedConvIds.length; i += 1) {

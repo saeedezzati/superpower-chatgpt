@@ -1,4 +1,4 @@
-/* global getAllConversations, formatDate */
+/* global getAllConversations, formatDate, shiftKeyPressed: true */
 function showAllCheckboxes() {
   const nav = document.querySelector('nav');
   if (!nav) return;
@@ -43,7 +43,7 @@ function resetSelection() {
       const { selectedConversations } = result;
       exportAllButton.innerHTML = exportAllButton.innerHTML.replace(`Export ${selectedConversations.length} Selected`, 'Export All');
       deleteConversationButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>Delete All';
-      chrome.storage.local.set({ selectedConversations: [] });
+      chrome.storage.local.set({ selectedConversations: [], lastSelectedConversation: null });
     });
   }
 
@@ -87,10 +87,14 @@ function updateTimestamp(conversationList) {
           // add checkbox
           const checkboxWrapper = document.createElement('div');
           checkboxWrapper.style = 'position: absolute; top: 0px; left: 0px; z-index:10; display:none;cursor: pointer;width:40px;height: 100%;';
+          checkboxWrapper.id = `checkbox-wrapper-${conversation.id}`;
           checkboxWrapper.addEventListener('click', (event) => {
             event.stopPropagation();
             const checkbox = button.querySelector('#checkbox');
             if (!checkbox) return;
+            if (event.shiftKey) {
+              shiftKeyPressed = true;
+            }
             checkbox.click();
           });
           button.appendChild(checkboxWrapper);
@@ -111,8 +115,86 @@ function updateTimestamp(conversationList) {
 
           checkbox.addEventListener('click', (event) => {
             event.stopPropagation();
-          });
+            chrome.storage.local.get(['lastSelectedConversation', 'selectedConversations'], (res) => {
+              const { lastSelectedConversation, selectedConversations } = res;
+              if (!event.target.checked) {
+                const newSelectedConversations = selectedConversations.filter((conv) => conv.id !== conversation.id);
+                chrome.storage.local.set({ selectedConversations: newSelectedConversations }, () => {
+                  if (newSelectedConversations.length === 0) {
+                    hideAllButLastCheckboxes(conversation.id);
+                  }
+                  updateButtonsAfterSelection(selectedConversations, newSelectedConversations);
+                });
+              }
+              if (event.target.checked && ((!event.shiftKey && !shiftKeyPressed) || selectedConversations.length === 0)) {
+                const newSelectedConversations = [...selectedConversations, conversation];
 
+                chrome.storage.local.set({
+                  selectedConversations: newSelectedConversations,
+                  lastSelectedConversation: conversation,
+                }, () => {
+                  if (newSelectedConversations.length === 1) {
+                    showAllCheckboxes();
+                  }
+                  updateButtonsAfterSelection(selectedConversations, newSelectedConversations);
+                });
+              }
+              if (event.target.checked && (event.shiftKey || shiftKeyPressed) && selectedConversations.length > 0) {
+                shiftKeyPressed = false;
+                const newSelectedConversations = [...selectedConversations, conversation];
+                const conversationsOrder = Array.from(conversationList.querySelectorAll('[id^=checkbox-wrapper-]')).map((c) => c.id.split('checkbox-wrapper-')[1]);
+
+                if (lastSelectedConversation) {
+                  // find last conversation index in conversationsOrder
+                  let lastConversationIndex = conversationsOrder.findIndex((c) => c === lastSelectedConversation.id);
+                  let newConversationIndex = conversationsOrder.findIndex((c) => c === conversation.id);
+
+                  if (lastConversationIndex === -1 || newConversationIndex === -1) {
+                    const folderConatainingLastConversation = conversationsOrder.find((f) => f.conversationIds?.find((cid) => cid === lastSelectedConversation.id));
+
+                    const folderConatainingNewConversation = conversationsOrder.find((f) => f.conversationIds?.find((cid) => cid === conversation.id));
+
+                    if (folderConatainingLastConversation?.id === folderConatainingNewConversation?.id) {
+                      lastConversationIndex = folderConatainingLastConversation?.conversationIds?.findIndex((cid) => cid === lastSelectedConversation.id);
+                      newConversationIndex = folderConatainingNewConversation?.conversationIds?.findIndex((cid) => cid === conversation.id);
+                      const conversationsToSelect = folderConatainingLastConversation.conversationIds.slice(Math.min(lastConversationIndex, newConversationIndex) + 1, Math.max(lastConversationIndex, newConversationIndex)).filter((f) => typeof f === 'string');
+
+                      // click on the new conversation to select it
+                      conversationsToSelect.forEach((cid) => {
+                        if (!selectedConversations.map((conv) => conv.id).includes(cid)) {
+                          newSelectedConversations.push(conversations[cid]);
+                        }
+                        const convElement = document.querySelector(`#checkbox-wrapper-${cid}`);
+
+                        if (convElement && !convElement.querySelector('#checkbox').checked) {
+                          convElement.querySelector('#checkbox').checked = true;
+                        }
+                      });
+                      chrome.storage.local.set({ selectedConversations: newSelectedConversations });
+                    }
+                  } else {
+                    // select all conversations between the last selected and the current one
+                    const conversationsToSelect = conversationsOrder.slice(Math.min(lastConversationIndex, newConversationIndex) + 1, Math.max(lastConversationIndex, newConversationIndex)).filter((f) => typeof f === 'string');
+
+                    // click on the new conversation to select it
+                    conversationsToSelect.forEach((cid) => {
+                      if (!selectedConversations.map((conv) => conv.id).includes(cid)) {
+                        newSelectedConversations.push(conversations[cid]);
+                      }
+                      const convElement = document.querySelector(`#checkbox-wrapper-${cid}`);
+
+                      if (convElement && !convElement.querySelector('#checkbox').checked) {
+                        convElement.querySelector('#checkbox').checked = true;
+                      }
+                    });
+                    chrome.storage.local.set({ selectedConversations: newSelectedConversations });
+                  }
+                  updateButtonsAfterSelection(selectedConversations, newSelectedConversations);
+                }
+                chrome.storage.local.set({ lastSelectedConversation: conversation });
+              }
+            });
+          });
           // const svg = button.querySelector('svg');
           // if (svg) {
           //   button.insertBefore(checkbox, svg);
@@ -128,76 +210,42 @@ function updateTimestamp(conversationList) {
               }
             });
           });
-          checkbox.addEventListener('change', () => {
-            chrome.storage.local.get(['selectedConversations'], (res) => {
-              const { selectedConversations } = res;
-              let newSelectedConversations = selectedConversations;
-              const nav = document.querySelector('nav');
-              const newChatButton = nav.querySelector('a');
-              if (checkbox.checked) {
-                newSelectedConversations = [...selectedConversations, conversation];
-                chrome.storage.local.set({ selectedConversations: newSelectedConversations });
-                if (newSelectedConversations.length === 1) {
-                  showAllCheckboxes();
-                }
-                // chenge export all to export selected
-                const exportAllButton = document.querySelector('#export-all-button');
-                if (exportAllButton) {
-                  // keep export all icon, but change the text
-                  if (newSelectedConversations.length === 1) {
-                    exportAllButton.innerHTML = exportAllButton.innerHTML.replace('Export All', `Export ${newSelectedConversations.length} Selected`);
-                  } else {
-                    exportAllButton.innerHTML = exportAllButton.innerHTML.replace(`Export ${newSelectedConversations.length - 1} Selected`, `Export ${newSelectedConversations.length} Selected`);
-                  }
-                }
-                const deleteConversationsButton = document.querySelector('#delete-conversations-button');
-                if (deleteConversationsButton) {
-                  // keep export all icon, but change the text
-                  if (newSelectedConversations.length === 1) {
-                    deleteConversationsButton.innerHTML = deleteConversationsButton.innerHTML.replace('Delete All', `Delete ${newSelectedConversations.length} Selected`);
-                  } else {
-                    deleteConversationsButton.innerHTML = deleteConversationsButton.innerHTML.replace(`Delete ${newSelectedConversations.length - 1} Selected`, `Delete ${newSelectedConversations.length} Selected`);
-                  }
-                }
-              } else {
-                newSelectedConversations = selectedConversations.filter((conv) => conv.id !== conversation.id);
-                chrome.storage.local.set({ selectedConversations: newSelectedConversations });
-                if (newSelectedConversations.length === 0) {
-                  hideAllButLastCheckboxes(conversation.id);
-                }
-                // chenge export selected to export all
-                const exportAllButton = document.querySelector('#export-all-button');
-                if (exportAllButton) {
-                  if (newSelectedConversations.length === 0) {
-                    exportAllButton.innerHTML = exportAllButton.innerHTML.replace('Export 1 Selected', 'Export All');
-                  } else {
-                    exportAllButton.innerHTML = exportAllButton.innerHTML.replace(`Export ${newSelectedConversations.length + 1} Selected`, `Export ${newSelectedConversations.length} Selected`);
-                  }
-                }
-                const deleteConversationsButton = document.querySelector('#delete-conversations-button');
-                if (deleteConversationsButton) {
-                  if (newSelectedConversations.length === 0) {
-                    deleteConversationsButton.innerHTML = deleteConversationsButton.innerHTML.replace('Delete 1 Selected', 'Delete All');
-                  } else {
-                    deleteConversationsButton.innerHTML = deleteConversationsButton.innerHTML.replace(`Delete ${newSelectedConversations.length + 1} Selected`, `Delete ${newSelectedConversations.length} Selected`);
-                  }
-                }
-              }
-              if (newSelectedConversations.length > 0) {
-                // show an x svg followed by clear selection
-                newChatButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>Clear selection';
-              } else {
-                // show a plus svg followed by new chat
-                newChatButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>New chat';
-              }
-            });
-          });
         }
       });
     }, () => {
       // console.error(error);
     });
   });
+}
+function updateButtonsAfterSelection(selectedConversations, newSelectedConversations) {
+  const nav = document.querySelector('nav');
+  const newChatButton = nav.querySelector('a');
+  // chenge export all to export selected
+  const exportAllButton = document.querySelector('#export-all-button');
+  if (exportAllButton) {
+    // keep export all icon, but change the text
+    if (newSelectedConversations.length === 1) {
+      exportAllButton.innerHTML = exportAllButton.innerHTML.replace('Export All', `Export ${newSelectedConversations.length} Selected`);
+    } else {
+      exportAllButton.innerHTML = exportAllButton.innerHTML.replace(`Export ${selectedConversations.length} Selected`, `Export ${newSelectedConversations.length} Selected`);
+    }
+  }
+  const deleteConversationsButton = document.querySelector('#delete-conversations-button');
+  if (deleteConversationsButton) {
+    // keep export all icon, but change the text
+    if (newSelectedConversations.length === 1) {
+      deleteConversationsButton.innerHTML = deleteConversationsButton.innerHTML.replace('Delete All', `Delete ${newSelectedConversations.length} Selected`);
+    } else {
+      deleteConversationsButton.innerHTML = deleteConversationsButton.innerHTML.replace(`Delete ${selectedConversations.length} Selected`, `Delete ${newSelectedConversations.length} Selected`);
+    }
+  }
+  if (newSelectedConversations.length > 0) {
+    // show an x svg followed by clear selection
+    newChatButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>Clear selection';
+  } else {
+    // show a plus svg followed by new chat
+    newChatButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>New chat';
+  }
 }
 function addTimestamp() {
   const nav = document.querySelector('nav');

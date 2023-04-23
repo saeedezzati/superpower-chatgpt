@@ -4,52 +4,6 @@
 
 // Initial state
 let userChatIsActuallySaved = false;
-function addExpandButton() {
-  const nav = document.querySelector('nav');
-  if (nav) {
-    nav.style.overflow = 'hidden';
-  }
-  const originalExpandButton = document.querySelector('#expand-sidebar-bottom-button');
-  if (originalExpandButton) originalExpandButton.remove();
-  const conversationListParent = document.querySelector('#conversation-list').parentElement;
-  conversationListParent.style.transition = 'all 1s ease-in-out';
-  conversationListParent.style.position = 'relative';
-  const expandButton = document.createElement('button');
-  expandButton.id = 'expand-sidebar-bottom-button';
-  expandButton.classList = 'flex items-center justify-center w-10 h-4 relative rounded-md bg-gray-800 hover:bg-gray-700 ';
-  expandButton.style = 'bottom:-8px;margin:auto';
-  chrome.storage.local.get(['settings'], (result) => {
-    const { settings } = result;
-    const { hideBottomSidebar } = settings;
-    if (!hideBottomSidebar) {
-      expandButton.innerHTML = '<svg class="w-4 h-4 text-gray-100" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>';
-    } else {
-      expandButton.innerHTML = '<svg class="w-4 h-4 text-gray-100" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>';
-      conversationListParent.style.minHeight = 'calc(100vh - 98px)';
-      conversationListParent.style.maxHeight = 'calc(100vh - 98px)';
-    }
-  });
-  expandButton.addEventListener('click', () => {
-    chrome.storage.local.get(['settings'], (result) => {
-      const { settings } = result;
-      const { hideBottomSidebar } = settings;
-      chrome.storage.local.set({ settings: { ...settings, hideBottomSidebar: !hideBottomSidebar } }, () => {
-        const curConversationListParent = document.querySelector('#conversation-list').parentElement;
-        if (!hideBottomSidebar) {
-          curConversationListParent.style.minHeight = 'calc(100vh - 98px)';
-          curConversationListParent.style.maxHeight = 'calc(100vh - 98px)';
-          expandButton.innerHTML = '<svg class="w-4 h-4 text-gray-100" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>';
-        } else {
-          curConversationListParent.style.minHeight = 'unset';
-          curConversationListParent.style.maxHeight = 'unset';
-          expandButton.innerHTML = '<svg class="w-4 h-4 text-gray-100" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>';
-        }
-      });
-    });
-  });
-  // add expandButton after conversationListParent
-  conversationListParent.after(expandButton);
-}
 function removeOriginalConversationList() {
   const nav = document.querySelector('nav');
   const navGap = nav.querySelector('div');
@@ -63,7 +17,6 @@ function removeOriginalConversationList() {
   if (existingConversationList) {
     existingConversationList.remove();
     navGap.prepend(newConversationList);
-    addExpandButton();
     // eslint-disable-next-line no-unused-vars
     const sortable = new Sortable(newConversationList, {
       group: {

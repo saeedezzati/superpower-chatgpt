@@ -99,8 +99,14 @@ function loadConversationFromNode(conversationId, newMessageId, oldMessageId, se
 function loadConversation(conversationId, searchValue = '', focusOnInput = true) {
   // chatStreamIsClosed = true;
   scrolUpDetected = false;
-  chrome.storage.sync.get(['name', 'avatar'], (result) => {
+  chrome.storage.sync.get(['name', 'avatar', 'conversationsOrder'], (result) => {
     chrome.storage.local.get(['conversations', 'settings', 'models'], (res) => {
+      const { conversationsOrder } = result;
+      const folderConatainingConversation = conversationsOrder.find((folder) => folder?.conversationIds?.includes(conversationId));
+      let folderName = '';
+      if (folderConatainingConversation) {
+        folderName = folderConatainingConversation.name;
+      }
       const fullConversation = res.conversations?.[conversationId];
       // set page title meta to fullConversation.title
       document.title = fullConversation.title;
@@ -137,7 +143,7 @@ function loadConversation(conversationId, searchValue = '', focusOnInput = true)
       }
       sortedNodes.reverse();
       //--------
-      let messageDiv = `<div id="conversation-top" class="w-full flex items-center justify-center border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group bg-gray-50 dark:bg-[#444654]" style="min-height:56px;z-index:1;">${fullConversation.title}</div>`;
+      let messageDiv = `<div id="conversation-top" class="w-full flex items-center justify-center border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group bg-gray-50 dark:bg-[#444654]" style="min-height:56px;z-index:1;"><strong>${folderName ? `${folderName}  &nbsp;&nbsp;&nbsp;›` : ''}</strong>&nbsp;&nbsp;&nbsp;${fullConversation.title}</div>`;
       if (fullConversation.archived) {
         messageDiv = '<div id="conversation-top"></div><div style="display: flex; align-items: center; justify-content: center; min-height: 56px; width: 100%; color:white; background-color: #ff0000; position: sticky; top: 0;z-index:1;">This is an archived chat. You can read archived chats, but you cannot continue them.</div>';
       }
