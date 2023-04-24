@@ -2,7 +2,7 @@
 function showAllCheckboxes() {
   const nav = document.querySelector('nav');
   if (!nav) return;
-  const navGap = nav.querySelector('div');
+  const navGap = document.querySelector('nav > :nth-child(3)');
   const conversationList = navGap.querySelector('div');
   const chatButtons = conversationList.querySelectorAll('a');
   chatButtons.forEach((button) => {
@@ -16,7 +16,7 @@ function showAllCheckboxes() {
 function hideAllButLastCheckboxes(lastCheckboxId) {
   const nav = document.querySelector('nav');
   if (!nav) return;
-  const navGap = nav.querySelector('div');
+  const navGap = document.querySelector('nav > :nth-child(3)');
   const conversationList = navGap.querySelector('div');
   const chatButtons = conversationList.querySelectorAll('a');
   chatButtons.forEach((button) => {
@@ -47,7 +47,7 @@ function resetSelection() {
     });
   }
 
-  const navGap = nav.querySelector('div');
+  const navGap = document.querySelector('nav > :nth-child(3)');
   const conversationList = navGap.querySelector('div');
   const chatButtons = conversationList.querySelectorAll('a');
   chatButtons.forEach((button) => {
@@ -250,7 +250,7 @@ function updateButtonsAfterSelection(selectedConversations, newSelectedConversat
 function addTimestamp() {
   const nav = document.querySelector('nav');
   if (!nav) return;
-  const navGap = nav.querySelector('div');
+  const navGap = document.querySelector('nav > :nth-child(3)');
   const conversationList = navGap.querySelector('div');
   updateTimestamp(conversationList);
   const observer = new MutationObserver(() => {

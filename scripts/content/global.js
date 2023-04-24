@@ -569,7 +569,7 @@ function addButtonToNavFooter(title, onClick) {
     navFooter.id = 'nav-footer';
     navFooter.style = 'margin:8px 0 0 0;padding-right:8px;width:100%;display:flex; flex-direction:column-reverse;justify-content:flex-start;align-items:center;min-height:108px;';
   }
-  const navGap = nav.querySelector('div');
+  const navGap = document.querySelector('nav > :nth-child(3)');
   navGap.style = `${navGap.style.cssText};display:flex;margin-right:-8px;`;
   const conversationList = navGap.querySelector('div');
   conversationList.id = 'conversation-list';

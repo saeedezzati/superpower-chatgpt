@@ -5,8 +5,7 @@
 // Initial state
 let userChatIsActuallySaved = false;
 function removeOriginalConversationList() {
-  const nav = document.querySelector('nav');
-  const navGap = nav.querySelector('div');
+  const navGap = document.querySelector('nav > :nth-child(3)');
   navGap.style = `${navGap.style.cssText};display:flex;margin-right:-8px;`;
   const existingConversationList = navGap.querySelector('div');
   const newConversationList = document.createElement('div');
