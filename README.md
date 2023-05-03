@@ -47,7 +47,9 @@ https://user-images.githubusercontent.com/574142/232172841-50f1b114-ef47-4533-a6
 
 🕰️ Timestamps: Timestamps for all chats on ChatGPT. Easily switch between "last updated" and "created" time
 
-🔻More sidebar space: Easily minimize the bottom section of the sidebar for more space to see your conversation list
+🔻 More sidebar space: Easily minimize the bottom section of the sidebar for more space to see your conversation list
+
+🕵️‍♀️ Incognito Mode: Chat with History Off and continue it later
 
 ## Prompt Management for ChatGPT
 
