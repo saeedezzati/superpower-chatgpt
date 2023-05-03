@@ -267,8 +267,9 @@ function showNewChatPage() {
       c.classList = notSelectedClassList;
     });
     const main = document.querySelector('main');
-    main.firstChild.innerHTML = newChatPage(planName);
-    addExamplePromptEventListener();
+    main.firstChild.innerHTML = '';
+    main.firstChild.appendChild(newChatPage(planName));
+    // addExamplePromptEventListener();
     const pinNav = document.querySelector('#pin-nav');
     if (pinNav) {
       pinNav.remove();
@@ -501,8 +502,8 @@ function registerShortkeys() {
         }
       }
     }
-    // alt + n
-    if (e.altKey && e.keyCode === 78) {
+    // alt + shift + n
+    if (e.altKey && e.shiftKey && e.keyCode === 78) {
       e.preventDefault();
       showNewChatPage();
     }
@@ -561,7 +562,6 @@ function formatDate(date) {
 function addButtonToNavFooter(title, onClick) {
   const nav = document.querySelector('nav');
   if (!nav) return;
-  const newChatButton = nav.querySelector('a');
   const existingNavFooter = document.querySelector('#nav-footer');
   let navFooter = existingNavFooter;
   if (!existingNavFooter) {
@@ -580,7 +580,8 @@ function addButtonToNavFooter(title, onClick) {
   // check if the setting button is already added
   if (document.querySelector(`#${title.toLowerCase().replaceAll(' ', '-')}-button`)) return;
   // create the setting button by copying the nav button
-  const button = newChatButton.cloneNode(true);
+  const button = document.createElement('a');
+  button.classList = 'flex py-3 px-3 items-center gap-3 transition-colors duration-200 text-white cursor-pointer text-sm rounded-md border border-white/20 hover:bg-gray-500/10 mb-1 flex-shrink-0';
   button.textContent = title;
 
   const buttonIcon = document.createElement('img');
@@ -747,7 +748,8 @@ function updateNewChatButtonNotSynced() {
     const inputForm = main.querySelector('form');
     const textAreaElement = inputForm.querySelector('textarea');
     const nav = document.querySelector('nav');
-    const newChatButton = nav.querySelector('a');
+    const newChatButton = nav?.querySelector('a');
+    newChatButton.classList = 'flex py-3 px-3 items-center gap-3 transition-colors duration-200 text-white cursor-pointer text-sm rounded-md border border-white/20 hover:bg-gray-500/10 mb-1 flex-shrink-0';
     newChatButton.id = 'new-chat-button';
     newChatButton.addEventListener('click', () => {
       resetSelection();

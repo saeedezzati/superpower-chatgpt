@@ -3,7 +3,7 @@
 /* global formatDate, showAllCheckboxes, hideAllButLastCheckboxes, deleteConversation, renameConversation, loadConversation, highlight, showNewChatPage, createSearchBox, emptyFolderElement, shiftKeyPressed:true */
 
 const notSelectedClassList = 'flex py-3 px-3 pr-3 w-full items-center gap-3 relative rounded-md hover:bg-[#2A2B32] cursor-pointer break-all hover:pr-14 group';
-const selectedClassList = 'flex py-3 px-3 pr-3 w-full items-center gap-3 relative rounded-md cursor-pointer break-all hover:pr-14 bg-gray-800 hover:bg-gray-800 group selected';
+const selectedClassList = 'flex py-3 px-3 pr-3 w-full items-center gap-3 relative rounded-md cursor-pointer break-all hover:pr-14 bg-gray-800 hover:bg-gray-800 group selected border-l border-green-500';
 
 function getConversationElementClassList(conversation) {
   const { pathname } = new URL(window.location.toString());
@@ -51,8 +51,10 @@ function createConversation(conversation, conversationTimestamp = false, searchV
   conversationElementIcon.classList = 'w-4 h-4';
   if (conversation.archived) {
     conversationElementIcon.src = chrome.runtime.getURL('icons/trash.png');
-  } else {
+  } else if (conversation.saveHistory) {
     conversationElementIcon.src = chrome.runtime.getURL('icons/bubble.png');
+  } else {
+    conversationElementIcon.src = chrome.runtime.getURL('icons/bubble-purple.png');
   }
   conversationElement.appendChild(conversationElementIcon);
   const conversationTitle = document.createElement('div');
@@ -295,6 +297,7 @@ function addCheckboxToConversationElement(conversationElement, conversation) {
       event.stopPropagation();
       chrome.storage.local.get(['lastSelectedConversation', 'conversations', 'selectedConversations'], (res) => {
         const { lastSelectedConversation, selectedConversations, conversations } = res;
+        // uncheck
         if (!event.target.checked) {
           const newSelectedConversations = selectedConversations.filter((conv) => conv.id !== conversation.id);
           chrome.storage.local.set({ selectedConversations: newSelectedConversations }, () => {
@@ -304,6 +307,7 @@ function addCheckboxToConversationElement(conversationElement, conversation) {
             updateButtonsAfterSelection(selectedConversations, newSelectedConversations);
           });
         }
+        // single check
         if (event.target.checked && ((!event.shiftKey && !shiftKeyPressed) || selectedConversations.length === 0)) {
           const newSelectedConversations = [...selectedConversations, conversation];
 
@@ -317,6 +321,7 @@ function addCheckboxToConversationElement(conversationElement, conversation) {
             updateButtonsAfterSelection(selectedConversations, newSelectedConversations);
           });
         }
+        // shift check
         if (event.target.checked && (event.shiftKey || shiftKeyPressed) && selectedConversations.length > 0) {
           shiftKeyPressed = false;
           const newSelectedConversations = [...selectedConversations, conversation];
@@ -389,27 +394,19 @@ function addCheckboxToConversationElement(conversationElement, conversation) {
     });
   });
 }
-function updateButtonsAfterSelection(selectedConversations, newSelectedConversations) {
+function updateButtonsAfterSelection(previousSelectedConversations, newSelectedConversations) {
+  const previousText = previousSelectedConversations.length === 0 ? 'All' : `${previousSelectedConversations.length} Selected`;
+  const newText = newSelectedConversations.length === 0 ? 'All' : `${newSelectedConversations.length} Selected`;
   const nav = document.querySelector('nav');
-  const newChatButton = nav.querySelector('a');
+  const newChatButton = nav?.querySelector('a');
   // chenge export all to export selected
   const exportAllButton = document.querySelector('#export-all-button');
   if (exportAllButton) {
-    // keep export all icon, but change the text
-    if (newSelectedConversations.length === 1) {
-      exportAllButton.innerHTML = exportAllButton.innerHTML.replace('Export All', `Export ${newSelectedConversations.length} Selected`);
-    } else {
-      exportAllButton.innerHTML = exportAllButton.innerHTML.replace(`Export ${selectedConversations.length} Selected`, `Export ${newSelectedConversations.length} Selected`);
-    }
+    exportAllButton.innerHTML = exportAllButton.innerHTML.replace(`Export ${previousText}`, `Export ${newText}`);
   }
   const deleteConversationsButton = document.querySelector('#delete-conversations-button');
   if (deleteConversationsButton) {
-    // keep export all icon, but change the text
-    if (newSelectedConversations.length === 1) {
-      deleteConversationsButton.innerHTML = deleteConversationsButton.innerHTML.replace('Delete All', `Delete ${newSelectedConversations.length} Selected`);
-    } else {
-      deleteConversationsButton.innerHTML = deleteConversationsButton.innerHTML.replace(`Delete ${selectedConversations.length} Selected`, `Delete ${newSelectedConversations.length} Selected`);
-    }
+    deleteConversationsButton.innerHTML = deleteConversationsButton.innerHTML.replace(`Delete ${previousText}`, `Delete ${newText}`);
   }
   if (newSelectedConversations.length > 0) {
     // show an x svg followed by clear selection

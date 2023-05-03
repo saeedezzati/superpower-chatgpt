@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Superpower ChatGPT",
-  "version": "3.1.1",
+  "version": "3.1.3",
   "description": "ChatGPT with superpowers! Sync/search history locally, create folders, export all chats, pin messages, access thousands of prompts",
   "icons": {
     "16": "images/icon-16.png",

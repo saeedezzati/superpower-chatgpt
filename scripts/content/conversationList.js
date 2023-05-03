@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global markdown, initializeNavbar, generateInstructions, generateChat, SSE, formatDate, loadConversation, resetSelection, katex, texmath, rowUser, rowAssistant, updateOrCreateConversation, replaceTextAreaElemet, highlight, isGenerating:true, disableTextInput:true, generateTitle, debounce, initializeRegenerateResponseButton, initializeStopGeneratingResponseButton, toggleTextAreaElemet, showNewChatPage, chatStreamIsClosed:true, addCopyCodeButtonsEventListeners, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams, addScrollButtons */
+/* global markdown, initializeNavbar, generateInstructions, generateChat, SSE, formatDate, loadConversation, resetSelection, katex, texmath, rowUser, rowAssistant, updateOrCreateConversation, replaceTextAreaElemet, highlight, isGenerating:true, disableTextInput:true, generateTitle, debounce, initializeRegenerateResponseButton, initializeStopGeneratingResponseButton, toggleTextAreaElemet, showNewChatPage, chatStreamIsClosed:true, addCopyCodeButtonsEventListeners, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams, addScrollButtons, updateTotalCounter */
 
 // Initial state
 let userChatIsActuallySaved = false;
@@ -253,8 +253,10 @@ function prependConversation(conversation) {
   conversationElementIcon.classList = 'w-4 h-4';
   if (conversation.archived) {
     conversationElementIcon.src = chrome.runtime.getURL('icons/trash.png');
-  } else {
+  } else if (conversation.saveHistory) {
     conversationElementIcon.src = chrome.runtime.getURL('icons/bubble.png');
+  } else {
+    conversationElementIcon.src = chrome.runtime.getURL('icons/bubble-purple.png');
   }
   conversationElement.appendChild(conversationElementIcon);
   const conversationTitle = document.createElement('div');
@@ -373,7 +375,8 @@ function updateNewChatButtonSynced() {
     const inputForm = main.querySelector('form');
     const textAreaElement = inputForm.querySelector('textarea');
     const nav = document.querySelector('nav');
-    const newChatButton = nav.querySelector('a');
+    const newChatButton = nav?.querySelector('a');
+    newChatButton.classList = 'flex py-3 px-3 items-center gap-3 transition-colors duration-200 text-white cursor-pointer text-sm rounded-md border border-white/20 hover:bg-gray-500/10 mb-1 flex-shrink-0';
     // clone newChatButton
     if (conversationsAreSynced) {
       const newChatButtonClone = newChatButton.cloneNode(true);
@@ -420,7 +423,8 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
   if (syncDiv) syncDiv.style.opacity = '0.3';
   if (!regenerateResponse) initializeRegenerateResponseButton();
   chatStreamIsClosed = false;
-  generateChat(userInput, conversation?.id, messageId, parentId).then((chatStream) => {
+  const saveHistory = conversation?.id ? conversation.saveHistory : settings.saveHistory;
+  generateChat(userInput, conversation?.id, messageId, parentId, saveHistory).then((chatStream) => {
     userChatIsActuallySaved = regenerateResponse;
     let userChatSavedLocally = regenerateResponse; // false by default unless regenerateResponse is true
     let assistantChatSavedLocally = false;
@@ -457,6 +461,7 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
         toggleTextAreaElemet();
         initializeStopGeneratingResponseButton();
         initializeRegenerateResponseButton();
+        updateTotalCounter();
       } else if (e.event === 'ping') {
         // console.error('PING RECEIVED', e);
       } else {
@@ -692,6 +697,13 @@ function overrideSubmitForm() {
           bottomDiv.id = 'conversation-bottom';
           bottomDiv.classList = 'w-full h-32 md:h-48 flex-shrink-0';
           conversationDiv.appendChild(bottomDiv);
+          const bottomDivContent = document.createElement('div');
+          bottomDivContent.classList = 'relative text-base gap-4 md:gap-6 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl flex lg:px-0';
+          bottomDiv.appendChild(bottomDivContent);
+          const totalCounter = document.createElement('div');
+          totalCounter.id = 'total-counter';
+          totalCounter.style = 'position: absolute; top: 0px; right: 0px; font-size: 10px; color: rgb(153, 153, 153); opacity: 0.8; z-index: 100;';
+          bottomDivContent.appendChild(totalCounter);
 
           innerDiv.appendChild(conversationDiv);
           outerDiv.appendChild(innerDiv);

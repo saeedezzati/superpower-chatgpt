@@ -22,10 +22,10 @@ function createModal(title, subtitle, modalBodyContent, modalActionBarContent, a
 
   const modalTitle = document.createElement('div');
   modalTitle.style = 'font-size: 1.5em; font-weight: 600; color: lightslategray;';
-  modalTitle.textContent = title;
+  modalTitle.innerHTML = title;
   const modalSubtitle = document.createElement('div');
   modalSubtitle.style = 'font-size: 0.7em; font-weight:200; margin:2px 0; color: lightslategray';
-  modalSubtitle.textContent = subtitle;
+  modalSubtitle.innerHTML = subtitle;
   modalHeaderLeft.appendChild(modalTitle);
   modalHeaderLeft.appendChild(modalSubtitle);
 

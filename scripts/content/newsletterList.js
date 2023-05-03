@@ -4,7 +4,7 @@
 function createNewsletterListModal(version) {
   const bodyContent = newsletterListModalContent(version);
   const actionsBarContent = newsletterListModalActions();
-  createModal('Newsletter Archive', 'You can find all of our previous newsletters here', bodyContent, actionsBarContent);
+  createModal('Newsletter Archive', 'You can find all of our previous newsletters here (<a href="https://superpowerdaily.com" target="_blank" rel="noopener noreferrer" style="color:gold;">Read Online</a>)', bodyContent, actionsBarContent);
 }
 
 function newsletterListModalContent() {

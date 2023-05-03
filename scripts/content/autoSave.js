@@ -131,7 +131,9 @@ function updateOrCreateConversation(conversationId, message, parentId, settings,
           addConversationsEventListeners(existingConversation.id);
           const mapping = Object.values(existingConversation.mapping);
           if (generateTitle && existingConversation.title === 'New chat' && mapping.length < 5 && mapping.filter((m) => m.message?.author.role === 'assistant').length === 1) { // only one assistant message
-            generateTitleForConversation(existingConversation.id, message.id);
+            if (settings.saveHistory) {
+              generateTitleForConversation(existingConversation.id, message.id);
+            }
           } else if (settings.conversationTimestamp) { // === updated
             // move cnversationelemnt after searchbox
             const conversationElement = document.querySelector(`#conversation-button-${conversationId}`);
@@ -157,6 +159,7 @@ function updateOrCreateConversation(conversationId, message, parentId, settings,
         id: conversationId,
         shouldRefresh: false,
         archived: false,
+        saveHistory: settings.saveHistory,
         languageCode: settings.selectedLanguage.code,
         toneCode: settings.selectedTone.code,
         writingStyleCode: settings.selectedWritingStyle.code,
@@ -231,7 +234,7 @@ function addProgressBar() {
   nav.appendChild(syncDiv);
 }
 function checkConversationAreSynced(localConvs, remoteConvs) {
-  return Object.values(localConvs).filter((conv) => !conv.archived).length === remoteConvs.length;
+  return Object.values(localConvs).filter((conv) => !conv.archived && conv.saveHistory).length === remoteConvs.length;
 }
 // eslint-disable-next-line no-unused-vars
 function refreshConversations(conversations) {
@@ -281,7 +284,9 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
             const visibleAndRefreshedLocalConvIds = Object.keys(localConversations).filter((id) => !localConversations[id].archived && !localConversations[id].shouldRefresh);
 
             for (let i = 0; i < localConvIds.length; i += 1) {
-              localConversations[localConvIds[i]].title = remoteConversations.find((conv) => conv.id === localConvIds[i])?.title || localConversations[localConvIds[i]].title;
+              const remoteConv = remoteConversations.find((conv) => conv.id === localConvIds[i]) || localConversations[localConvIds[i]];
+              localConversations[localConvIds[i]].title = remoteConv.title;
+              localConversations[localConvIds[i]].update_time = remoteConv.update_time;
               // delete conversation key(legacy)
               const localConv = localConversations[localConvIds[i]];
               if ('conversation' in localConv) {
@@ -302,8 +307,11 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
               if (typeof localConversations[localConvIds[i]].archived === 'undefined') {
                 localConversations[localConvIds[i]].archived = false;
               }
+              if (localConv.saveHistory === undefined) {
+                localConv.saveHistory = true;
+              }
               // archive deleted conversations
-              if (localConv.id && !remoteConvIds.includes(localConv.id)) {
+              if (localConv.id && localConv.saveHistory && !remoteConvIds.includes(localConv.id)) {
                 localConversations[localConvIds[i]].archived = true;
                 // check conversations
                 if (newConversationsOrder.indexOf(localConv.id) !== -1) {
@@ -370,7 +378,7 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
                   const progressLabel = document.getElementById('sync-progresslabel');
                   if (progressLabel) {
                     // eslint-disable-next-line no-loop-func
-                    progressLabel.innerText = `Syncing(${Object.keys(localConversations).filter((id) => !localConversations[id].archived).length}/${remoteConvIds.length})`;
+                    progressLabel.innerText = `Syncing(${Object.keys(localConversations).filter((id) => !localConversations[id].archived && localConversations[id].saveHistory).length}/${remoteConvIds.length})`;
                   }
                   await countDownAsync(isPaid);
                 }

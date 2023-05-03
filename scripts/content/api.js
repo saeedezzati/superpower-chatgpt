@@ -12,7 +12,7 @@ chrome.storage.local.get(['environment'], (result) => {
 const defaultHeaders = {
   'content-type': 'application/json',
 };
-function generateChat(message, conversationId, messageId, parentMessageId, pluginIds = []) {
+function generateChat(message, conversationId, messageId, parentMessageId, saveHistory = true, role = 'user', pluginIds = []) {
   return chrome.storage.local.get(['settings']).then((res) => chrome.storage.sync.get(['auth_token']).then((result) => {
     const payload = {
       action: 'next',
@@ -20,7 +20,7 @@ function generateChat(message, conversationId, messageId, parentMessageId, plugi
         ? [
           {
             id: messageId,
-            author: { role: 'user' },
+            author: { role },
             content: {
               content_type: 'text',
               parts: [message],
@@ -33,6 +33,9 @@ function generateChat(message, conversationId, messageId, parentMessageId, plugi
       timezone_offset_min: new Date().getTimezoneOffset(),
       variant_purpose: 'none',
     };
+    if (!saveHistory) {
+      payload.history_and_training_disabled = true;
+    }
     if (conversationId) {
       payload.conversation_id = conversationId;
     }
@@ -340,19 +343,25 @@ function renameConversation(conversationId, title) {
   }).then((res) => res.json()));
 }
 function deleteConversation(conversationId) {
-  return chrome.storage.sync.get(['auth_token']).then((result) => fetch(`https://chat.openai.com/backend-api/conversation/${conversationId}`, {
-    method: 'PATCH',
-    headers: {
-      ...defaultHeaders,
-      Authorization: result.auth_token,
-    },
-    body: JSON.stringify({ is_visible: false }),
-  }).then((res) => {
-    if (res.ok) {
-      return res.json();
+  return chrome.storage.local.get(['conversations']).then((localRes) => {
+    const { conversations } = localRes;
+    if (!conversations[conversationId].saveHistory) {
+      return { success: true };
     }
-    return Promise.reject(res);
-  }));
+    return chrome.storage.sync.get(['auth_token']).then((result) => fetch(`https://chat.openai.com/backend-api/conversation/${conversationId}`, {
+      method: 'PATCH',
+      headers: {
+        ...defaultHeaders,
+        Authorization: result.auth_token,
+      },
+      body: JSON.stringify({ is_visible: false }),
+    }).then((res) => {
+      if (res.ok) {
+        return res.json();
+      }
+      return Promise.reject(res);
+    }));
+  });
 }
 function deleteAllConversations() {
   return chrome.storage.sync.get(['auth_token']).then((result) => fetch('https://chat.openai.com/backend-api/conversations', {

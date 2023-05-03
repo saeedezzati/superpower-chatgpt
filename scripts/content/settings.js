@@ -728,9 +728,9 @@ function newsletterTabContent() {
   const dailyNewsletterSwitch = createSwitch('Hide daily newsletter', 'Automatically hide the daily newsletter popup.', 'hideNewsletter', false);
   content.appendChild(dailyNewsletterSwitch);
 
-  const sendNewsletterToEmailSwitch = createSwitch('Email newsletter', 'Send the Superpower ChatGPT daily newsletter to my email', 'emailNewsletter', false, updateEmailNewsletter, 'Coming soon');
+  // const sendNewsletterToEmailSwitch = createSwitch('Email newsletter', 'Send the Superpower ChatGPT daily newsletter to my email', 'emailNewsletter', false, updateEmailNewsletter, 'Coming soon');
 
-  content.appendChild(sendNewsletterToEmailSwitch);
+  // content.appendChild(sendNewsletterToEmailSwitch);
   return content;
 }
 function createSwitch(title, subtitle, settingsKey, defaultValue, callback = null, tag = '', disabled = false) {
@@ -738,7 +738,7 @@ function createSwitch(title, subtitle, settingsKey, defaultValue, callback = nul
   switchWrapper.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start; width: 100%; margin: 8px 0;';
   const switchElement = document.createElement('div');
   switchElement.style = `display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0;color:white; ${disabled ? 'opacity: 0.5;' : ''}`;
-  switchElement.textContent = title;
+  switchElement.innerHTML = title;
   const label = document.createElement('label');
   label.className = 'switch';
   const input = document.createElement('input');
@@ -750,7 +750,7 @@ function createSwitch(title, subtitle, settingsKey, defaultValue, callback = nul
   betaTag.textContent = tag;
   const helper = document.createElement('div');
   helper.style = 'font-size: 12px; color: #999;';
-  helper.textContent = subtitle;
+  helper.innerHTML = subtitle;
   if (settingsKey) {
     chrome.storage.local.get('settings', ({ settings }) => {
       const settingValue = settings[settingsKey];
@@ -952,6 +952,7 @@ function initializeSettings() {
         copyMode: result.settings?.copyMode !== undefined ? result.settings.copyMode : false,
         hideBottomSidebar: result.settings?.hideBottomSidebar !== undefined ? result.settings.hideBottomSidebar : false,
         hideNewsletter: result.settings?.hideNewsletter !== undefined ? result.settings.hideNewsletter : false,
+        saveHistory: result.settings?.saveHistory !== undefined ? result.settings.saveHistory : true,
         emailNewsletter: result.settings?.emailNewsletter !== undefined ? result.settings.emailNewsletter : false,
         showGpt4Counter: result.settings?.showGpt4Counter !== undefined ? result.settings.showGpt4Counter : true,
         conversationTimestamp: result.settings?.conversationTimestamp !== undefined ? result.settings.conversationTimestamp : false,

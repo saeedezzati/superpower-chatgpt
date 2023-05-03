@@ -5,7 +5,7 @@ let interval;
 let timeout;
 function getSingelConversation(conversationId, title) {
   getConversation(conversationId).then((conversation) => {
-    const conversationTitle = conversation.title.replaceAll('"', '');
+    const conversationTitle = conversation.title.replace(/[^a-zA-Z0-9]/g, '_');
     const createDate = new Date(conversation.create_time * 1000);
     const filePrefix = `${createDate.getHours()}-${createDate.getMinutes()}-${createDate.getSeconds()}`;
 
@@ -240,7 +240,7 @@ function exportAllConversations(exportFormat) {
         return;
       }
       await getConversation(conversationId).then((conversation) => {
-        const conversationTitle = conversation.title.replace('"', '');
+        const conversationTitle = conversation.title.replace(/[^a-zA-Z0-9]/g, '_');
         let currentNode = conversation.current_node;
         const createDate = new Date(conversation.create_time * 1000);
         //  folderName = conversation.create_time in local time in the format of YYYY-MM-DD

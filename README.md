@@ -93,9 +93,19 @@ https://user-images.githubusercontent.com/574142/232172841-50f1b114-ef47-4533-a6
 
 ## Newsletter inside ChatGPT
 
+
 📰 AI Newsletter: Read our popular daily AI newsletter right inside ChatGPT
 
 🗄️ Newsletter Archive: Access the newsletter archive and read all the previous versions
+
+---
+## Superpower Daily Newsletter
+
+We have a popular newsletter that covers the latest AI news, research, and products. There are two ways to read the newsletter:
+
+1. You can read the newsletter right inside ChatGPT. You can also access the newsletter archive and read all the previous versions.
+
+2. You can read the newsletter, see the full archive, and share it with your friends all from our website: https://superpowerdaily.com
 
 ---
 
@@ -161,7 +171,7 @@ Join our [Discord channel](https://discord.gg/Ma9VpTSct2) to stay up to date, su
 
 ## Privacy
 
-The only data from the users that are saved on the server are the public prompt shared by the community. The user name and email are also saved as the minimum requirement to share your prompts. Everything else, including your prompt history, your conversation history, etc., is saved locally on your computer, and you have full control over it. The Auto Sync feature basically downloads a copy of all your conversation to your computer to allow more features, such as searching conversations and folders. This extension does not save any of your conversations on our database, and I have no visibility into your conversations history.
+The only data from the users that are saved on the server are the public prompt shared by the community. The user name and email are also saved. By using this extension, you agree to join our daily AI newsletter. You can opt out of the newsletter at any time. You can see the newsletter here (https://www.superpowerdaily.com/) before you agree to this. Everything else, including your prompt history, your conversation history, etc., is saved locally on your computer, and you have full control over it. The Auto Sync feature basically download a copy of all your conversation on your own computer to allow more features, such as searching conversations. This extension does not save any of your conversations on our database, and I have no visibility into your conversations history.
 
 ## How can I support the development of Superpower ChatGPT?
 
