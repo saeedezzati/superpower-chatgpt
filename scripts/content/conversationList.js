@@ -773,8 +773,8 @@ function setBackButtonDetection() {
 
 // eslint-disable-next-line no-unused-vars
 function loadConversationList(skipInputFormReload = false) {
-  chrome.storage.sync.get(['conversationsOrder'], async (res) => {
-    chrome.storage.local.get(['conversations', 'conversationsAreSynced', 'settings'], async (result) => {
+  chrome.storage.sync.get(['conversationsOrder'], (res) => {
+    chrome.storage.local.get(['conversations', 'conversationsAreSynced', 'settings'], (result) => {
       if (result.conversationsAreSynced && typeof result.conversations !== 'undefined') {
         updateNewChatButtonSynced();
         if (!skipInputFormReload) initializeNavbar();

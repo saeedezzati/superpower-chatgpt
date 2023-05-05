@@ -1,5 +1,5 @@
 /* global allAsistantChats, TurndownService, addActionWrapperToResult */
-const copyRichText = async (element) => {
+const copyRichText = (element) => {
   let content = element.cloneNode(true);
   // remove all div with id=code-header from content
   const codeHeader = content.querySelectorAll('#code-header');
