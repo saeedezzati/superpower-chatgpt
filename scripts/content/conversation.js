@@ -174,8 +174,8 @@ function loadConversation(conversationId, searchValue = '', focusOnInput = true)
       bottomDivContent.appendChild(totalCounter);
       innerDiv.appendChild(conversationDiv);
       outerDiv.appendChild(innerDiv);
-
-      main.firstChild.remove();
+      const contentWrapper = main.querySelector('.flex-1.overflow-hidden');
+      contentWrapper.remove();
       main.prepend(outerDiv);
       if (!searchValue) {
         if (focusOnInput) {

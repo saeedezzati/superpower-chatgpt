@@ -1,9 +1,9 @@
-<img width="100%" alt="Superpower ChatGPT" src="https://user-images.githubusercontent.com/574142/232174790-a91d7d76-ec48-40ef-97ce-76edaa52053a.png">
+<img width="100%" alt="Superpower plugin for ChatGPT" src="https://user-images.githubusercontent.com/574142/232174790-a91d7d76-ec48-40ef-97ce-76edaa52053a.png">
 
 [link-chrome]: https://chrome.google.com/webstore/detail/superpower-chatgpt/amhmeenmapldpjdedekalnfifgnpfnkc "Chrome Web Store"
 [link-firefox]: https://addons.mozilla.org/en-US/firefox/addon/superpower-chatgpt "Firefox Addons"
 
-# Superpower ChatGPT ⚡️
+# Superpower plugin for ChatGPT ⚡️
 
 A browser extension to add the missing features like **Folders**, **Search**, and **Community Prompts** to ChatGPT
 
@@ -165,7 +165,7 @@ with
 
 ## FAQ
 
-Read our [FAQ document](https://ezi.notion.site/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24) for more information about Superpower ChatGPT
+Read our [FAQ document](https://ezi.notion.site/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24) for more information about Superpower plugin for ChatGPT
 
 ## Feature Requests, Bugs, and Support
 
@@ -175,9 +175,9 @@ Join our [Discord channel](https://discord.gg/Ma9VpTSct2) to stay up to date, su
 
 The only data from the users that are saved on the server are the public prompt shared by the community. The user name and email are also saved. By using this extension, you agree to join our daily AI newsletter. You can opt out of the newsletter at any time. You can see the newsletter here (https://www.superpowerdaily.com/) before you agree to this. Everything else, including your prompt history, your conversation history, etc., is saved locally on your computer, and you have full control over it. The Auto Sync feature basically download a copy of all your conversation on your own computer to allow more features, such as searching conversations. This extension does not save any of your conversations on our database, and I have no visibility into your conversations history.
 
-## How can I support the development of Superpower ChatGPT?
+## How can I support the development of Superpower plugin for ChatGPT?
 
-I appreciate your interest in supporting this extension. Here are some ways you can support the development of Superpower ChatGPT.
+I appreciate your interest in supporting this extension. Here are some ways you can support the development of Superpower plugin for ChatGPT.
 
  [![Donate with PayPal](https://img.shields.io/badge/paypal-donate-yellow.svg)](https://www.paypal.com/donate/?business=TAF9NBUWQQQ7J&no_recurring=0&item_name=Thank+you+for+supporting+Superpower+ChatGPT+%F0%9F%99%87%F0%9F%8F%BB%E2%80%8D%E2%99%82%EF%B8%8F&currency_code=USD)
 [![Donate with Stripe](https://img.shields.io/badge/stripe-donate-blue.svg)](https://buy.stripe.com/6oE6s0dQS7y2bjG9AA)
@@ -189,7 +189,7 @@ I appreciate your interest in supporting this extension. Here are some ways you 
 
 
 ## Copyright
-Superpower ChatGPT
+Superpower plugin for ChatGPT
 
 Copyright (C) 2023 Fancy Dino
 

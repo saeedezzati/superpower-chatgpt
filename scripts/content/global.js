@@ -267,8 +267,10 @@ function showNewChatPage() {
       c.classList = notSelectedClassList;
     });
     const main = document.querySelector('main');
-    main.firstChild.innerHTML = '';
-    main.firstChild.appendChild(newChatPage(planName));
+    // div with class flex-1 overflow-hidden
+    const contentWrapper = main.querySelector('.flex-1.overflow-hidden');
+    contentWrapper.innerHTML = '';
+    contentWrapper.appendChild(newChatPage(planName));
     // addExamplePromptEventListener();
     const pinNav = document.querySelector('#pin-nav');
     if (pinNav) {

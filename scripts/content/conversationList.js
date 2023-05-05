@@ -101,7 +101,7 @@ function createSearchBox() {
     searchbox.id = 'conversation-search';
     searchbox.tabIndex = 0;
     searchbox.placeholder = 'Search conversations';
-    searchbox.classList = 'w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800 conversation-search';
+    searchbox.classList = 'w-full px-4 py-2 mr-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800 conversation-search';
     searchbox.addEventListener('keydown', (event) => {
       if (event.key === 'ArrowDown') {
         // chatStreamIsClosed = true;
@@ -170,7 +170,7 @@ function createSearchBox() {
 
     const newFolderButton = document.createElement('button');
     newFolderButton.id = 'new-folder-button';
-    newFolderButton.classList = 'w-12 h-full flex items-center justify-center ml-2 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800 border border-gray-800';
+    newFolderButton.classList = 'w-12 h-full flex items-center justify-center rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800 border border-gray-800';
     const newFoolderIcon = document.createElement('img');
     newFoolderIcon.classList = 'w-5 h-5';
     newFoolderIcon.src = chrome.runtime.getURL('icons/new-folder.png');
@@ -680,7 +680,8 @@ function overrideSubmitForm() {
           const lastMessage = allMessages[allMessages.length - 1];
           const parentId = lastMessage?.id?.split('message-wrapper-')[1] || self.crypto.randomUUID();
           // remove main first child
-          main.removeChild(main.firstChild);
+          const contentWrapper = main.querySelector('.flex-1.overflow-hidden');
+          main.removeChild(contentWrapper);
 
           const outerDiv = document.createElement('div');
           outerDiv.classList = 'flex-1 overflow-hidden';

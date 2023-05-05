@@ -305,7 +305,7 @@ function initializeAddToPromptLibrary() {
   addSubmitButtonToAllUserInputs();
   const main = document.querySelector('main');
   if (!main) return;
-  const contentWrapper = main.firstChild;
+  const contentWrapper = main.querySelector('.flex-1.overflow-hidden');
   const scrollableArea = contentWrapper.firstChild;
   // make scrollableArea scroll behavior smooth
   scrollableArea.style.scrollBehavior = 'smooth';
