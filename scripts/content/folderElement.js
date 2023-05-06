@@ -47,7 +47,7 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
 
   if (folder.conversationIds.length > 0) {
     folder.conversationIds.forEach((conversationId) => {
-      const conversation = conversations[conversationId];
+      const conversation = Object.values(conversations).find((c) => c.id?.slice(0, 5) === conversationId);
       if (conversation) {
         const conversationElement = createConversation(conversation, conversationTimestamp);
         folderContent.appendChild(conversationElement);
@@ -115,13 +115,13 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
           if (curEmptyFolder) curEmptyFolder.remove();
           const toFolderIndex = conversationsOrder.findIndex((c) => c.id === toId);
           const toFolder = conversationsOrder[toFolderIndex];
-          toFolder.conversationIds.splice(newDraggableIndex, 0, itemId);
+          toFolder.conversationIds.splice(newDraggableIndex, 0, itemId?.slice(0, 5));
           conversationsOrder.splice(toFolderIndex, 1, toFolder);
           if (!isFolder && toId === 'trash' && fromId !== 'trash') {
             deleteConversationOnDragToTrash(itemId);
           }
         } else {
-          conversationsOrder.splice(newIndex - 1, 0, itemId); // if adding to conversation list use index-1(for search box)
+          conversationsOrder.splice(newIndex - 1, 0, itemId?.slice(0, 5)); // if adding to conversation list use index-1(for search box)
         }
 
         chrome.storage.sync.set({ conversationsOrder });
@@ -409,10 +409,11 @@ function deleteFolder(folder) {
       const promises = [];
 
       for (let i = 0; i < selectedConversationIds.length; i += 1) {
-        promises.push(deleteConversation(selectedConversationIds[i]).then((data) => {
+        const conv = Object.values(conversations).find((c) => c.id?.slice(0, 5) === selectedConversationIds[i]);
+        promises.push(deleteConversation(conv.id).then((data) => {
           if (data.success) {
-            successfullyDeletedConvIds.push(selectedConversationIds[i]);
-            const conversationElement = document.querySelector(`#conversation-button-${selectedConversationIds[i]}`);
+            successfullyDeletedConvIds.push(conv.id);
+            const conversationElement = document.querySelector(`#conversation-button-${conv.id}`);
             if (conversationElement && conversationElement.classList.contains('selected')) {
               showNewChatPage();
             }

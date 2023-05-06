@@ -103,7 +103,7 @@ function loadConversation(conversationId, searchValue = '', focusOnInput = true)
   chrome.storage.sync.get(['name', 'avatar', 'conversationsOrder'], (result) => {
     chrome.storage.local.get(['conversations', 'settings', 'models'], (res) => {
       const { conversationsOrder } = result;
-      const folderConatainingConversation = conversationsOrder.find((folder) => folder?.conversationIds?.includes(conversationId));
+      const folderConatainingConversation = conversationsOrder.find((folder) => folder?.conversationIds?.includes(conversationId?.slice(0, 5)));
       let folderName = '';
       if (folderConatainingConversation) {
         folderName = folderConatainingConversation.name;

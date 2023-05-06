@@ -74,13 +74,13 @@ function replaceDeleteConversationButton() {
                   }
                   // update conversationsOrder
                   const convId = conversationElement.id.split('conversation-button-')[1];
-                  if (trashFolder && !trashFolder.conversationIds.includes(convId)) {
-                    trashFolder.conversationIds.unshift(convId);
+                  if (trashFolder && !trashFolder.conversationIds.includes(convId?.slice(0, 5))) {
+                    trashFolder.conversationIds.unshift(convId?.slice(0, 5));
                   }
                 });
-                conversationList.querySelectorAll('[id^=wrapper-folder-]').forEach((folder) => {
-                  if (folder.id !== 'wrapper-folder-trash') {
-                    folder.remove();
+                conversationList.querySelectorAll('[id^=wrapper-folder-]').forEach((folderElement) => {
+                  if (folderElement.id !== 'wrapper-folder-trash') {
+                    folderElement.remove();
                   }
                 });
                 // replace trashFolder with new trashFolder
@@ -152,25 +152,25 @@ function replaceDeleteConversationButton() {
               // update conversationsOrder
               for (let i = 0; i < successfullyDeletedConvIds.length; i += 1) {
                 const convId = successfullyDeletedConvIds[i];
-                let conversationOrderIndex = conversationsOrder.findIndex((id) => id === convId);
+                let conversationOrderIndex = conversationsOrder.findIndex((id) => id === convId?.slice(0, 5));
                 if (conversationOrderIndex !== -1) {
                   conversationsOrder.splice(conversationOrderIndex, 1);
                 } else { // if not found, look into folders
-                  const conersationFolder = conversationsOrder.find((f) => (f.id !== 'trash') && (f.conversationIds.includes(convId)));
-                  if (conersationFolder) {
-                    conversationOrderIndex = conersationFolder.conversationIds.findIndex((id) => id === convId);
-                    conersationFolder.conversationIds.splice(conversationOrderIndex, 1);
+                  const conversationFolder = conversationsOrder.find((f) => (f.id !== 'trash') && (f.conversationIds.includes(convId?.slice(0, 5))));
+                  if (conversationFolder) {
+                    conversationOrderIndex = conversationFolder.conversationIds.findIndex((id) => id === convId?.slice(0, 5));
+                    conversationFolder.conversationIds.splice(conversationOrderIndex, 1);
                     // if folder is empty now, add empty folder element
-                    if (conersationFolder.conversationIds.length === 0) {
-                      const folderContent = document.querySelector(`#folder-content-${conersationFolder.id}`);
-                      folderContent.appendChild(emptyFolderElement(conersationFolder.id));
+                    if (conversationFolder.conversationIds.length === 0) {
+                      const folderContent = document.querySelector(`#folder-content-${conversationFolder.id}`);
+                      folderContent.appendChild(emptyFolderElement(conversationFolder.id));
                     }
                   }
                 }
               }
 
               if (trashFolder) {
-                trashFolder.conversationIds = [...successfullyDeletedConvIds, ...trashFolder.conversationIds];
+                trashFolder.conversationIds = [...successfullyDeletedConvIds.map((cid) => cid?.slice(0, 5)), ...trashFolder.conversationIds];
                 // remove dupleicate conversationIds
                 trashFolder.conversationIds = [...new Set(trashFolder.conversationIds)];
                 const newConversationsOrder = conversationsOrder.map((folder) => {

@@ -191,13 +191,13 @@ function confirmActions(conversation, action) {
             }
 
             // remove conversationId from conversationsOrder
-            let conversationOrderIndex = conversationsOrder.findIndex((id) => id === conversation.id);
+            let conversationOrderIndex = conversationsOrder.findIndex((id) => id === conversation.id?.slice(0, 5));
             if (conversationOrderIndex !== -1) {
               conversationsOrder.splice(conversationOrderIndex, 1);
             } else { // if not found, look into folders
-              const conersationFolder = conversationsOrder.find((f) => (f.id !== 'trash') && (f.conversationIds.includes(conversation.id)));
+              const conersationFolder = conversationsOrder.find((f) => (f.id !== 'trash') && (f.conversationIds.includes(conversation.id?.slice(0, 5))));
               if (conersationFolder) {
-                conversationOrderIndex = conersationFolder.conversationIds.findIndex((id) => id === conversation.id);
+                conversationOrderIndex = conersationFolder.conversationIds.findIndex((id) => id === conversation.id?.slice(0, 5));
                 conersationFolder.conversationIds.splice(conversationOrderIndex, 1);
                 // if folder is empty now, add empty folder element
                 if (conersationFolder.conversationIds.length === 0) {
@@ -207,8 +207,8 @@ function confirmActions(conversation, action) {
               }
             }
             // update trash folder
-            if (!trashFolder.conversationIds.includes(conversation.id)) {
-              conversationsOrder.find((folder) => folder.id === 'trash').conversationIds.unshift(conversation.id);
+            if (!trashFolder.conversationIds.includes(conversation.id?.slice(0, 5))) {
+              conversationsOrder.find((folder) => folder.id === 'trash').conversationIds.unshift(conversation.id?.slice(0, 5));
             }
             // update conversationsOrder
             chrome.storage.sync.set({
@@ -330,49 +330,50 @@ function addCheckboxToConversationElement(conversationElement, conversation) {
             const { conversationsOrder } = syncResult;
             if (lastSelectedConversation) {
               // find last conversation index in conversationsOrder
-              let lastConversationIndex = conversationsOrder.findIndex((c) => c === lastSelectedConversation.id);
-              let newConversationIndex = conversationsOrder.findIndex((c) => c === conversation.id);
+              let lastConversationIndex = conversationsOrder.findIndex((c) => c === lastSelectedConversation.id?.slice(0, 5));
+              let newConversationIndex = conversationsOrder.findIndex((c) => c === conversation.id?.slice(0, 5));
 
               if (lastConversationIndex === -1 || newConversationIndex === -1) {
-                const folderConatainingLastConversation = conversationsOrder.find((f) => f.conversationIds?.find((cid) => cid === lastSelectedConversation.id));
+                const folderConatainingLastConversation = conversationsOrder.find((f) => f.conversationIds?.find((cid) => cid === lastSelectedConversation.id?.slice(0, 5)));
 
-                const folderConatainingNewConversation = conversationsOrder.find((f) => f.conversationIds?.find((cid) => cid === conversation.id));
+                const folderConatainingNewConversation = conversationsOrder.find((f) => f.conversationIds?.find((cid) => cid === conversation.id?.slice(0, 5)));
 
                 if (folderConatainingLastConversation?.id === folderConatainingNewConversation?.id) {
-                  lastConversationIndex = folderConatainingLastConversation?.conversationIds?.findIndex((cid) => cid === lastSelectedConversation.id);
-                  newConversationIndex = folderConatainingNewConversation?.conversationIds?.findIndex((cid) => cid === conversation.id);
-                  const conversationsToSelect = folderConatainingLastConversation.conversationIds.slice(Math.min(lastConversationIndex, newConversationIndex) + 1, Math.max(lastConversationIndex, newConversationIndex)).filter((f) => typeof f === 'string');
+                  lastConversationIndex = folderConatainingLastConversation?.conversationIds?.findIndex((cid) => cid === lastSelectedConversation.id?.slice(0, 5));
+                  newConversationIndex = folderConatainingNewConversation?.conversationIds?.findIndex((cid) => cid === conversation.id?.slice(0, 5));
+                  const conversationsToSelect = folderConatainingLastConversation.conversationIds?.slice(Math.min(lastConversationIndex, newConversationIndex) + 1, Math.max(lastConversationIndex, newConversationIndex)).filter((f) => typeof f === 'string');
 
                   // click on the new conversation to select it
                   conversationsToSelect.forEach((cid) => {
-                    if (!selectedConversations.map((conv) => conv.id).includes(cid)) {
-                      newSelectedConversations.push(conversations[cid]);
+                    const conv = Object.values(conversations).find((c) => c.id?.slice(0, 5) === cid);
+                    if (!selectedConversations.map((c) => c.id).includes(conv.id)) {
+                      newSelectedConversations.push(conv);
                     }
-                    const convElement = document.querySelector(`#checkbox-wrapper-${cid}`);
+                    const convElement = document.querySelector(`#checkbox-wrapper-${conv.id}`);
 
                     if (convElement && !convElement.querySelector('#checkbox').checked) {
                       convElement.querySelector('#checkbox').checked = true;
                     }
                   });
-                  chrome.storage.local.set({ selectedConversations: newSelectedConversations });
                 }
               } else {
                 // select all conversations between the last selected and the current one
-                const conversationsToSelect = conversationsOrder.slice(Math.min(lastConversationIndex, newConversationIndex) + 1, Math.max(lastConversationIndex, newConversationIndex)).filter((f) => typeof f === 'string');
+                const conversationsToSelect = conversationsOrder?.slice(Math.min(lastConversationIndex, newConversationIndex) + 1, Math.max(lastConversationIndex, newConversationIndex)).filter((f) => typeof f === 'string');
 
                 // click on the new conversation to select it
                 conversationsToSelect.forEach((cid) => {
-                  if (!selectedConversations.map((conv) => conv.id).includes(cid)) {
-                    newSelectedConversations.push(conversations[cid]);
+                  const conv = Object.values(conversations).find((c) => c.id?.slice(0, 5) === cid);
+                  if (!selectedConversations.map((c) => c.id).includes(conv.id)) {
+                    newSelectedConversations.push(conv);
                   }
-                  const convElement = document.querySelector(`#checkbox-wrapper-${cid}`);
+                  const convElement = document.querySelector(`#checkbox-wrapper-${conv.id}`);
 
                   if (convElement && !convElement.querySelector('#checkbox').checked) {
                     convElement.querySelector('#checkbox').checked = true;
                   }
                 });
-                chrome.storage.local.set({ selectedConversations: newSelectedConversations });
               }
+              chrome.storage.local.set({ selectedConversations: newSelectedConversations });
               updateButtonsAfterSelection(selectedConversations, newSelectedConversations);
             }
             chrome.storage.local.set({ lastSelectedConversation: conversation });

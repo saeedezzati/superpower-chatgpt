@@ -47,7 +47,7 @@ async function addConversationToStorage(conv) {
           conversations: localConversations,
         });
         chrome.storage.sync.set({
-          conversationsOrder: conversationsOrder.includes(conv.id) ? conversationsOrder : [conv.id, ...conversationsOrder],
+          conversationsOrder: conversationsOrder.includes(conv.id?.slice(0, 5)) ? conversationsOrder : [conv.id?.slice(0, 5), ...conversationsOrder],
         });
       });
     }
@@ -67,7 +67,7 @@ async function addConversationToStorage(conv) {
             conversations: localConversations,
           });
           chrome.storage.sync.set({
-            conversationsOrder: [conv.id, ...conversationsOrder],
+            conversationsOrder: [conv.id?.slice(0, 5), ...conversationsOrder],
           });
         });
       }
@@ -266,7 +266,7 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
         if (result.conversations && Object.keys(result.conversations).length > 0) {
           localConversations = result.conversations;
         }
-        const newConversationsOrder = conversationsOrder && (conversationsOrder?.findIndex((f) => f.id === 'trash') !== -1)
+        const oldConversationsOrder = conversationsOrder && (conversationsOrder?.findIndex((f) => f.id === 'trash') !== -1)
           ? conversationsOrder
           : [{
             id: 'trash',
@@ -277,6 +277,22 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
         chrome.storage.local.set({
           conversationsAreSynced: false,
         }, () => {
+          // check if old conversations order include at least one id longer than 4 chars
+          const oldConversationsOrderHasLongIds = oldConversationsOrder.findIndex((conv) => {
+            if (typeof conv === 'string') {
+              return conv.length > 5;
+            }
+            return conv.id.length > 5 || conv.conversationIds.findIndex((id) => id.length > 5) !== -1;
+          }) !== -1;
+
+          const newConversationsOrder = oldConversationsOrderHasLongIds
+            ? oldConversationsOrder.map((conv) => {
+              if (typeof conv === 'string') {
+                return conv?.slice(0, 5);
+              }
+              return { ...conv, id: conv.id?.slice(0, 5), conversationIds: conv.conversationIds.map((id) => id?.slice(0, 5)) };
+            })
+            : oldConversationsOrder;
           chrome.storage.sync.set({
             conversationsOrder: newConversationsOrder,
           }, async () => {
@@ -316,13 +332,13 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
               if (localConv.id && localConv.saveHistory && !remoteConvIds.includes(localConv.id)) {
                 localConversations[localConvIds[i]].archived = true;
                 // check conversations
-                if (newConversationsOrder.indexOf(localConv.id) !== -1) {
-                  newConversationsOrder.splice(newConversationsOrder.indexOf(localConv.id), 1);
+                if (newConversationsOrder.indexOf(localConv.id?.slice(0, 5)) !== -1) {
+                  newConversationsOrder.splice(newConversationsOrder.indexOf(localConv.id?.slice(0, 5)), 1);
                 } else {
                   // check folders
                   newConversationsOrder.forEach((folder) => {
-                    if (typeof folder === 'object' && folder.id !== 'trash' && folder.conversationIds.indexOf(localConv.id) !== -1) {
-                      folder.conversationIds.splice(folder.conversationIds.indexOf(localConv.id), 1);
+                    if (typeof folder === 'object' && folder.id !== 'trash' && folder.conversationIds.indexOf(localConv.id?.slice(0, 5)) !== -1) {
+                      folder.conversationIds.splice(folder.conversationIds.indexOf(localConv.id?.slice(0, 5)), 1);
                     }
                   });
                 }
@@ -331,8 +347,8 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
                 // remove duplicate conversation from trash folder(to be safe)
                 trashFolder.conversationIds = [...new Set(trashFolder.conversationIds)];
                 // add conversation to the begining of trash folder
-                if (!trashFolder?.conversationIds.includes(localConv.id)) {
-                  newConversationsOrder.find((folder) => folder?.id === 'trash')?.conversationIds.unshift(localConv.id);
+                if (!trashFolder?.conversationIds.includes(localConv.id?.slice(0, 5))) {
+                  newConversationsOrder.find((folder) => folder?.id === 'trash')?.conversationIds.unshift(localConv.id?.slice(0, 5));
                 }
               }
               // update conversations if shouldRefresh is true
@@ -360,11 +376,11 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
               if (localConvIds.includes(remoteConvIds[i]) && !visibleAndNotSkippedLocalConvIds.includes(remoteConvIds[i])) {
                 localConversations[remoteConvIds[i]].archived = false;
               }
-              if (!allVisibleConversationsOrderIds.includes(remoteConvIds[i])) {
+              if (!allVisibleConversationsOrderIds.includes(remoteConvIds[i]?.slice(0, 5))) {
                 if (!conversationsOrder || conversationsOrder.length === 0) { // if conversationsOrder does not exist, add to the end of it right before trash folder (last element -1)
-                  newConversationsOrder.splice(newConversationsOrder.length - 1, 0, remoteConvIds[i]);
+                  newConversationsOrder.splice(newConversationsOrder.length - 1, 0, remoteConvIds[i]?.slice(0, 5));
                 } else { // if conversationsOrder exists, add to the begining of it
-                  newConversationsOrder.unshift(remoteConvIds[i]);
+                  newConversationsOrder.unshift(remoteConvIds[i]?.slice(0, 5));
                 }
               }
               if (forceRefreshIds.includes(remoteConvIds[i])

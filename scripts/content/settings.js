@@ -246,7 +246,7 @@ function generalTabContent() {
   linkWrapper.appendChild(updatesLink);
   // add link for feedback email
   const feedbackLink = document.createElement('a');
-  feedbackLink.href = 'mailto:m4rkobay@gmail.com?subject=Superpower plugin for ChatGPT Feature Request&body=Hi Marko,%0DReporting a bug? Any of the following information would help me figure it out faster: %0D- What version of the extension do you have? (You can find that at the bottom of the "settings" menu) %0D- What browser are you using? %0D- Do you see any errors in the console log? %0D- Do you have a plus account? %0D- How many conversations do you have approximately? %0D- Do you have the Auto Sync feature ON? %0D- Are all of your conversations synced? %0D- Do you see the "settings" menu on the sidebar? %0D- Does your issue go away if you turn the Auto Sync OFF in the settings menu? %0D- Does this issue happen to all prompts? Or only the first prompt? %0D- Are you using any other ChatGPT extensions at the same time? %0D- Can you email me a screenshot or video of the ChatGPT page when the bug happens? (with the extension installed)%0DThanks!';
+  feedbackLink.href = 'mailto:m4rkobay@gmail.com?subject=Superpower for ChatGPT Feature Request&body=Hi Marko,%0DReporting a bug? Any of the following information would help me figure it out faster: %0D- What version of the extension do you have? (You can find that at the bottom of the "settings" menu) %0D- What browser are you using? %0D- Do you see any errors in the console log? %0D- Do you have a plus account? %0D- How many conversations do you have approximately? %0D- Do you have the Auto Sync feature ON? %0D- Are all of your conversations synced? %0D- Do you see the "settings" menu on the sidebar? %0D- Does your issue go away if you turn the Auto Sync OFF in the settings menu? %0D- Does this issue happen to all prompts? Or only the first prompt? %0D- Are you using any other ChatGPT extensions at the same time? %0D- Can you email me a screenshot or video of the ChatGPT page when the bug happens? (with the extension installed)%0DThanks!';
   feedbackLink.target = '_blank';
   feedbackLink.textContent = 'Feature Request ➜';
   feedbackLink.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
@@ -728,7 +728,7 @@ function newsletterTabContent() {
   const dailyNewsletterSwitch = createSwitch('Hide daily newsletter', 'Automatically hide the daily newsletter popup.', 'hideNewsletter', false);
   content.appendChild(dailyNewsletterSwitch);
 
-  // const sendNewsletterToEmailSwitch = createSwitch('Email newsletter', 'Send the Superpower plugin for ChatGPT daily newsletter to my email', 'emailNewsletter', false, updateEmailNewsletter, 'Coming soon');
+  // const sendNewsletterToEmailSwitch = createSwitch('Email newsletter', 'Send the Superpower for ChatGPT daily newsletter to my email', 'emailNewsletter', false, updateEmailNewsletter, 'Coming soon');
 
   // content.appendChild(sendNewsletterToEmailSwitch);
   return content;
@@ -831,7 +831,7 @@ function settingsModalActions() {
   const superpowerChatGPT = document.createElement('a');
   superpowerChatGPT.href = 'https://chrome.google.com/webstore/detail/superpower-chatgpt/amhmeenmapldpjdedekalnfifgnpfnkc';
   superpowerChatGPT.target = '_blank';
-  superpowerChatGPT.textContent = 'Superpower plugin for ChatGPT';
+  superpowerChatGPT.textContent = 'Superpower for ChatGPT';
   superpowerChatGPT.style = 'color: #999; font-size: 12px; margin-left: 4px; text-decoration: underline;';
   superpowerChatGPT.addEventListener('mouseover', () => {
     superpowerChatGPT.style = 'color: gold; font-size: 12px; margin-left: 4px;text-decoration: underline;';

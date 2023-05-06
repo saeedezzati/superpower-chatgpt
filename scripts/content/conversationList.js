@@ -35,7 +35,7 @@ function removeOriginalConversationList() {
         const isToFolder = to.id.startsWith('folder-content-');
 
         const fromId = 'conversation-list';
-        const toId = isToFolder ? to.id.split('folder-content-')[1] : 'conversation-list';
+        const toId = isToFolder ? to.id.split('folder-content-')[1]?.slice(0, 5) : 'conversation-list';
         if (oldDraggableIndex === newDraggableIndex && toId === fromId) return;
 
         if (!isFolder && isToFolder && toId === 'trash') {
@@ -195,7 +195,7 @@ function createSearchBox() {
       chrome.storage.sync.get(['conversationsOrder'], (syncResult) => {
         chrome.storage.local.get(['settings'], (result) => {
           const newFolder = {
-            id: self.crypto.randomUUID(), name: 'New Folder', conversationIds: [], isOpen: true,
+            id: self.crypto.randomUUID().slice(0, 5), name: 'New Folder', conversationIds: [], isOpen: true,
           };
           const { conversationsOrder } = syncResult;
           const { settings } = result;
@@ -292,7 +292,7 @@ function prependConversation(conversation) {
   }
   chrome.storage.sync.get(['conversationsOrder'], (result) => {
     const { conversationsOrder } = result;
-    chrome.storage.sync.set({ conversationsOrder: [conversation.id, ...conversationsOrder] });
+    chrome.storage.sync.set({ conversationsOrder: [conversation.id?.slice(0, 5), ...conversationsOrder] });
   });
 
   // after adding first conversation
@@ -339,7 +339,8 @@ function loadStorageConversations(conversations, conversationsOrder = [], search
         const folderElement = createFolder(conversation, conversationTimestamp, conversations);
         conversationList.appendChild(folderElement);
       } else {
-        const conversationElement = createConversation(conversations[conversation], conversationTimestamp, searchValue);
+        const conv = Object.values(conversations).find((c) => c.id?.slice(0, 5) === conversation);
+        const conversationElement = createConversation(conv, conversationTimestamp, searchValue);
         conversationList.appendChild(conversationElement);
       }
     }
