@@ -143,13 +143,14 @@ function createSearchBox() {
           const allConversations = Object.values(conversations).filter((c) => !c.skipped);
           let filteredConversations = allConversations.sort((a, b) => b.create_time - a.create_time);
 
+          resetSelection();
           if (searchValue) {
             filteredConversations = allConversations.filter((c) => (
               c.title?.toLowerCase()?.includes(searchValue.toLowerCase())
               || Object.values(c.mapping).map((m) => m?.message?.content?.parts?.join(' ')?.replace(/## Instructions[\s\S]*## End Instructions\n\n/, ''))
                 .join(' ')?.toLowerCase()
                 .includes(searchValue.toLowerCase())));
-            const filteredConversationIds = filteredConversations.map((c) => c.id);
+            const filteredConversationIds = filteredConversations.map((c) => c.id.slice(0, 5));
             // convert filtered conversations to object with id as key
             const filteredConversationsObj = filteredConversations.reduce((acc, cur) => {
               acc[cur.id] = cur;

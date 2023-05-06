@@ -186,7 +186,7 @@ function loadConversation(conversationId, searchValue = '', focusOnInput = true)
         innerDiv.scrollTop = innerDiv.scrollHeight;
       } else {
         // scroll to the first highlighted element usin mark tag
-        const searchElement = document.querySelector('mark');
+        const searchElement = document.querySelector('main').querySelector('mark');
 
         if (searchElement) {
           searchElement.scrollIntoView();
