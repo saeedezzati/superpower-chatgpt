@@ -64,7 +64,7 @@ function announcementModalContent(data) {
   announcementText.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start; min-height: 100%; width: 100%; white-space: break-spaces; overflow-wrap: break-word;padding:16px;position: relative;z-index:10;color: #fff;';
   const announcement = data;
   // add ?ref=superpower-chatgpt-chrome-extension to the end of all href links
-  const updatedTextWithRef = announcement.text.replace(/href="([^"]*)"/g, 'href="$1?ref=superpower-chatgpt-chrome-extension"');
+  const updatedTextWithRef = announcement.text.replace(/href="([^"]*)"/g, 'href="$1?ref=superpower-chatgpt-extension"');
   announcementText.innerHTML = announcement.category === 'newsletter' ? updatedTextWithRef : `<h1 style="margin-bottom: 24px; ">${announcement.title}</h1>${announcement.text}`;
   // if release_data is before march 21, 2023, add sponsor
   if (announcement.category === 'newsletter' && new Date(announcement.release_date) < new Date('2023-03-20')) {

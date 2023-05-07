@@ -155,7 +155,7 @@ function addExportButton() {
 
   // export menu
   const exportMenu = document.createElement('div');
-  exportMenu.style = 'position:absolute;right:0px;bottom:44px;border:1px solid #565869;border-radius:4px;display:none;';
+  exportMenu.style = 'position:absolute;right:0px;bottom:44px;border:1px solid #565869;border-radius:4px;display:none;z-index:200;';
   exportMenu.id = 'export-menu';
   const divider = document.createElement('div');
   divider.style = 'height:1px;background-color:#565869;margin:0px 4px;';
