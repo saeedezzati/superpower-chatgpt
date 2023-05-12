@@ -86,12 +86,10 @@ function addNavbar() {
       navWrapper.style.top = '-56px';
       navWrapper.style.position = 'absolute';
       navWrapper.style.height = '112px';
-      navWrapper.style.paddingRight = navOpen ? '260px' : '0px';
     }
     navWrapper.addEventListener('mouseover', () => {
       chrome.storage.local.get(['settings'], (res) => {
         if (res.settings.autoHideTopNav) {
-          navWrapper.style.paddingRight = res.settings.navOpen ? '260px' : '0px';
           navWrapper.style.top = '0px';
         }
       });

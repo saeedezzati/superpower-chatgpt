@@ -167,6 +167,59 @@ function messageFeedback(conversationId, messageId, rating, text = '') {
     body: JSON.stringify(data),
   }).then((res) => res.json()));
 }
+function getAllPlugins() {
+  getPlugins(0, 100, undefined, undefined).then((res) => res);
+}
+function getApprovedPlugins() {
+  getPlugins(0, 100, true, 'approved').then((res) => res);
+}
+function getInstalledPlugins() {
+  getPlugins(0, 100, true, undefined).then((res) => {
+    chrome.storage.local.set({
+      installedPlugins: res.items,
+    });
+  });
+}
+function getPlugins(offset = 0, limit = 20, isInstalled = undefined, statuses = undefined) {
+  const url = new URL('https://chat.openai.com/backend-api/aip/p');
+  // without passing limit it returns 20 by default
+  // limit cannot be more than 100
+  const params = { offset, limit };
+  url.search = new URLSearchParams(params).toString();
+  if (isInstalled !== undefined) {
+    url.searchParams.append('is_installed', isInstalled);
+  }
+  if (statuses) {
+    url.searchParams.append('statuses', statuses);
+  }
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch(url, {
+    method: 'GET',
+    headers: {
+      ...defaultHeaders,
+      Authorization: result.auth_token,
+    },
+  }).then((res) => {
+    if (res.ok) {
+      return res.json();
+    }
+    return Promise.reject(res);
+  }));
+}
+function userSettings(pluginId) {
+  const url = new URL(`https://chat.openai.com/backend-api/aip/${pluginId}/user-settings`);
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch(url, {
+    method: 'GET',
+    headers: {
+      ...defaultHeaders,
+      Authorization: result.auth_token,
+    },
+  }).then((res) => {
+    if (res.ok) {
+      return res.json();
+    }
+    return Promise.reject(res);
+  }));
+}
 // returnsa thenable promise. If selectedConversations exist, return them, otherwise get all conversations
 function getSelectedConversations(forceRefresh = false) {
   return new Promise((resolve) => {
@@ -232,59 +285,6 @@ function getAllConversations(forceRefresh = false) {
       }
     });
   });
-}
-function getAllPlugins() {
-  getPlugins(0, 100, undefined, undefined).then((res) => res);
-}
-function getApprovedPlugins() {
-  getPlugins(0, 100, true, 'approved').then((res) => res);
-}
-function getInstalledPlugins() {
-  getPlugins(0, 100, true, undefined).then((res) => {
-    chrome.storage.local.set({
-      installedPlugins: res.items,
-    });
-  });
-}
-function getPlugins(offset = 0, limit = 20, isInstalled = undefined, statuses = undefined) {
-  const url = new URL('https://chat.openai.com/backend-api/aip/p');
-  // without passing limit it returns 20 by default
-  // limit cannot be more than 100
-  const params = { offset, limit };
-  url.search = new URLSearchParams(params).toString();
-  if (isInstalled !== undefined) {
-    url.searchParams.append('is_installed', isInstalled);
-  }
-  if (statuses) {
-    url.searchParams.append('statuses', statuses);
-  }
-  return chrome.storage.sync.get(['auth_token']).then((result) => fetch(url, {
-    method: 'GET',
-    headers: {
-      ...defaultHeaders,
-      Authorization: result.auth_token,
-    },
-  }).then((res) => {
-    if (res.ok) {
-      return res.json();
-    }
-    return Promise.reject(res);
-  }));
-}
-function userSettings(pluginId) {
-  const url = new URL(`https://chat.openai.com/backend-api/aip/${pluginId}/user-settings`);
-  return chrome.storage.sync.get(['auth_token']).then((result) => fetch(url, {
-    method: 'GET',
-    headers: {
-      ...defaultHeaders,
-      Authorization: result.auth_token,
-    },
-  }).then((res) => {
-    if (res.ok) {
-      return res.json();
-    }
-    return Promise.reject(res);
-  }));
 }
 
 function getConversations(offset = 0, limit = 100) {

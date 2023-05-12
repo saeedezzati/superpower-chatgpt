@@ -4,6 +4,10 @@
 
 // Initial state
 let userChatIsActuallySaved = false;
+let chunkNumber = 1;
+let totalChunks = 1;
+let remainingText = '';
+
 function removeOriginalConversationList() {
   const navGap = document.querySelector('nav > :nth-child(3)');
   navGap.style = `${navGap.style.cssText};display:flex;margin-right:-8px;`;
@@ -310,12 +314,15 @@ function generateTitleForConversation(conversationId, messageId) {
       const conversationElement = document.querySelector(`#conversation-button-${conversationId}`);
       conversationElement.classList.add('animate-flash');
       const conversationTitle = conversationElement.querySelector(`#conversation-title-${conversationId}`);
+      const topDiv = document.querySelector('#conversation-top');
       // animate writing title one character at a time
       conversationTitle.innerHTML = '';
+      if (topDiv) topDiv.innerHTML = '';
       if (!title) return;
       title.split('').forEach((c, i) => {
         setTimeout(() => {
           conversationTitle.innerHTML += c;
+          if (topDiv) topDiv.innerHTML += c;
         }, i * 50);
       });
 
@@ -341,6 +348,7 @@ function loadStorageConversations(conversations, conversationsOrder = [], search
         conversationList.appendChild(folderElement);
       } else {
         const conv = Object.values(conversations).find((c) => c.id?.slice(0, 5) === conversation);
+        if (!conv) continue;
         const conversationElement = createConversation(conv, conversationTimestamp, searchValue);
         conversationList.appendChild(conversationElement);
       }
@@ -454,7 +462,11 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
         const tempId = setInterval(() => {
           if (userChatIsActuallySaved) {
             clearInterval(tempId);
-            updateOrCreateConversation(finalConversationId, finalMessage, messageId, settings, true, chatStreamIsClosed);
+            updateOrCreateConversation(finalConversationId, finalMessage, messageId, settings, true, chatStreamIsClosed).then(() => {
+              setTimeout(() => {
+                insertNextChunk(settings);
+              }, 700);
+            });
           }
         }, 1000);
         isGenerating = false;
@@ -583,7 +595,7 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
               if (existingRowUser) {
                 let threadCount = Object.keys(conversation).length > 0 ? conversation?.mapping[messageId]?.children?.length || 1 : 1;
                 if (regenerateResponse) threadCount += 1;
-                const assistantRow = rowAssistant(conversation, data, threadCount, threadCount, models);
+                const assistantRow = rowAssistant(conversation, data, threadCount, threadCount, models, settings.customConversationWidth, settings.conversationWidth);
                 const conversationBottom = document.querySelector('#conversation-bottom');
                 conversationBottom.insertAdjacentHTML('beforebegin', assistantRow);
                 if (!scrolUpDetected) {
@@ -634,6 +646,25 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
     });
   });
 }
+function insertNextChunk(settings) {
+  if (!settings.splitPrompt) return;
+  if (totalChunks === 1) return;
+  if (remainingText === '') return;
+  const inputForm = document.querySelector('form');
+  if (!inputForm) return;
+  const submitButton = inputForm.querySelector('textarea ~ button');
+  if (!submitButton) return;
+  const textAreaElement = inputForm.querySelector('textarea');
+  if (!textAreaElement) return;
+  textAreaElement.value = `[START CHUNK ${chunkNumber}/${totalChunks}]
+${remainingText.slice(0, settings.splitPromptLimit)}
+[END CHUNK ${chunkNumber}/${totalChunks}]
+Reply with OK: [CHUNK x/TOTAL], don't reply anything else, don't explain the text!`;
+  textAreaElement.focus();
+  textAreaElement.dispatchEvent(new Event('input', { bubbles: true }));
+  textAreaElement.dispatchEvent(new Event('change', { bubbles: true }));
+  submitButton.click();
+}
 function overrideSubmitForm() {
   const main = document.querySelector('main');
   if (!main) return;
@@ -652,15 +683,34 @@ function overrideSubmitForm() {
         const { conversations, settings, models } = res;
         const conversation = conversations[conversationId];
         chrome.storage.sync.get(['name', 'avatar'], (result) => {
-          const text = generateInstructions(conversation, settings, textAreaElement.value.trim());
-
+          let text = textAreaElement.value.trim();
+          if (chunkNumber === 1) {
+            if (settings.splitPrompt && text.length > settings.splitPromptLimit) {
+              totalChunks = Math.ceil(text.length / settings.splitPromptLimit);
+              remainingText = text.substring(settings.splitPromptLimit);
+              text = `${settings.splitPromptInstruction}[START CHUNK ${chunkNumber}/${totalChunks}]
+${text.substring(0, settings.splitPromptLimit)}
+[END CHUNK ${chunkNumber}/${totalChunks}]
+Reply with OK: [CHUNK x/TOTAL], don't reply anything else, don't explain the text!`;
+              chunkNumber += 1;
+            } else {
+              text = generateInstructions({}, settings, textAreaElement.value.trim());
+            }
+          } else if (chunkNumber === totalChunks) {
+            chunkNumber = 1;
+            totalChunks = 1;
+            remainingText = '';
+          } else {
+            chunkNumber += 1;
+            remainingText = remainingText.slice(settings.splitPromptLimit);
+          }
           const messageId = self.crypto.randomUUID();
           const allMessages = document.querySelectorAll('[id^="message-wrapper-"]');
           const lastMessage = allMessages[allMessages.length - 1];
           const parentId = lastMessage?.id?.split('message-wrapper-')[1] || self.crypto.randomUUID();
           const conversationBottom = document.querySelector('#conversation-bottom');
           const node = { message: { id: messageId, content: { parts: [text] } } };
-          const userRow = rowUser(conversation, node, 1, 1, result.name, result.avatar);
+          const userRow = rowUser(conversation, node, 1, 1, result.name, result.avatar, settings.customConversationWidth, settings.conversationWidth);
           conversationBottom.insertAdjacentHTML('beforebegin', userRow);
           conversationBottom.scrollIntoView({ behavior: 'smooth' });
           if (text) {
@@ -675,7 +725,28 @@ function overrideSubmitForm() {
       chrome.storage.local.get(['settings', 'models']).then((res) => {
         const { settings, models } = res;
         chrome.storage.sync.get(['name', 'avatar'], (result) => {
-          const text = generateInstructions({}, settings, textAreaElement.value.trim());
+          let text = textAreaElement.value.trim();
+          if (chunkNumber === 1) {
+            if (settings.splitPrompt && text.length > settings.splitPromptLimit) {
+              totalChunks = Math.ceil(text.length / settings.splitPromptLimit);
+              remainingText = text.substring(settings.splitPromptLimit);
+              text = `${settings.splitPromptInstruction}[START CHUNK ${chunkNumber}/${totalChunks}]
+${text.substring(0, settings.splitPromptLimit)}
+[END CHUNK ${chunkNumber}/${totalChunks}]
+Reply with OK: [CHUNK x/TOTAL], don't reply anything else, don't explain the text!`;
+              chunkNumber += 1;
+            } else {
+              text = generateInstructions({}, settings, textAreaElement.value.trim());
+            }
+          } else if (chunkNumber === totalChunks) {
+            chunkNumber = 1;
+            totalChunks = 1;
+            remainingText = '';
+          } else {
+            chunkNumber += 1;
+            remainingText = remainingText.slice(settings.splitPromptLimit);
+          }
+
           const messageId = self.crypto.randomUUID();
           const node = { message: { id: messageId, content: { parts: [text] } } };
           const allMessages = document.querySelectorAll('[id^="message-wrapper-"]');
@@ -694,18 +765,23 @@ function overrideSubmitForm() {
           addScrollDetector(innerDiv);
           const conversationDiv = document.createElement('div');
           conversationDiv.classList = 'flex flex-col items-center text-sm h-full dark:bg-gray-800';
-          const userRow = rowUser({}, node, 1, 1, result.name, result.avatar);
+          const userRow = rowUser({}, node, 1, 1, result.name, result.avatar, settings.customConversationWidth, settings.conversationWidth);
           conversationDiv.innerHTML = userRow;
+          const topDiv = '<div id="conversation-top" class="w-full flex items-center justify-center border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group bg-gray-50 dark:bg-[#444654]" style="min-height:56px;z-index:1;">New chat</div>';
+          conversationDiv.insertAdjacentHTML('afterbegin', topDiv);
           const bottomDiv = document.createElement('div');
           bottomDiv.id = 'conversation-bottom';
           bottomDiv.classList = 'w-full h-32 md:h-48 flex-shrink-0';
           conversationDiv.appendChild(bottomDiv);
           const bottomDivContent = document.createElement('div');
           bottomDivContent.classList = 'relative text-base gap-4 md:gap-6 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl flex lg:px-0';
+          if (settings.customConversationWidth) {
+            bottomDivContent.style = `max-width: ${settings.conversationWidth}%`;
+          }
           bottomDiv.appendChild(bottomDivContent);
           const totalCounter = document.createElement('div');
           totalCounter.id = 'total-counter';
-          totalCounter.style = 'position: absolute; top: 0px; right: 0px; font-size: 10px; color: rgb(153, 153, 153); opacity: 0.8; z-index: 100;';
+          totalCounter.style = 'position: absolute; top: 0px; right: 0px; font-size: 10px; color: rgb(153, 153, 153); opacity: 0.8;';
           bottomDivContent.appendChild(totalCounter);
 
           innerDiv.appendChild(conversationDiv);
@@ -780,7 +856,7 @@ function loadConversationList(skipInputFormReload = false) {
       if (result.conversationsAreSynced && typeof result.conversations !== 'undefined') {
         updateNewChatButtonSynced();
         if (!skipInputFormReload) initializeNavbar();
-        if (!skipInputFormReload) replaceTextAreaElemet();
+        if (!skipInputFormReload) replaceTextAreaElemet(result.settings);
         removeOriginalConversationList();
         createSearchBox();
         loadStorageConversations(result.conversations, res.conversationsOrder);

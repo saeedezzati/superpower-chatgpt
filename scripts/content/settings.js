@@ -29,13 +29,15 @@ function selectedTabContent(selectedTab) {
     case 4:
       return exportTabContent();
     case 5:
+      return splitterTabContent();
+    case 6:
       return newsletterTabContent();
     default:
       return generalTabContent();
   }
 }
 function settingsModalContent(initialTab = 0) {
-  const settingsTabs = ['General', 'Auto Sync', 'models', 'Custom Prompts', 'Export', 'Newsletter'];
+  const settingsTabs = ['General', 'Auto Sync', 'models', 'Custom Prompts', 'Export', 'Splitter', 'Newsletter'];
   let activeTab = initialTab;
   // create history modal content
   const content = document.createElement('div');
@@ -118,6 +120,46 @@ function generalTabContent() {
   // copy mode
   const copyModeSwitch = createSwitch('Copy mode', 'OFF: only copy response / ON: copy both request and response', 'copyMode', false);
   leftContent.appendChild(copyModeSwitch);
+
+  // conversation width
+  const customConversationWidthSwitch = createSwitch('Custom Conversation Width', 'OFF: Use default / ON: Set Conversation Width (30%-90%)', 'customConversationWidth', false, toggleCustomWidthInput);
+  leftContent.appendChild(customConversationWidthSwitch);
+
+  const conversationWidthInput = document.createElement('input');
+  conversationWidthInput.id = 'conversation-width-input';
+  conversationWidthInput.type = 'number';
+  conversationWidthInput.classList = 'w-full px-4 py-2 mr-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800 disabled:opacity-40';
+  chrome.storage.local.get(['settings'], (result) => {
+    conversationWidthInput.disabled = !result.settings.customConversationWidth;
+    conversationWidthInput.value = result.settings.conversationWidth;
+    conversationWidthInput.addEventListener('change', () => {
+      const curConversationWidthInput = document.querySelector('#conversation-width-input');
+      const newValue = Math.round(curConversationWidthInput.value);
+      curConversationWidthInput.value = newValue;
+      Array.from(document.querySelectorAll('[id^=message-wrapper]')).forEach((el) => {
+        el.querySelector('div').style.maxWidth = `${newValue}%`;
+      });
+      if (document.querySelector('#conversation-bottom')) {
+        document.querySelector('#conversation-bottom').firstChild.style.maxWidth = `${newValue}%`;
+      }
+      document.querySelector('main').querySelector('form').style.maxWidth = `${newValue}%`;
+      chrome.storage.local.set({ settings: { ...result.settings, conversationWidth: newValue } });
+    });
+    conversationWidthInput.addEventListener('input', () => {
+      const curConversationWidthInput = document.querySelector('#conversation-width-input');
+      const newValue = Math.round(curConversationWidthInput.value);
+      curConversationWidthInput.value = newValue;
+      Array.from(document.querySelectorAll('[id^=message-wrapper]')).forEach((el) => {
+        el.querySelector('div').style.maxWidth = `${newValue}%`;
+      });
+      if (document.querySelector('#conversation-bottom')) {
+        document.querySelector('#conversation-bottom').firstChild.style.maxWidth = `${newValue}%`;
+      }
+      document.querySelector('main').querySelector('form').style.maxWidth = `${newValue}%`;
+      chrome.storage.local.set({ settings: { ...result.settings, conversationWidth: newValue } });
+    });
+  });
+  leftContent.appendChild(conversationWidthInput);
 
   // discord widget
   const discordWidget = document.createElement('div');
@@ -289,6 +331,28 @@ function generalTabContent() {
 
   return content;
 }
+function toggleCustomWidthInput(customConversationWidth) {
+  chrome.storage.local.get(['settings'], (result) => {
+    const customWidthInput = document.getElementById('conversation-width-input');
+    customWidthInput.disabled = !customConversationWidth;
+    const { settings } = result;
+    if (customConversationWidth) {
+      Array.from(document.querySelectorAll('[id^=message-wrapper]')).forEach((el) => {
+        el.querySelector('div').style.maxWidth = `${settings.conversationWidth}%`;
+      });
+      if (document.querySelector('#conversation-bottom')) {
+        document.querySelector('#conversation-bottom').firstChild.style.maxWidth = `${settings.conversationWidth}%`;
+      }
+      document.querySelector('main').querySelector('form').style.maxWidth = `${settings.conversationWidth}%`;
+    } else {
+      Array.from(document.querySelectorAll('[id^=message-wrapper]')).forEach((el) => {
+        el.querySelector('div').style.removeProperty('max-width');
+      });
+      document.querySelector('#conversation-bottom').firstChild.style.removeProperty('max-width');
+      document.querySelector('main').querySelector('form').style.removeProperty('max-width');
+    }
+  });
+}
 function autoSyncTabContent() {
   const content = document.createElement('div');
   content.id = 'settings-modal-tab-content';
@@ -326,11 +390,9 @@ function toggleTopNav(autohide) {
     navWrapperElement.style.top = '-56px';
     navWrapperElement.style.position = 'absolute';
     navWrapperElement.style.height = '112px';
-    navWrapperElement.style.paddingRight = '260px';
   } else {
     navWrapperElement.style.top = '0px';
     navWrapperElement.style.position = 'relative';
-    navWrapperElement.style.paddingRight = '0px';
     navWrapperElement.style.height = '56px';
   }
 }
@@ -720,6 +782,66 @@ function exportTabContent() {
   exportNamingFormatLabel.appendChild(betaTag);
   return content;
 }
+function splitterTabContent() {
+  const content = document.createElement('div');
+  content.id = 'settings-modal-tab-content';
+  content.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;';
+
+  // conversation width
+  const splitPromptSwitch = createSwitch('Auto Split', 'Automatically split long prompts into chunks equal to the below limit (1000-8000 char)', 'splitPrompt', true);
+
+  const splitPromptLimitInput = document.createElement('input');
+  splitPromptLimitInput.id = 'split-prompt-limit-input';
+  splitPromptLimitInput.type = 'number';
+  splitPromptLimitInput.classList = 'w-full px-4 py-2 mb-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800 disabled:opacity-40';
+  chrome.storage.local.get(['settings'], (result) => {
+    splitPromptLimitInput.value = result.settings.splitPromptLimit;
+    splitPromptLimitInput.addEventListener('change', () => {
+      const curSplitPromptLimitInput = document.querySelector('#split-prompt-limit-input');
+      const newValue = Math.round(curSplitPromptLimitInput.value);
+
+      curSplitPromptLimitInput.value = newValue;
+      chrome.storage.local.set({ settings: { ...result.settings, splitPromptLimit: newValue } });
+    });
+    splitPromptLimitInput.addEventListener('input', () => {
+      const curSplitPromptLimitInput = document.querySelector('#split-prompt-limit-input');
+      const newValue = Math.round(curSplitPromptLimitInput.value);
+
+      curSplitPromptLimitInput.value = newValue;
+      chrome.storage.local.set({ settings: { ...result.settings, splitPromptLimit: newValue } });
+    });
+  });
+
+  // splitter prompt
+  const splitPromptInstructionTitle = document.createElement('div');
+  splitPromptInstructionTitle.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0; color:white;';
+  splitPromptInstructionTitle.textContent = 'Splitter Prompt';
+
+  const splitPromptInstructionHelper = document.createElement('div');
+  splitPromptInstructionHelper.style = 'font-size: 12px; color: #999;';
+  splitPromptInstructionHelper.textContent = 'Splitter prompt is a text that will be used when the user prompt in divided into chunkc due to the character limit.';
+
+  const splitPromptInstructionText = document.createElement('textarea');
+  splitPromptInstructionText.style = 'width: 100%; height: 240px; min-height: 240px; border-radius: 4px; border: 1px solid #565869; background-color: #0b0d0e; color: #eee; padding: 4px 8px; font-size: 14px;';
+  splitPromptInstructionText.placeholder = 'Enter splitter prompt here...';
+  chrome.storage.local.get('settings', ({ settings }) => {
+    splitPromptInstructionText.value = settings.splitPromptInstruction;
+  });
+  splitPromptInstructionText.dir = 'auto';
+  splitPromptInstructionText.addEventListener('input', () => {
+    splitPromptInstructionText.style.borderColor = '#565869';
+    chrome.storage.local.get('settings', ({ settings }) => {
+      chrome.storage.local.set({ settings: { ...settings, splitPromptInstruction: splitPromptInstructionText.value } });
+    });
+  });
+
+  content.appendChild(splitPromptSwitch);
+  content.appendChild(splitPromptLimitInput);
+  content.appendChild(splitPromptInstructionTitle);
+  content.appendChild(splitPromptInstructionHelper);
+  content.appendChild(splitPromptInstructionText);
+  return content;
+}
 function newsletterTabContent() {
   const content = document.createElement('div');
   content.id = 'settings-modal-tab-content';
@@ -952,9 +1074,14 @@ function initializeSettings() {
         copyMode: result.settings?.copyMode !== undefined ? result.settings.copyMode : false,
         hideBottomSidebar: result.settings?.hideBottomSidebar !== undefined ? result.settings.hideBottomSidebar : false,
         hideNewsletter: result.settings?.hideNewsletter !== undefined ? result.settings.hideNewsletter : false,
+        customConversationWidth: result.settings?.customConversationWidth !== undefined ? result.settings.customConversationWidth : false,
+        conversationWidth: result.settings?.conversationWidth !== undefined ? result.settings.conversationWidth : 50,
         saveHistory: result.settings?.saveHistory !== undefined ? result.settings.saveHistory : true,
         emailNewsletter: result.settings?.emailNewsletter !== undefined ? result.settings.emailNewsletter : false,
         showGpt4Counter: result.settings?.showGpt4Counter !== undefined ? result.settings.showGpt4Counter : true,
+        splitPrompt: result.settings?.splitPrompt !== undefined ? result.settings.splitPrompt : true,
+        splitPromptLimit: result.settings?.splitPromptLimit !== undefined ? result.settings.splitPromptLimit : 8000,
+        splitPromptInstruction: result.settings?.splitPromptInstruction || "Act like a document/text loader until you load and remember the content of the next text/s or document/s.\nThere might be multiple files, each file is marked by name in the format ### DOCUMENT NAME.\nI will send you them in chunks. Each chunk starts will be noted as [START CHUNK x/TOTAL], and the end of this chunk will be noted as [END CHUNK x/TOTAL], where x is the number of current chunks, and TOTAL is the number of all chunks I will send you.\nI will send you multiple messages with chunks, for each message, just reply OK: [CHUNK x/TOTAL], don't reply anything else, don't explain the text!\nLet's begin:\n\n",
         conversationTimestamp: result.settings?.conversationTimestamp !== undefined ? result.settings.conversationTimestamp : false,
         autoHideTopNav: result.settings?.autoHideTopNav !== undefined ? result.settings.autoHideTopNav : false,
         navOpen: result.settings?.navOpen !== undefined ? result.settings.navOpen : true,

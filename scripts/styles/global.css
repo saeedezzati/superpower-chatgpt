@@ -38,6 +38,9 @@ input[type="checkbox"]:checked:focus {
 .hover\:pr-20:hover {
   padding-right: 5rem;
 }
+.border-gold {
+  border-color: gold;
+}
 .pr-20 {
   padding-right: 5rem;
 }

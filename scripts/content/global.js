@@ -181,13 +181,14 @@ function addScrollButtons() {
 function addNavToggleButton() {
   chrome.storage.local.get(['settings'], (result) => {
     const { settings } = result;
-    const sidebar = document.querySelector('.w-\\[260px\\]');
+    const sidebar = document.querySelector('.w-\\[260px\\]').parentElement;
     const mainContent = sidebar?.nextElementSibling;
     if (!sidebar) return;
     if (!mainContent) return;
     // add transition to nav and main
     sidebar.style = `${sidebar.style.cssText};transition:margin-left 0.3s ease-in-out;position:relative;overflow:unset`;
     mainContent.style.transition = 'padding-left 0.3s ease-in-out';
+
     const navToggleButton = document.createElement('div');
     navToggleButton.id = 'nav-toggle-button';
     navToggleButton.className = 'absolute flex items-center justify-center bg-gray-900 text-gray-200 text-xs font-sans cursor-pointer rounded-r-md z-50';
@@ -212,14 +213,14 @@ function addNavToggleButton() {
           },
         }, () => {
           if (newNavOpen) {
-            const nav = document.querySelector('.w-\\[260px\\]');
+            const nav = document.querySelector('.w-\\[260px\\]').parentElement;
             const main = nav?.nextElementSibling;
             nav.style.marginLeft = '0px';
             main.classList.replace('md:pl-0', 'md:pl-[260px]');
             curNavToggleBtn.style = 'width:16px;height:40px;right:-16px;bottom:0px;font-size:20px';
             curNavToggleBtn.innerHTML = '‹';
           } else {
-            const nav = document.querySelector('.w-\\[260px\\]');
+            const nav = document.querySelector('.w-\\[260px\\]').parentElement;
             const main = nav?.nextElementSibling;
             nav.style.marginLeft = '-260px';
             main.classList.replace('md:pl-[260px]', 'md:pl-0');
@@ -303,10 +304,13 @@ function handleQueryParams(query) {
     });
   }
 }
-function replaceTextAreaElemet() {
+function replaceTextAreaElemet(settings) {
   const main = document.querySelector('main');
   if (!main) { return false; }
   const inputForm = main.querySelector('form');
+  if (settings.customConversationWidth) {
+    inputForm.style = `${inputForm.style.cssText}; max-width:${settings.conversationWidth}%;`;
+  }
   // remove all div childs of inputForm if child element textcontent include gpt
   const allChilds = inputForm.parentElement.childNodes;
   allChilds.forEach((c) => {
@@ -743,8 +747,8 @@ function removeUnusedButtons() {
   }
 }
 function updateNewChatButtonNotSynced() {
-  chrome.storage.local.get(['selectedConversations', 'conversationsAreSynced'], (result) => {
-    const { selectedConversations, conversationsAreSynced } = result;
+  chrome.storage.local.get(['selectedConversations'], (result) => {
+    const { selectedConversations } = result;
     const main = document.querySelector('main');
     if (!main) return;
     const inputForm = main.querySelector('form');

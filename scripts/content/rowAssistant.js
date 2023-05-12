@@ -1,6 +1,6 @@
 /* global markdown, katex, texmath, highlight */
 // eslint-disable-next-line no-unused-vars
-function rowAssistant(conversation, node, childIndex, childCount, models, searchValue = '') {
+function rowAssistant(conversation, node, childIndex, childCount, models, customConversationWidth, conversationWidth, searchValue = '') {
   const { pinned, message } = node;
   const { id, metadata } = message;
   const modelSlug = metadata.model_slug;
@@ -15,7 +15,7 @@ function rowAssistant(conversation, node, childIndex, childCount, models, search
   const charCount = messageContentParts.length;
   return `<div id="message-wrapper-${id}" data-role="assistant"
   class="w-full border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group ${pinned ? 'border-l-pinned bg-pinned dark:bg-pinned' : 'bg-gray-50 dark:bg-[#444654]'}">
-  <div class="relative text-base gap-4 md:gap-6 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl p-4 md:py-6 flex lg:px-0">
+  <div class="relative text-base gap-4 md:gap-6 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl p-4 md:py-6 flex lg:px-0" style="${customConversationWidth ? `max-width:${conversationWidth}%` : ''}">
   <button id="message-pin-button-${id}" title="pin/unpin message" class="${pinned ? 'visible' : 'invisible group-hover:visible'}" style="background-color: transparent; border: none; cursor: pointer;width: 18px; position: absolute; top: -8px; right: 6px;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="${pinned ? 'gold' : '#aaa'}" d="M48 0H336C362.5 0 384 21.49 384 48V487.7C384 501.1 373.1 512 359.7 512C354.7 512 349.8 510.5 345.7 507.6L192 400L38.28 507.6C34.19 510.5 29.32 512 24.33 512C10.89 512 0 501.1 0 487.7V48C0 21.49 21.49 0 48 0z"/></svg></button>
     <div class="w-[30px] flex flex-col relative items-end">
       <div style="background-color:${modelSlug?.startsWith('gpt-4') ? 'black' : '#10a37f'}" title="${modelTitle}"

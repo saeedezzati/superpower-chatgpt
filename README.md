@@ -75,6 +75,10 @@ https://user-images.githubusercontent.com/574142/232172841-50f1b114-ef47-4533-a6
 
 ## Utilities for ChatGPT
 
+✂️ Auto Splitter: Automatically split your long input into smaller chunks and send them to ChatGPT one by one.
+
+📏 Custom Conversation Width: Adjust the width of the conversation to your liking
+
 📊 Word and Character Count: Add the word and character counters to both the user input and the ChatGPT responses
 
 🎛 Model Switcher: Easily change the model(GPT-4, GPT-3.5, etc.) in the middle of the conversation. Simply hover over the ChatGPT avatar icon to see what model was used for each response

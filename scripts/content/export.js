@@ -202,8 +202,8 @@ function addExportButton() {
 }
 
 // countDown to use async/await
-async function countDownAsync() {
-  let count = 60;
+async function exportCountDownAsync() {
+  let count = 2;
   interval = setInterval(() => {
     const progressBarFilename = document.getElementById('export-all-modal-progress-bar-filename');
     if (count <= 0) {
@@ -224,7 +224,7 @@ async function countDownAsync() {
       clearInterval(interval);
       clearTimeout(timeout);
       resolve();
-    }, 60000);
+    }, 2000);
   });
 }
 
@@ -294,12 +294,13 @@ function exportAllConversations(exportFormat) {
         // eslint-disable-next-line no-await-in-loop
         await fetchConversation(conversations[i].id, exportMode, i);
         const fileCount = Object.values(zip.files).filter((f) => !f.dir).length;
-        if (fileCount > 0 && fileCount % 10 === 0) {
+        if (fileCount > 0 && fileCount % 1 === 0) {
           // eslint-disable-next-line no-await-in-loop
-          chrome.storage.local.get(['conversations', 'conversationsAreSynced']).then(async (res) => {
-            const { conversationsAreSynced } = res;
-            if (!conversationsAreSynced) {
-              await countDownAsync();
+          await chrome.storage.local.get(['conversations', 'conversationsAreSynced', 'settings']).then(async (res) => {
+            const { conversationsAreSynced, settings } = res;
+            const { autoSync } = settings;
+            if (!conversationsAreSynced || !autoSync) {
+              await exportCountDownAsync();
             }
           });
         }
@@ -486,10 +487,10 @@ function openExportAllModal() {
       exportAllModalExportButton.style.opacity = '1';
       exportAllModalProgressBarLabel.textContent = `0 / ${selectedConversations?.length}`;
     } else {
-      chrome.storage.local.get(['conversations', 'conversationsAreSynced']).then((res) => {
-        const { conversations: storageConversations, conversationsAreSynced } = res;
-
-        if (conversationsAreSynced) {
+      chrome.storage.local.get(['conversations', 'conversationsAreSynced', 'settings']).then((res) => {
+        const { conversations: storageConversations, conversationsAreSynced, settings } = res;
+        const { autoSync } = settings;
+        if (conversationsAreSynced && autoSync) {
           const allConversations = Object.values(storageConversations).filter((conversation) => !conversation.skipped);
 
           exportAllModalProgressBarLabel.textContent = `0 / ${allConversations.length}`;

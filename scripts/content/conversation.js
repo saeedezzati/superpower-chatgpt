@@ -48,7 +48,7 @@ function loadConversationFromNode(conversationId, newMessageId, oldMessageId, se
   chrome.storage.sync.get(['name', 'avatar'], (result) => {
     chrome.storage.local.get(['conversations', 'settings', 'models'], (res) => {
       const fullConversation = res.conversations?.[conversationId];
-
+      const { settings } = res;
       let currentNode = fullConversation.mapping[newMessageId];
       const sortedNodes = [];
       while (currentNode) {
@@ -68,10 +68,10 @@ function loadConversationFromNode(conversationId, newMessageId, oldMessageId, se
         // eslint-disable-next-line no-continue
         if (!message) continue;
         if (message.role === 'user' || message.author?.role === 'user') {
-          messageDiv += rowUser(fullConversation, sortedNodes[i], threadIndex, threadCount, result.name, result.avatar, searchValue);
+          messageDiv += rowUser(fullConversation, sortedNodes[i], threadIndex, threadCount, result.name, result.avatar, settings.customConversationWidth, settings.conversationWidth, searchValue);
         }
         if (message.role === 'assistant' || message.author?.role === 'assistant') {
-          messageDiv += rowAssistant(fullConversation, sortedNodes[i], threadIndex, threadCount, res.models, searchValue);
+          messageDiv += rowAssistant(fullConversation, sortedNodes[i], threadIndex, threadCount, res.models, settings.customConversationWidth, settings.conversationWidth, searchValue);
         }
       }
       const conversationBottom = document.querySelector('#conversation-bottom');
@@ -103,6 +103,7 @@ function loadConversation(conversationId, searchValue = '', focusOnInput = true)
   chrome.storage.sync.get(['name', 'avatar', 'conversationsOrder'], (result) => {
     chrome.storage.local.get(['conversations', 'settings', 'models'], (res) => {
       const { conversationsOrder } = result;
+      const { settings } = res;
       const folderConatainingConversation = conversationsOrder.find((folder) => folder?.conversationIds?.includes(conversationId?.slice(0, 5)));
       let folderName = '';
       if (folderConatainingConversation) {
@@ -144,7 +145,7 @@ function loadConversation(conversationId, searchValue = '', focusOnInput = true)
       }
       sortedNodes.reverse();
       //--------
-      let messageDiv = `<div id="conversation-top" class="w-full flex items-center justify-center border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group bg-gray-50 dark:bg-[#444654]" style="min-height:56px;z-index:1;"><strong>${folderName ? `${folderName}  &nbsp;&nbsp;&nbsp;›` : ''}</strong>&nbsp;&nbsp;&nbsp;${fullConversation.title}</div>`;
+      let messageDiv = `<div id="conversation-top" class="w-full flex items-center justify-center border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group bg-gray-50 dark:bg-[#444654]" style="min-height:56px;z-index:1;"><strong>${folderName ? `${folderName}  &nbsp;&nbsp;&nbsp;› &nbsp;&nbsp;&nbsp;` : ''}</strong>${fullConversation.title}</div>`;
       if (fullConversation.archived) {
         messageDiv = '<div id="conversation-top"></div><div style="display: flex; align-items: center; justify-content: center; min-height: 56px; width: 100%; color:white; background-color: #ff0000; position: sticky; top: 0;z-index:1;">This is an archived chat. You can read archived chats, but you cannot continue them.</div>';
       }
@@ -154,10 +155,10 @@ function loadConversation(conversationId, searchValue = '', focusOnInput = true)
         // eslint-disable-next-line no-continue
         if (!message) continue;
         if (message.role === 'user' || message.author?.role === 'user') {
-          messageDiv += rowUser(fullConversation, sortedNodes[i], threadIndex, threadCount, result.name, result.avatar, searchValue);
+          messageDiv += rowUser(fullConversation, sortedNodes[i], threadIndex, threadCount, result.name, result.avatar, settings.customConversationWidth, settings.conversationWidth, searchValue);
         }
         if (message.role === 'assistant' || message.author?.role === 'assistant') {
-          messageDiv += rowAssistant(fullConversation, sortedNodes[i], threadIndex, threadCount, res.models, searchValue);
+          messageDiv += rowAssistant(fullConversation, sortedNodes[i], threadIndex, threadCount, res.models, settings.customConversationWidth, settings.conversationWidth, searchValue);
         }
       }
       conversationDiv.innerHTML = messageDiv;
@@ -167,10 +168,13 @@ function loadConversation(conversationId, searchValue = '', focusOnInput = true)
       conversationDiv.appendChild(bottomDiv);
       const bottomDivContent = document.createElement('div');
       bottomDivContent.classList = 'relative text-base gap-4 md:gap-6 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl flex lg:px-0';
+      if (settings.customConversationWidth) {
+        bottomDivContent.style = `max-width: ${settings.conversationWidth}%`;
+      }
       bottomDiv.appendChild(bottomDivContent);
       const totalCounter = document.createElement('div');
       totalCounter.id = 'total-counter';
-      totalCounter.style = 'position: absolute; top: 0px; right: 0px; font-size: 10px; color: rgb(153, 153, 153); opacity: 0.8; z-index: 100;';
+      totalCounter.style = 'position: absolute; top: 0px; right: 0px; font-size: 10px; color: rgb(153, 153, 153); opacity: 0.8;';
       bottomDivContent.appendChild(totalCounter);
       innerDiv.appendChild(conversationDiv);
       outerDiv.appendChild(innerDiv);

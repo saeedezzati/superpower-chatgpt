@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global updateNewChatButtonNotSynced, getAllConversations, getConversation, loadConversationList, initializeCopyAndCounter, initializeAddToPromptLibrary, initializeTimestamp, addConversationsEventListeners, isGenerating, prependConversation, generateTitleForConversation, canSubmitPrompt, formatDate, userChatIsActuallySaved:true, addAsyncInputEvents, addSyncBanner */
+/* global updateNewChatButtonNotSynced, getAllConversations, getConversation, loadConversationList, initializeCopyAndCounter, initializeAddToPromptLibrary, initializeTimestamp, addConversationsEventListeners, isGenerating, prependConversation, generateTitleForConversation, canSubmitPrompt, formatDate, userChatIsActuallySaved:true, addAsyncInputEvents, addSyncBanner, insertNextChunk */
 /* eslint-disable no-await-in-loop, */
 let localConversations = {};
 let autoSaveTimeoutId;
@@ -16,11 +16,11 @@ function clearAllTimeouts() {
   //   id -= 1;
   // }
 }
-async function countDownAsync(isPaid) {
+async function autoSaveCountDownAsync(isPaid) {
   await new Promise((resolve) => {
     autoSaveTimeoutId = setTimeout(() => {
       resolve();
-    }, isPaid ? 2000 : 10000);
+    }, isPaid ? 2000 : 2000);
   });
 }
 async function addConversationToStorage(conv) {
@@ -99,7 +99,7 @@ async function updateConversationInStorage(conv) {
 }
 
 function updateOrCreateConversation(conversationId, message, parentId, settings, generateTitle = false, forceRefresh = false, newSystemMessage = {}) {
-  chrome.storage.local.get(['conversations'], (result) => {
+  return chrome.storage.local.get(['conversations']).then((result) => {
     const existingConversation = result.conversations?.[conversationId];
     if (existingConversation) {
       existingConversation.languageCode = settings.selectedLanguage.code;
@@ -121,13 +121,14 @@ function updateOrCreateConversation(conversationId, message, parentId, settings,
           existingConversation.mapping[parentId].children.push(message.id);
         }
       }
-      chrome.storage.local.set(
+      return chrome.storage.local.set(
         {
           conversations: {
             ...result.conversations,
             [conversationId]: existingConversation,
           },
         },
+      ).then(
         () => {
           userChatIsActuallySaved = true;
           addConversationsEventListeners(existingConversation.id);
@@ -149,47 +150,46 @@ function updateOrCreateConversation(conversationId, message, parentId, settings,
           }
         },
       );
-    } else {
-      const systemMessage = {
-        ...newSystemMessage,
-        parent: parentId,
-        children: [
-          message.id,
-        ],
-      };
-      const newConversation = {
-        id: conversationId,
-        shouldRefresh: false,
-        archived: false,
-        saveHistory: settings.saveHistory,
-        languageCode: settings.selectedLanguage.code,
-        toneCode: settings.selectedTone.code,
-        writingStyleCode: settings.selectedWritingStyle.code,
-        current_node: message.id,
-        title: 'New chat',
-        create_time: (new Date()).getTime() / 1000,
-        mapping: {
-          [parentId]: {
-            children: [systemMessage.id], id: parentId, message: null, parent: null,
-          },
-          [systemMessage.id]: systemMessage,
-          [message.id]: {
-            children: [], id: message.id, message, parent: systemMessage.id,
-          },
-        },
-        moderation_results: [],
-      };
-      chrome.storage.local.set({
-        conversations: {
-          ...result.conversations,
-          [conversationId]: newConversation,
-        },
-      }, () => {
-        userChatIsActuallySaved = true;
-        addConversationsEventListeners(newConversation.id);
-        prependConversation(newConversation);
-      });
     }
+    const systemMessage = {
+      ...newSystemMessage,
+      parent: parentId,
+      children: [
+        message.id,
+      ],
+    };
+    const newConversation = {
+      id: conversationId,
+      shouldRefresh: false,
+      archived: false,
+      saveHistory: settings.saveHistory,
+      languageCode: settings.selectedLanguage.code,
+      toneCode: settings.selectedTone.code,
+      writingStyleCode: settings.selectedWritingStyle.code,
+      current_node: message.id,
+      title: 'New chat',
+      create_time: (new Date()).getTime() / 1000,
+      mapping: {
+        [parentId]: {
+          children: [systemMessage.id], id: parentId, message: null, parent: null,
+        },
+        [systemMessage.id]: systemMessage,
+        [message.id]: {
+          children: [], id: message.id, message, parent: systemMessage.id,
+        },
+      },
+      moderation_results: [],
+    };
+    return chrome.storage.local.set({
+      conversations: {
+        ...result.conversations,
+        [conversationId]: newConversation,
+      },
+    }).then(() => {
+      userChatIsActuallySaved = true;
+      addConversationsEventListeners(newConversation.id);
+      prependConversation(newConversation);
+    });
   });
 }
 function addProgressBar() {
@@ -290,6 +290,7 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
               if (typeof conv === 'string') {
                 return conv?.slice(0, 5);
               }
+              if (!conv.id) return conv;
               return { ...conv, id: conv.id?.slice(0, 5), conversationIds: conv.conversationIds.map((id) => id?.slice(0, 5)) };
             })
             : oldConversationsOrder;
@@ -379,8 +380,8 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
               if (!allVisibleConversationsOrderIds.includes(remoteConvIds[i]?.slice(0, 5))) {
                 if (!conversationsOrder || conversationsOrder.length === 0) { // if conversationsOrder does not exist, add to the end of it right before trash folder (last element -1)
                   newConversationsOrder.splice(newConversationsOrder.length - 1, 0, remoteConvIds[i]?.slice(0, 5));
-                } else { // if conversationsOrder exists, add to the begining of it
-                  newConversationsOrder.unshift(remoteConvIds[i]?.slice(0, 5));
+                } else { // if conversationsOrder exists, insert it at index i in newConversationsOrder
+                  newConversationsOrder.splice(i, 0, remoteConvIds[i]?.slice(0, 5));
                 }
               }
               if (forceRefreshIds.includes(remoteConvIds[i])
@@ -398,7 +399,7 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
                     // eslint-disable-next-line no-loop-func
                     progressLabel.innerText = `Syncing(${Object.keys(localConversations).filter((id) => !localConversations[id].archived && (typeof localConversations[id].saveHistory === 'undefined' || localConversations[id].saveHistory)).length}/${remoteConvIds.length})`;
                   }
-                  await countDownAsync(isPaid);
+                  await autoSaveCountDownAsync(isPaid);
                 }
               }
             }

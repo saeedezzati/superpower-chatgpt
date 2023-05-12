@@ -2,7 +2,7 @@
 function promptDropdown() {
   const dropdown = document.createElement('ul');
   dropdown.id = 'continue-conversation-dropdown-list';
-  dropdown.style = 'max-height:300px;overflow-y:scroll;width:132px;bottom:40px; left:0;';
+  dropdown.style = 'max-height:300px;overflow-y:scroll;width:132px;bottom:40px; left:0;z-index:200';
   dropdown.classList = 'hidden absolute z-10 right-0 mt-1 overflow-auto rounded-sm py-1 text-base ring-1 ring-opacity-5 focus:outline-none bg-white dark:bg-gray-800 dark:ring-white/20 dark:last:border-0 sm:text-sm -translate-x-1/4';
   dropdown.setAttribute('role', 'menu');
   dropdown.setAttribute('aria-orientation', 'vertical');
@@ -92,7 +92,7 @@ function addContinueButton() {
 
   if (syncDiv) syncDiv.style.opacity = '1';
   const continueButtonWrapper = document.createElement('div');
-  continueButtonWrapper.style = 'position:absolute;left:0;display:flex;';
+  continueButtonWrapper.style = 'position:absolute;left:0;display:flex;z-index:200';
   continueButtonWrapper.id = 'continue-conversation-button-wrapper';
 
   const continueButtonDropdown = document.createElement('button');

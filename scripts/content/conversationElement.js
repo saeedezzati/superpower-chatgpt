@@ -3,7 +3,7 @@
 /* global formatDate, showAllCheckboxes, hideAllButLastCheckboxes, deleteConversation, renameConversation, loadConversation, highlight, showNewChatPage, createSearchBox, emptyFolderElement, shiftKeyPressed:true */
 
 const notSelectedClassList = 'flex py-3 px-3 pr-3 w-full items-center gap-3 relative rounded-md hover:bg-[#2A2B32] cursor-pointer break-all hover:pr-14 group';
-const selectedClassList = 'flex py-3 px-3 pr-3 w-full items-center gap-3 relative rounded-md cursor-pointer break-all hover:pr-14 bg-gray-800 hover:bg-gray-800 group selected border-l border-green-500';
+const selectedClassList = 'flex py-3 px-3 pr-3 w-full items-center gap-3 relative rounded-md cursor-pointer break-all hover:pr-14 bg-gray-800 hover:bg-gray-800 group selected border-l border-gold';
 
 function getConversationElementClassList(conversation) {
   const { pathname } = new URL(window.location.toString());
