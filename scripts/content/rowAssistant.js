@@ -1,24 +1,48 @@
-/* global markdown, katex, texmath, highlight */
+/* global markdown, katex, texmath, highlight, markdownitSup */
 // eslint-disable-next-line no-unused-vars
 function rowAssistant(conversation, node, childIndex, childCount, models, customConversationWidth, conversationWidth, searchValue = '') {
   const { pinned, message } = node;
   const { id, metadata } = message;
   const modelSlug = metadata.model_slug;
+  const { citations } = metadata;
+
   const modelTitle = models.find((m) => m.slug === modelSlug)?.title;
-  const messageContentParts = highlight(message.content.parts.join('\n'), searchValue);
-  const messageContentPartsHTML = markdown('assistant', searchValue).use(texmath, {
-    engine: katex,
-    delimiters: 'dollars',
-    katexOptions: { macros: { '\\RR': '\\mathbb{R}' } },
-  }).render(messageContentParts);
+  let messageContentParts = highlight(message.content.parts.join('\n'), searchValue);
+  // if citations array is not mpty, replace text from start_ix to end_ix position with citation
+  if (citations?.length > 0) {
+    citations.reverse().forEach((citation, index) => {
+      const startIndex = citation.start_ix;
+      const endIndex = citation.end_ix;
+      const citationMetadata = citation.metadata;
+      const { url } = citationMetadata;
+      // number 1 with link to  url
+      let citationText = `[^1^](${url})`;
+      if (endIndex === citations[index - 1]?.start_ix) {
+        citationText = '';
+      }
+
+      messageContentParts = messageContentParts.replace(messageContentParts.substring(startIndex, endIndex), citationText);
+    });
+  }
+  const messageContentPartsHTML = markdown('assistant', searchValue)
+    .use(markdownitSup)
+    .use(texmath, {
+      engine: katex,
+      delimiters: 'dollars',
+      katexOptions: { macros: { '\\RR': '\\mathbb{R}' } },
+    }).render(messageContentParts);
+
   const wordCount = messageContentParts.split(/[ /]/).length;
   const charCount = messageContentParts.length;
+
+  // eslint-disable-next-line no-nested-ternary
+  const avatarColor = (modelSlug?.includes('plugins') || modelSlug?.startsWith('gpt-4')) ? 'rgb(171, 104, 255)' : 'rgb(25, 195, 125)';
   return `<div id="message-wrapper-${id}" data-role="assistant"
   class="w-full border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group ${pinned ? 'border-l-pinned bg-pinned dark:bg-pinned' : 'bg-gray-50 dark:bg-[#444654]'}">
   <div class="relative text-base gap-4 md:gap-6 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl p-4 md:py-6 flex lg:px-0" style="${customConversationWidth ? `max-width:${conversationWidth}%` : ''}">
   <button id="message-pin-button-${id}" title="pin/unpin message" class="${pinned ? 'visible' : 'invisible group-hover:visible'}" style="background-color: transparent; border: none; cursor: pointer;width: 18px; position: absolute; top: -8px; right: 6px;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="${pinned ? 'gold' : '#aaa'}" d="M48 0H336C362.5 0 384 21.49 384 48V487.7C384 501.1 373.1 512 359.7 512C354.7 512 349.8 510.5 345.7 507.6L192 400L38.28 507.6C34.19 510.5 29.32 512 24.33 512C10.89 512 0 501.1 0 487.7V48C0 21.49 21.49 0 48 0z"/></svg></button>
     <div class="w-[30px] flex flex-col relative items-end">
-      <div style="background-color:${modelSlug?.startsWith('gpt-4') ? 'black' : '#10a37f'}" title="${modelTitle}"
+      <div style="background-color:${avatarColor}" title="${modelTitle}"
         class="relative h-[30px] w-[30px] p-1 rounded-sm text-white flex items-center justify-center"><svg
           width="41" height="41" viewBox="0 0 41 41" fill="none" xmlns="http://www.w3.org/2000/svg"
           stroke-width="1.5" class="h-6 w-6">

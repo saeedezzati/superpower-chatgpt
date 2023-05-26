@@ -1,12 +1,14 @@
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global markdown, initializeNavbar, generateInstructions, generateChat, SSE, formatDate, loadConversation, resetSelection, katex, texmath, rowUser, rowAssistant, updateOrCreateConversation, replaceTextAreaElemet, highlight, isGenerating:true, disableTextInput:true, generateTitle, debounce, initializeRegenerateResponseButton, initializeStopGeneratingResponseButton, toggleTextAreaElemet, showNewChatPage, chatStreamIsClosed:true, addCopyCodeButtonsEventListeners, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams, addScrollButtons, updateTotalCounter */
+/* global markdown, markdownitSup, initializeNavbar, generateInstructions, generateChat, SSE, formatDate, loadConversation, resetSelection, katex, texmath, rowUser, rowAssistant, updateOrCreateConversation, replaceTextAreaElemet, highlight, isGenerating:true, disableTextInput:true, generateTitle, debounce, initializeRegenerateResponseButton, initializeStopGeneratingResponseButton, toggleTextAreaElemet, showNewChatPage, chatStreamIsClosed:true, addCopyCodeButtonsEventListeners, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams, addScrollButtons, updateTotalCounter, isWindows */
 
 // Initial state
 let userChatIsActuallySaved = false;
 let chunkNumber = 1;
 let totalChunks = 1;
 let remainingText = '';
+let finalSummary = '';
+let shouldSubmitFinalSummary = false;
 
 function removeOriginalConversationList() {
   const navGap = document.querySelector('nav > :nth-child(3)');
@@ -192,7 +194,7 @@ function createSearchBox() {
     newFolderButton.addEventListener('click', (e) => {
       // inser a new folder at the top of the list
       // if cmnd + shift
-      if (e.shiftKey && (e.metaKey || e.ctrlKey)) {
+      if (e.shiftKey && (e.metaKey || (isWindows() && e.ctrlKey))) {
         chrome.storage.sync.remove('conversationsOrder');
         window.location.reload();
         return;
@@ -236,7 +238,7 @@ function prependConversation(conversation) {
     // get closet element with id starting with conversation-button
     const conversationElementId = e.srcElement.closest('[id^="conversation-button-"]').id.split('conversation-button-')[1];
     // if commandkey or ctrlkey is pressed, open in new tab
-    if (e.metaKey || e.ctrlKey) {
+    if (e.metaKey || (isWindows() && e.ctrlKey)) {
       window.open(`https://chat.openai.com/c/${conversationElementId}`, '_blank');
       return;
     }
@@ -457,6 +459,12 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
           const { conversation_id: conversationId, message } = data;
           finalConversationId = conversationId;
           finalMessage = message;
+          // reset splitter stuff
+          chunkNumber = 1;
+          totalChunks = 1;
+          remainingText = '';
+          finalSummary = '';
+          shouldSubmitFinalSummary = false;
           // update rowAssistant?
         }
         const tempId = setInterval(() => {
@@ -464,7 +472,7 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
             clearInterval(tempId);
             updateOrCreateConversation(finalConversationId, finalMessage, messageId, settings, true, chatStreamIsClosed).then(() => {
               setTimeout(() => {
-                insertNextChunk(settings);
+                insertNextChunk(settings, finalMessage);
               }, 700);
             });
           }
@@ -482,11 +490,17 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
         try {
           isGenerating = true;
           if (finalMessage === '') {
+            const pluginDropdownButton = document.querySelector('#navbar-plugins-dropdown-button');
+            if (pluginDropdownButton) {
+              pluginDropdownButton.disabled = true;
+              pluginDropdownButton.style.opacity = 0.75;
+              pluginDropdownButton.title = 'Changing plugins in the middle of the conversation is not allowed';
+            }
             initializeStopGeneratingResponseButton();
             // update gpt4 counter
             chrome.storage.local.get(['gpt4Timestamps', 'settings', 'conversationLimit'], (result) => {
               const { gpt4Timestamps } = result;
-              if (result.settings.selectedModel.slug !== 'gpt-4') return;
+              if (!result.settings.selectedModel.tags.includes('gpt4') && result.settings.selectedModel.slug !== 'gpt-4') return;
               const now = new Date().getTime();
               const gpt4CounterElement = document.querySelector('#gpt4-counter');
               gpt4CounterElement.style.display = result.settings.showGpt4Counter ? 'block' : 'none';
@@ -494,9 +508,9 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
               const messageCapWindow = result?.conversationLimit?.message_cap_window || 180;
               if (gpt4Timestamps) {
                 gpt4Timestamps.push(now);
-                const fourHoursAgo = now - (messageCapWindow / 60) * 60 * 60 * 1000;
-                const gpt4TimestampsFiltered = gpt4Timestamps.filter((timestamp) => timestamp > fourHoursAgo);
-                chrome.storage.local.set({ gpt4Timestamps: gpt4TimestampsFiltered });
+                const hoursAgo = now - (messageCapWindow / 60) * 60 * 60 * 1000;
+                const gpt4TimestampsFiltered = gpt4Timestamps.filter((timestamp) => timestamp > hoursAgo);
+                chrome.storage.local.set({ gpt4Timestamps: gpt4TimestampsFiltered, capExpiresAt: '' });
                 if (gpt4CounterElement) {
                   gpt4CounterElement.innerText = `GPT4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): ${gpt4TimestampsFiltered.length}/${messageCap}`;
                 }
@@ -514,6 +528,7 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
           if (data.error) throw new Error(data.error);
           const { conversation_id: conversationId, message } = data;
           const { role } = message.author;
+          const { recipient } = message;
 
           finalConversationId = conversationId;
           const { pathname } = new URL(window.location.toString());
@@ -556,7 +571,7 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
           if (!conversation?.id || userChatSavedLocally) {
             // save assistant chat locally
             finalMessage = message;
-            if (!assistantChatSavedLocally) {
+            if (!assistantChatSavedLocally && message.author.role === 'assistant' && message.recipient === 'all') {
               assistantChatSavedLocally = true;
               const tempId = setInterval(() => {
                 if (userChatIsActuallySaved) {
@@ -570,6 +585,9 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
           // if user switch conv while generating, dont show the assistant row until the user switch back to the original conv
           if (finalConversationId !== urlConversationId) return;
 
+          if (role !== 'assistant' && role !== 'user') return;
+          if (recipient !== 'all') return;
+
           const existingRowAssistant = document.querySelector(`[id="message-wrapper-${message.id}"][data-role="assistant"]`);
           if (existingRowAssistant) {
             if (!scrolUpDetected) {
@@ -578,14 +596,34 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
             const existingRowAssistantTextWrapper = existingRowAssistant.querySelector(`#message-text-${message.id}`);
             const resultCounter = existingRowAssistant.querySelector(`#result-counter-${message.id}`);
             const searchValue = document.querySelector('#conversation-search')?.value;
-            const messageContentParts = searchValue ? highlight(finalMessage.content.parts.join('\n'), searchValue) : finalMessage.content.parts.join('\n');
-            const messageContentPartsHTML = markdown('assistant').use(texmath, {
-              engine: katex,
-              delimiters: 'dollars',
-              katexOptions: { macros: { '\\RR': '\\mathbb{R}' } },
-            }).render(messageContentParts);
+            let messageContentParts = searchValue ? highlight(finalMessage.content.parts.join('\n'), searchValue) : finalMessage.content.parts.join('\n');
+            const { citations } = finalMessage.metadata;
+            if (citations?.length > 0) {
+              citations.reverse().forEach((citation, index) => {
+                const startIndex = citation.start_ix;
+                const endIndex = citation.end_ix;
+                const citationMetadata = citation.metadata;
+                const { url } = citationMetadata;
+                // number 1 with link to  url
+                let citationText = `[^1^](${url})`;
+                if (endIndex === citations[index - 1]?.start_ix) {
+                  citationText = '';
+                }
+
+                messageContentParts = messageContentParts.replace(messageContentParts.substring(startIndex, endIndex), citationText);
+              });
+            }
+
+            const messageContentPartsHTML = markdown('assistant')
+              .use(markdownitSup)
+              .use(texmath, {
+                engine: katex,
+                delimiters: 'dollars',
+                katexOptions: { macros: { '\\RR': '\\mathbb{R}' } },
+              }).render(messageContentParts);
             const wordCount = messageContentParts.split(/[ /]/).length;
             const charCount = messageContentParts.length;
+
             existingRowAssistantTextWrapper.innerHTML = `${messageContentPartsHTML}`;
             resultCounter.innerHTML = `${charCount} chars / ${wordCount} words`;
           } else {
@@ -614,6 +652,11 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
     });
     chatStream.addEventListener('error', (err) => {
       isGenerating = false;
+      chunkNumber = 1;
+      totalChunks = 1;
+      remainingText = '';
+      finalSummary = '';
+      shouldSubmitFinalSummary = false;
       syncDiv.style.opacity = '1';
       const main = document.querySelector('main');
       const inputForm = main.querySelector('form');
@@ -636,8 +679,10 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
         const hour12Display = hour12 || 12;
         const minuteDisplay = minute < 10 ? `0${minute}` : minute;
         const capExpiresAt = `${hour12Display}:${minuteDisplay}${ampm}`;
-        // chrome.storage.local.set({ capExpiresAt });
+        chrome.storage.local.set({ capExpiresAt });
         errorMessage = `You've reached the current usage cap for this model. You can continue with the default model now, or try again after ${capExpiresAt}.`;
+      } else {
+        chrome.storage.local.set({ capExpiresAt: '' });
       }
       const conversationBottom = document.querySelector('#conversation-bottom');
       const errorMessageElement = `<div style="max-width:400px" class="py-2 px-3 my-2 border text-gray-600 rounded-md text-sm dark:text-gray-100 border-red-500 bg-red-500/10">${errorMessage}</div>`;
@@ -646,20 +691,51 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
     });
   });
 }
-function insertNextChunk(settings) {
-  if (!settings.splitPrompt) return;
-  if (totalChunks === 1) return;
-  if (remainingText === '') return;
+function submitFinalSummary() {
+  if (!shouldSubmitFinalSummary) return;
+  if (finalSummary === '') return;
   const inputForm = document.querySelector('form');
   if (!inputForm) return;
   const submitButton = inputForm.querySelector('textarea ~ button');
   if (!submitButton) return;
   const textAreaElement = inputForm.querySelector('textarea');
   if (!textAreaElement) return;
+
+  textAreaElement.value = `Here's the final summary of our conversation:
+${finalSummary}
+Reply with OK: [Summary is received!]. Don't reply with anything else!`;
+  shouldSubmitFinalSummary = false;
+  finalSummary = '';
+  textAreaElement.focus();
+  textAreaElement.dispatchEvent(new Event('input', { bubbles: true }));
+  textAreaElement.dispatchEvent(new Event('change', { bubbles: true }));
+  submitButton.click();
+}
+function insertNextChunk(settings, previousMessage) {
+  if (settings.autoSummarize) {
+    finalSummary = `${finalSummary}\n${previousMessage.content.parts.join('\n')}`;
+
+    if (shouldSubmitFinalSummary) {
+      submitFinalSummary();
+      return;
+    }
+  }
+  if (!settings.autoSplit) return;
+  if (totalChunks === 1) return;
+  if (remainingText === '') return;
+
+  const inputForm = document.querySelector('form');
+  if (!inputForm) return;
+  const submitButton = inputForm.querySelector('textarea ~ button');
+  if (!submitButton) return;
+  const textAreaElement = inputForm.querySelector('textarea');
+  if (!textAreaElement) return;
+  const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > remainingText.length ? settings.autoSplitLimit : remainingText.lastIndexOf('\n', settings.autoSplitLimit);
+
   textAreaElement.value = `[START CHUNK ${chunkNumber}/${totalChunks}]
-${remainingText.slice(0, settings.splitPromptLimit)}
+${remainingText.slice(0, lastNewLineIndexBeforeLimit)}
 [END CHUNK ${chunkNumber}/${totalChunks}]
-Reply with OK: [CHUNK x/TOTAL], don't reply anything else, don't explain the text!`;
+${settings.autoSplitChunkPrompt}`;
   textAreaElement.focus();
   textAreaElement.dispatchEvent(new Event('input', { bubbles: true }));
   textAreaElement.dispatchEvent(new Event('change', { bubbles: true }));
@@ -685,24 +761,28 @@ function overrideSubmitForm() {
         chrome.storage.sync.get(['name', 'avatar'], (result) => {
           let text = textAreaElement.value.trim();
           if (chunkNumber === 1) {
-            if (settings.splitPrompt && text.length > settings.splitPromptLimit) {
-              totalChunks = Math.ceil(text.length / settings.splitPromptLimit);
-              remainingText = text.substring(settings.splitPromptLimit);
-              text = `${settings.splitPromptInstruction}[START CHUNK ${chunkNumber}/${totalChunks}]
-${text.substring(0, settings.splitPromptLimit)}
+            finalSummary = '';
+            if (settings.autoSplit && text.length > settings.autoSplitLimit) {
+              totalChunks = Math.ceil(text.length / settings.autoSplitLimit);
+              const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > text.length ? settings.autoSplitLimit : text.lastIndexOf('\n', settings.autoSplitLimit);
+              remainingText = text.substring(lastNewLineIndexBeforeLimit);
+              text = `${settings.autoSplitInitialPrompt}[START CHUNK ${chunkNumber}/${totalChunks}]
+${text.substring(0, lastNewLineIndexBeforeLimit)}
 [END CHUNK ${chunkNumber}/${totalChunks}]
-Reply with OK: [CHUNK x/TOTAL], don't reply anything else, don't explain the text!`;
+${settings.autoSplitChunkPrompt}`;
               chunkNumber += 1;
             } else {
-              text = generateInstructions({}, settings, textAreaElement.value.trim());
+              text = generateInstructions(conversation, settings, textAreaElement.value.trim());
             }
           } else if (chunkNumber === totalChunks) {
+            if (totalChunks > 1 && settings.autoSummarize) shouldSubmitFinalSummary = true;
             chunkNumber = 1;
             totalChunks = 1;
             remainingText = '';
           } else {
             chunkNumber += 1;
-            remainingText = remainingText.slice(settings.splitPromptLimit);
+            const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > remainingText.length ? settings.autoSplitLimit : remainingText.lastIndexOf('\n', settings.autoSplitLimit);
+            remainingText = remainingText.slice(lastNewLineIndexBeforeLimit);
           }
           const messageId = self.crypto.randomUUID();
           const allMessages = document.querySelectorAll('[id^="message-wrapper-"]');
@@ -727,24 +807,28 @@ Reply with OK: [CHUNK x/TOTAL], don't reply anything else, don't explain the tex
         chrome.storage.sync.get(['name', 'avatar'], (result) => {
           let text = textAreaElement.value.trim();
           if (chunkNumber === 1) {
-            if (settings.splitPrompt && text.length > settings.splitPromptLimit) {
-              totalChunks = Math.ceil(text.length / settings.splitPromptLimit);
-              remainingText = text.substring(settings.splitPromptLimit);
-              text = `${settings.splitPromptInstruction}[START CHUNK ${chunkNumber}/${totalChunks}]
-${text.substring(0, settings.splitPromptLimit)}
+            finalSummary = '';
+            if (settings.autoSplit && text.length > settings.autoSplitLimit) {
+              totalChunks = Math.ceil(text.length / settings.autoSplitLimit);
+              const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > text.length ? settings.autoSplitLimit : text.lastIndexOf('\n', settings.autoSplitLimit);
+              remainingText = text.substring(lastNewLineIndexBeforeLimit);
+              text = `${settings.autoSplitInitialPrompt}[START CHUNK ${chunkNumber}/${totalChunks}]
+${text.substring(0, lastNewLineIndexBeforeLimit)}
 [END CHUNK ${chunkNumber}/${totalChunks}]
-Reply with OK: [CHUNK x/TOTAL], don't reply anything else, don't explain the text!`;
+${settings.autoSplitChunkPrompt}`;
               chunkNumber += 1;
             } else {
               text = generateInstructions({}, settings, textAreaElement.value.trim());
             }
           } else if (chunkNumber === totalChunks) {
+            if (totalChunks > 1 && settings.autoSummarize) shouldSubmitFinalSummary = true;
             chunkNumber = 1;
             totalChunks = 1;
             remainingText = '';
           } else {
             chunkNumber += 1;
-            remainingText = remainingText.slice(settings.splitPromptLimit);
+            const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > remainingText.length ? settings.autoSplitLimit : remainingText.lastIndexOf('\n', settings.autoSplitLimit);
+            remainingText = remainingText.slice(lastNewLineIndexBeforeLimit);
           }
 
           const messageId = self.crypto.randomUUID();

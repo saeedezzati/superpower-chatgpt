@@ -12,12 +12,12 @@ function addNavbar() {
   navbar.id = 'gptx-navbar';
   navbar.className = 'w-full flex items-center justify-between border-b h-14 border-black/10 bg-gray-50 px-3 py-1 text-gray-500 dark:border-gray-900/50 dark:bg-gray-700 dark:text-gray-300 shadow-md';
 
-  chrome.storage.local.get(['settings', 'models', 'account', 'unofficialModels', 'customModels'], (result) => {
+  chrome.storage.local.get(['settings', 'models', 'account', 'installedPlugins', 'enabledPluginIds', 'unofficialModels', 'customModels'], (result) => {
     const {
-      models, settings, unofficialModels, customModels,
+      models, settings, unofficialModels, customModels, installedPlugins, enabledPluginIds,
     } = result;
     const {
-      selectedModel, selectedLanguage, selectedTone, selectedWritingStyle, autoHideTopNav, navOpen,
+      selectedModel, selectedLanguage, selectedTone, selectedWritingStyle, autoHideTopNav,
     } = settings;
     const allModels = [...models, ...unofficialModels, ...customModels];
     // const planName = account?.account_plan?.subscription_plan || 'chatgptfreeplan';
@@ -43,19 +43,21 @@ function addNavbar() {
     leftSection.appendChild(modelSwitcherWrapper);
 
     // Add plugins dropdown
-    // const pluginsDropdownWrapper = document.createElement('div');
-    // pluginsDropdownWrapper.style = 'position:relative;width:200px;margin-left:8px;z-index:1000;display:none';
-    // if (settings.selectedModel.slug.includes('plugins')) {
-    //   pluginsDropdownWrapper.style.display = 'block';
-    // }
-    // pluginsDropdownWrapper.id = `plugins-dropdown-wrapper-${idPrefix}`;
-    // pluginsDropdownWrapper.innerHTML = pluginsDropdown(allModels, settings.selectedModel, idPrefix, customModels);
-    // leftSection.appendChild(pluginsDropdownWrapper);
-
+    if (models.map((m) => m.slug).find((m) => m.includes('plugins'))) {
+      const pluginsDropdownWrapper = document.createElement('div');
+      pluginsDropdownWrapper.style = 'position:relative;width:200px;margin-left:8px;z-index:1000;display:none';
+      if (settings.selectedModel.slug.includes('plugins')) {
+        pluginsDropdownWrapper.style.display = 'block';
+      }
+      pluginsDropdownWrapper.id = `plugins-dropdown-wrapper-${idPrefix}`;
+      pluginsDropdownWrapper.innerHTML = pluginsDropdown(installedPlugins, enabledPluginIds, idPrefix);
+      leftSection.appendChild(pluginsDropdownWrapper);
+    }
     navbar.appendChild(leftSection);
     addModelSwitcherEventListener(idPrefix);
-    // addPluginsDropdownEventListener(idPrefix);
-
+    if (models.map((m) => m.slug).find((m) => m.includes('plugins'))) {
+      addPluginsDropdownEventListener(idPrefix);
+    }
     const rightSection = document.createElement('div');
     rightSection.style = 'display:flex;z-index:1000;margin-left:auto;';
 

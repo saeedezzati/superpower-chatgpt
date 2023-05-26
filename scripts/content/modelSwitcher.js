@@ -5,7 +5,7 @@ function modelSwitcher(models, selectedModel, idPrefix, customModels, forceDark 
   return `<button id="${idPrefix}-model-switcher-button" class="relative w-full cursor-pointer rounded-md border ${forceDark ? 'border-white/20 bg-gray-800' : 'border-gray-300 bg-white'} pt-1 pl-3 pr-10 text-left focus:border-green-600 focus:outline-none focus:ring-1 focus:ring-green-600 dark:border-white/20 dark:bg-gray-800 sm:text-sm" type="button">
   <label class="block text-xs ${forceDark ? 'text-gray-500' : 'text-gray-700'} dark:text-gray-500">Model</label>
   <span class="inline-flex w-full truncate font-semibold ${forceDark ? 'text-gray-100' : 'text-gray-800'} dark:text-gray-100">
-    <span class="flex h-6 items-center gap-1 truncate"><span id="${idPrefix}-selected-model-title">${selectedModel.title} ${selectedModel.tags?.map((tag) => `<span class="py-0.25 rounded px-1 text-[10px] font-semibold uppercase bg-blue-200 text-[#4559A4]">${tag}</span>`)}</span>
+    <span class="flex h-6 items-center gap-1 truncate"><span id="${idPrefix}-selected-model-title">${selectedModel.title} ${selectedModel.tags?.map((tag) => `<span class="py-0.25 mr-1 rounded px-1 text-sm capitalize bg-blue-200 text-blue-500">${tag}</span>`).join('')}</span>
     </span>
   </span>
   <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
@@ -24,7 +24,7 @@ asd
 function createModelListDropDown(models, selectedModel, idPrefix, customModels, forceDark = false) {
   return `${models.map((model) => `<li class="text-gray-900 group relative cursor-pointer select-none border-b py-1 pl-3 pr-9 last:border-0 ${forceDark ? 'border-white/20' : 'border-gray-100'} dark:border-white/20" id="${idPrefix}-model-switcher-option-${model.slug}" role="option" tabindex="-1">
  <div class="flex flex-col">
-   <span class="font-semibold flex h-6 items-center gap-1 truncate ${forceDark ? 'text-gray-100' : 'text-gray-800'} dark:text-gray-100">${model.title} ${model?.tags?.map((tag) => `<span class="py-0.25 rounded px-1 text-[10px] font-semibold uppercase bg-blue-200 text-[#4559A4]">${tag}</span>`)}</span>
+   <span class="font-semibold flex h-6 items-center gap-1 truncate ${forceDark ? 'text-gray-100' : 'text-gray-800'} dark:text-gray-100">${model.title} ${model?.tags?.map((tag) => `<span class="py-0.25 mr-1 rounded px-1 text-sm capitalize bg-blue-200 text-blue-500">${tag}</span>`).join('')}</span>
    <span class="${forceDark ? 'text-gray-500' : 'text-gray-800'} dark:text-gray-500 text-xs">${model.description}</span>
  </div>
  ${customModels.map((m) => m.slug).includes(model.slug) ? `<span id="delete-model-${model.slug}" class="absolute w-4 h-4 inset-y-0 flex items-center pr-4 ${forceDark ? 'text-gray-100' : 'text-gray-800'} dark:text-gray-100 invisible group-hover:visible" style="right:40px;top:13px;"><svg xmlns="http://www.w3.org/2000/svg" fill="#ddd" viewBox="0 0 448 512"><path d="M160 400C160 408.8 152.8 416 144 416C135.2 416 128 408.8 128 400V192C128 183.2 135.2 176 144 176C152.8 176 160 183.2 160 192V400zM240 400C240 408.8 232.8 416 224 416C215.2 416 208 408.8 208 400V192C208 183.2 215.2 176 224 176C232.8 176 240 183.2 240 192V400zM320 400C320 408.8 312.8 416 304 416C295.2 416 288 408.8 288 400V192C288 183.2 295.2 176 304 176C312.8 176 320 183.2 320 192V400zM317.5 24.94L354.2 80H424C437.3 80 448 90.75 448 104C448 117.3 437.3 128 424 128H416V432C416 476.2 380.2 512 336 512H112C67.82 512 32 476.2 32 432V128H24C10.75 128 0 117.3 0 104C0 90.75 10.75 80 24 80H93.82L130.5 24.94C140.9 9.357 158.4 0 177.1 0H270.9C289.6 0 307.1 9.358 317.5 24.94H317.5zM151.5 80H296.5L277.5 51.56C276 49.34 273.5 48 270.9 48H177.1C174.5 48 171.1 49.34 170.5 51.56L151.5 80zM80 432C80 449.7 94.33 464 112 464H336C353.7 464 368 449.7 368 432V128H80V432z"/></svg></span>` : ''}
@@ -66,8 +66,8 @@ function addModelSwitcherEventListener(idPrefix, forceDark = false) {
 
   modelSwitcherOptions.forEach((option) => {
     option.addEventListener('mousemove', () => {
-      const dardMode = document.querySelector('html').classList.contains('dark');
-      option.classList.add((dardMode || forceDark) ? 'bg-gray-600' : 'bg-gray-200');
+      const darkMode = document.querySelector('html').classList.contains('dark');
+      option.classList.add((darkMode || forceDark) ? 'bg-gray-600' : 'bg-gray-200');
       const modelSpecifics = document.querySelector(`#${idPrefix}-model-specifics`);
       chrome.storage.local.get(['models', 'unofficialModels', 'customModels'], (result) => {
         const { models, unofficialModels, customModels } = result;
@@ -98,8 +98,8 @@ function addModelSwitcherEventListener(idPrefix, forceDark = false) {
       });
     }
     option.addEventListener('mouseleave', () => {
-      const dardMode = document.querySelector('html').classList.contains('dark');
-      option.classList.remove((dardMode || forceDark) ? 'bg-gray-600' : 'bg-gray-200');
+      const darkMode = document.querySelector('html').classList.contains('dark');
+      option.classList.remove((darkMode || forceDark) ? 'bg-gray-600' : 'bg-gray-200');
       const modelSpecifics = document.querySelector(`#${idPrefix}-model-specifics`);
       modelSpecifics.classList.add('hidden');
     });
@@ -110,13 +110,13 @@ function addModelSwitcherEventListener(idPrefix, forceDark = false) {
         const allModels = [...models, ...unofficialModels, ...customModels];
         const modelSlug = option.id.split(`${idPrefix}-model-switcher-option-`)[1];
         const selectedModel = allModels.find((m) => m.slug === modelSlug);
-        // const pluginsDropdownWrapper = document.querySelector(`#plugins-dropdown-wrapper-${idPrefix}`);
-        // if (selectedModel.slug.includes('plugins')) {
-        //   getInstalledPlugins();
-        //   pluginsDropdownWrapper.style.display = 'block';
-        // } else {
-        //   pluginsDropdownWrapper.style.display = 'none';
-        // }
+        const pluginsDropdownWrapper = document.querySelector(`#plugins-dropdown-wrapper-${idPrefix}`);
+        if (selectedModel.slug.includes('plugins')) {
+          getInstalledPlugins();
+          pluginsDropdownWrapper.style.display = 'block';
+        } else {
+          pluginsDropdownWrapper.style.display = 'none';
+        }
         chrome.storage.local.set({ settings: { ...settings, selectedModel } });
       });
     });
@@ -128,7 +128,7 @@ function addModelSwitcherEventListener(idPrefix, forceDark = false) {
         modelSwitcherCheckmark.remove();
         const { selectedModel } = e.settings.newValue;
         const selectedModelTitle = document.querySelector(`#${idPrefix}-selected-model-title`);
-        selectedModelTitle.innerHTML = `${selectedModel.title} ${selectedModel.tags?.map((tag) => `<span class="py-0.25 rounded px-1 text-[10px] font-semibold uppercase bg-blue-200 text-[#4559A4]">${tag}</span>`)}`;
+        selectedModelTitle.innerHTML = `${selectedModel.title} ${selectedModel.tags?.map((tag) => `<span class="py-0.25 mr-1 rounded px-1 text-sm capitalize bg-blue-200 text-blue-500">${tag}</span>`).join('')}`;
         const selectedModelOption = document.querySelector(`#${idPrefix}-model-switcher-option-${selectedModel.slug}`);
         selectedModelOption.appendChild(modelSwitcherCheckmark);
       }

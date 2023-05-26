@@ -7,46 +7,51 @@ chrome.storage.local.get('environment', ({ environment }) => {
   }
 });
 function registerUser(data) {
-  const { user } = data;
-  const { version } = chrome.runtime.getManifest();
-  const body = {
-    openai_id: user.id,
-    email: user.email,
-    avatar: user.image,
-    name: user.name,
-    version,
-  };
-
-  // register user to the server
-  fetch(`${API_URL}/gptx/register/`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  }).then((res) => res.json())
-    .then((newData) => {
-      chrome.storage.sync.set({
-        openai_id: user.id,
-        user_id: newData.id,
-        name: newData.name,
-        nickname: newData.nickname ? newData.nickname : newData.name,
-        email: newData.email,
-        avatar: newData.avatar,
-        url: newData.url,
-        version: newData.version,
-        lastUserSync: Date.now(),
+  chrome.storage.local.get(['account'], (r) => {
+    const { account } = r;
+    const isPaid = account?.account_plan?.is_paid_subscription_active || account?.accounts?.default?.entitlement?.has_active_subscription || false;
+    const { user } = data;
+    const { version } = chrome.runtime.getManifest();
+    const body = {
+      openai_id: user.id,
+      email: user.email,
+      avatar: user.image,
+      name: user.name,
+      plus: isPaid,
+      version,
+    };
+    // register user to the server
+    fetch(`${API_URL}/gptx/register/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    }).then((res) => res.json())
+      .then((newData) => {
+        chrome.storage.sync.set({
+          openai_id: user.id,
+          user_id: newData.id,
+          name: newData.name,
+          nickname: newData.nickname ? newData.nickname : newData.name,
+          email: newData.email,
+          avatar: newData.avatar,
+          url: newData.url,
+          mfa: user.mfa ? user.mfa : false,
+          version: newData.version,
+          lastUserSync: Date.now(),
+        });
+        chrome.storage.local.get(['settings'], (result) => {
+          chrome.storage.local.set({ settings: { ...result.settings, emailNewsletter: newData.email_newsletter } });
+        });
+        chrome.runtime.setUninstallURL(`${API_URL}/gptx/uninstall?p=${user.id.split('-')[1]}`);
       });
-      chrome.storage.local.get(['settings'], (result) => {
-        chrome.storage.local.set({ settings: { ...result.settings, emailNewsletter: newData.email_newsletter } });
-      });
-      chrome.runtime.setUninstallURL(`${API_URL}/gptx/uninstall?p=${user.id.split('-')[1]}`);
-    });
+  });
 }
 /* eslint-disable no-unused-vars */
 chrome.webRequest.onBeforeSendHeaders.addListener(
   (details) => {
-    chrome.storage.sync.get(['user_id', 'openai_id', 'version', 'avatar', 'lastUserSync'], (result) => {
+    chrome.storage.sync.get(['user_id', 'openai_id', 'version', 'avatar', 'lastUserSync', 'mfa'], (result) => {
       // or conditionor
       const { version } = chrome.runtime.getManifest();
 
@@ -55,6 +60,7 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
         || !result.avatar
         || !result.user_id
         || !result.openai_id
+        || typeof result.mfa === 'undefined'
         || result.version !== version;
       if (shouldRegister && details.url === 'https://chat.openai.com/api/auth/session') {
         const requestHeaders = details.requestHeaders.reduce((acc, header) => {

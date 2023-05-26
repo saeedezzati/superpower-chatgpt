@@ -71,7 +71,9 @@ function updateTimestamp(conversationList) {
         if (!existingTimestamp) {
           // button first div child
           const chatTitle = button.querySelector('div');
-          chatTitle.style = `${chatTitle.style.cssText} position: relative; bottom: 5px;`;
+          if (chatTitle) {
+            chatTitle.style = `${chatTitle?.style?.cssText} position: relative; bottom: 5px;`;
+          }
           const timestamp = document.createElement('div');
           timestamp.id = 'timestamp';
           timestamp.style = 'font-size: 10px; color: lightslategray; position: absolute; bottom: 0px; left: 40px;';

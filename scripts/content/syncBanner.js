@@ -1,5 +1,7 @@
 // eslint-disable-next-line no-unused-vars
 function addSyncBanner() {
+  const existingSyncBanner = document.querySelector('#sync-nav-wrapper');
+  if (existingSyncBanner) existingSyncBanner.remove();
   const navWrapper = document.createElement('div');
   navWrapper.id = 'sync-nav-wrapper';
   navWrapper.className = 'w-full z-10 bg-transparent transition-all relative top-0';

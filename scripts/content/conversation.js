@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global getConversation, submitChat, openSubmitPromptModal, initializeRegenerateResponseButton, toggleTextAreaElemet, rowAssistant, rowUser, copyRichText, messageFeedback, openFeedbackModal, refreshConversations, initializeStopGeneratingResponseButton, chatStreamIsClosed:true, generateInstructions, isGenerating:true, scrolUpDetected:true, addScrollDetector */
+/* global getConversation, submitChat, openSubmitPromptModal, initializeRegenerateResponseButton, toggleTextAreaElemet, rowAssistant, rowUser, copyRichText, messageFeedback, openFeedbackModal, refreshConversations, initializeStopGeneratingResponseButton, chatStreamIsClosed:true, generateInstructions, isGenerating:true, scrolUpDetected:true, addScrollDetector, generateSuggestions */
 
 function addPinNav(sortedNodes) {
   chrome.storage.local.get(['settings'], (res) => {
@@ -33,14 +33,28 @@ function addPinNav(sortedNodes) {
     main.appendChild(pinNav);
   });
 }
-function updateModel(modelSlug) {
+function updateModel(modelSlug, pluginIds = []) {
   if (!modelSlug) return;
   chrome.storage.local.get(['settings', 'models', 'unofficialModels', 'customModels'], ({
     settings, models, unofficialModels, customModels,
   }) => {
     const allModels = [...models, ...unofficialModels, ...customModels];
     const selectedModel = allModels.find((m) => m.slug === modelSlug);
-    chrome.storage.local.set({ settings: { ...settings, selectedModel } });
+    const pluginsDropdownWrapper = document.querySelector('#plugins-dropdown-wrapper-navbar');
+    if (pluginsDropdownWrapper) {
+      if (selectedModel.slug.includes('plugins')) {
+        pluginsDropdownWrapper.style.display = 'block';
+      } else {
+        pluginsDropdownWrapper.style.display = 'none';
+      }
+    }
+    const pluginDropdownButton = document.querySelector('#navbar-plugins-dropdown-button');
+    if (pluginDropdownButton) {
+      pluginDropdownButton.disabled = true;
+      pluginDropdownButton.style.opacity = 0.75;
+      pluginDropdownButton.title = 'Changing plugins in the middle of the conversation is not allowed';
+    }
+    chrome.storage.local.set({ settings: { ...settings, selectedModel }, enabledPluginIds: pluginIds });
   });
 }
 function loadConversationFromNode(conversationId, newMessageId, oldMessageId, searchValue = '') {
@@ -49,6 +63,7 @@ function loadConversationFromNode(conversationId, newMessageId, oldMessageId, se
     chrome.storage.local.get(['conversations', 'settings', 'models'], (res) => {
       const fullConversation = res.conversations?.[conversationId];
       const { settings } = res;
+
       let currentNode = fullConversation.mapping[newMessageId];
       const sortedNodes = [];
       while (currentNode) {
@@ -90,7 +105,7 @@ function loadConversationFromNode(conversationId, newMessageId, oldMessageId, se
       initializeRegenerateResponseButton();
       initializeStopGeneratingResponseButton();
       addPinNav(sortedNodes);
-      updateModel(sortedNodes[sortedNodes.length - 1].message?.metadata?.model_slug);
+      updateModel(sortedNodes[sortedNodes.length - 1].message?.metadata?.model_slug, fullConversation.plugin_ids || []);
       updateTotalCounter();
     });
   });
@@ -129,6 +144,10 @@ function loadConversation(conversationId, searchValue = '', focusOnInput = true)
       // traverse up the current node to get all the parent nodes
       const sortedNodes = [];
       let currentNodeId = fullConversation.current_node;
+      // mapping: {id: message, id: message }
+      // remove all the nodes that are not user or assistant
+      // (node) => ['user', 'assistant'].includes(node.author.role) && node.recipient === 'all');
+
       while (currentNodeId) {
         const currentNode = fullConversation.mapping[currentNodeId];
         const parentId = currentNode.parent;
@@ -157,7 +176,7 @@ function loadConversation(conversationId, searchValue = '', focusOnInput = true)
         if (message.role === 'user' || message.author?.role === 'user') {
           messageDiv += rowUser(fullConversation, sortedNodes[i], threadIndex, threadCount, result.name, result.avatar, settings.customConversationWidth, settings.conversationWidth, searchValue);
         }
-        if (message.role === 'assistant' || message.author?.role === 'assistant') {
+        if (message.recipient === 'all' && (message.role === 'assistant' || message.author?.role === 'assistant')) {
           messageDiv += rowAssistant(fullConversation, sortedNodes[i], threadIndex, threadCount, res.models, settings.customConversationWidth, settings.conversationWidth, searchValue);
         }
       }
@@ -205,7 +224,7 @@ function loadConversation(conversationId, searchValue = '', focusOnInput = true)
         refreshConversations(res.conversations);
       }
       addPinNav(sortedNodes);
-      updateModel(sortedNodes[sortedNodes.length - 1].message?.metadata?.model_slug);
+      updateModel(sortedNodes[sortedNodes.length - 1].message?.metadata?.model_slug, fullConversation.plugin_ids || []);
       updateTotalCounter();
     });
   });

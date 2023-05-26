@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global updateNewChatButtonNotSynced, getAllConversations, getConversation, loadConversationList, initializeCopyAndCounter, initializeAddToPromptLibrary, initializeTimestamp, addConversationsEventListeners, isGenerating, prependConversation, generateTitleForConversation, canSubmitPrompt, formatDate, userChatIsActuallySaved:true, addAsyncInputEvents, addSyncBanner, insertNextChunk */
+/* global updateNewChatButtonNotSynced, getAllConversations, getConversation, loadConversationList, initializeCopyAndCounter, initializeAddToPromptLibrary, initializeTimestamp, addConversationsEventListeners, isGenerating, prependConversation, generateTitleForConversation, canSubmitPrompt, formatDate, userChatIsActuallySaved:true, addAsyncInputEvents, addSyncBanner, insertNextChunk, isWindows */
 /* eslint-disable no-await-in-loop, */
 let localConversations = {};
 let autoSaveTimeoutId;
@@ -99,7 +99,7 @@ async function updateConversationInStorage(conv) {
 }
 
 function updateOrCreateConversation(conversationId, message, parentId, settings, generateTitle = false, forceRefresh = false, newSystemMessage = {}) {
-  return chrome.storage.local.get(['conversations']).then((result) => {
+  return chrome.storage.local.get(['conversations', 'enabledPluginIds']).then((result) => {
     const existingConversation = result.conversations?.[conversationId];
     if (existingConversation) {
       existingConversation.languageCode = settings.selectedLanguage.code;
@@ -152,7 +152,8 @@ function updateOrCreateConversation(conversationId, message, parentId, settings,
       );
     }
     const systemMessage = {
-      ...newSystemMessage,
+      id: newSystemMessage.id,
+      message: { ...newSystemMessage },
       parent: parentId,
       children: [
         message.id,
@@ -180,6 +181,9 @@ function updateOrCreateConversation(conversationId, message, parentId, settings,
       },
       moderation_results: [],
     };
+    if (settings.selectedModel.slug.includes('plugins')) {
+      newConversation.plugin_ids = result.enabledPluginIds;
+    }
     return chrome.storage.local.set({
       conversations: {
         ...result.conversations,
@@ -250,6 +254,14 @@ function refreshConversations(conversations) {
     }
   }
 }
+function outOfSyncConversations(localConvs, remoteConvs) {
+  return Object.keys(localConvs).filter(
+    (id) => !localConvs[id].archived
+      && localConvs[id].current_node
+      && (localConvs[id].update_time === new Date(remoteConvs.find((rc) => rc.id === id).update_time).getTime() / 1000)
+      && (typeof localConvs[id].saveHistory === 'undefined' || localConvs[id].saveHistory),
+  );
+}
 // eslint-disable-next-line no-unused-vars
 function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
   clearTimeout(refreshTimeoutId);
@@ -262,7 +274,7 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
       const { conversationsOrder } = res;
       chrome.storage.local.get(['conversations', 'account'], (result) => {
         const { account } = result;
-        const isPaid = account?.account_plan?.is_paid_subscription_active || false;
+        const isPaid = account?.account_plan?.is_paid_subscription_active || account?.accounts?.default?.entitlement?.has_active_subscription || false;
         if (result.conversations && Object.keys(result.conversations).length > 0) {
           localConversations = result.conversations;
         }
@@ -303,11 +315,12 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
             const visibleAndRefreshedLocalConvIds = Object.keys(localConversations).filter((id) => !localConversations[id].archived && !localConversations[id].shouldRefresh);
 
             for (let i = 0; i < localConvIds.length; i += 1) {
+              const localConv = localConversations[localConvIds[i]];
               const remoteConv = remoteConversations.find((conv) => conv.id === localConvIds[i]) || localConversations[localConvIds[i]];
               localConversations[localConvIds[i]].title = remoteConv.title;
-              localConversations[localConvIds[i]].update_time = remoteConv.update_time;
+              // eslint-disable-next-line prefer-destructuring
+              // localConversations[localConvIds[i]].update_time = Math.trunc(localConv.mapping[localConv.current_node].message.create_time);
               // delete conversation key(legacy)
-              const localConv = localConversations[localConvIds[i]];
               if ('conversation' in localConv) {
                 delete localConv.conversation;
               }
@@ -359,7 +372,7 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
             }
             const allVisibleConversationsOrderIds = newConversationsOrder.filter((conv) => conv.id !== 'trash').map((conv) => (typeof conv === 'object' ? conv.conversationIds : conv)).flat();
 
-            if (remoteConvIds.length > 0 && remoteConvIds.length - visibleAndRefreshedLocalConvIds.length > 3) {
+            if (remoteConvIds.length > 0 && remoteConvIds.length - outOfSyncConversations(localConversations, remoteConversations).length > 3) {
               initializeCopyAndCounter();
               initializeAddToPromptLibrary();
               initializeTimestamp();
@@ -391,13 +404,16 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
                 || !localConversations[remoteConvIds[i]].id
                 || !localConversations[remoteConvIds[i]].create_time
                 || !localConversations[remoteConvIds[i]].current_node
+                || localConversations[remoteConvIds[i]].update_time !== new Date(remoteConversations[i].update_time).getTime() / 1000
+                // || (localConversations[remoteConvIds[i]].mapping[localConversations[remoteConvIds[i]].current_node].message.metadata.model_slug.includes('plugins') && typeof localConversations[remoteConvIds[i]].plugin_ids === 'undefined')
               ) {
                 await addConversationToStorage(remoteConversations[i]);
-                if (remoteConvIds.length - visibleAndRefreshedLocalConvIds.length > 3) {
+                if (remoteConvIds.length - outOfSyncConversations(localConversations, remoteConversations).length > 3) {
                   const progressLabel = document.getElementById('sync-progresslabel');
                   if (progressLabel) {
                     // eslint-disable-next-line no-loop-func
-                    progressLabel.innerText = `Syncing(${Object.keys(localConversations).filter((id) => !localConversations[id].archived && (typeof localConversations[id].saveHistory === 'undefined' || localConversations[id].saveHistory)).length}/${remoteConvIds.length})`;
+                    progressLabel.innerText = `Syncing(${outOfSyncConversations(localConversations, remoteConversations).length}/${remoteConvIds.length})`;
+                    addSyncBanner();
                   }
                   await autoSaveCountDownAsync(isPaid);
                 }
@@ -460,7 +476,7 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
                         refreshIds.push(conversationId);
                       }
                       // if shift + cmnd/ctrl
-                      if (e.shiftKey && (e.metaKey || e.ctrlKey)) {
+                      if (e.shiftKey && (e.metaKey || (isWindows() && e.ctrlKey))) {
                         chrome.storage.sync.set({
                           conversationsOrder: [],
                         }, () => {
@@ -476,7 +492,12 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
                       }
                     };
                   }
-                  loadConversationList(skipInputFormReload);
+                  const existingSyncBanner = document.querySelector('#sync-nav-wrapper');
+                  if (existingSyncBanner) {
+                    window.location.reload();
+                  } else {
+                    loadConversationList(skipInputFormReload);
+                  }
                 });
               });
             } else {
@@ -523,7 +544,7 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
             refreshIds.push(conversationId);
           }
           // if shift + cmnd/ctrl
-          if (e.shiftKey && (e.metaKey || e.ctrlKey)) {
+          if (e.shiftKey && (e.metaKey || (isWindows() && e.ctrlKey))) {
             chrome.storage.sync.set({
               conversationsOrder: [],
             }, () => {

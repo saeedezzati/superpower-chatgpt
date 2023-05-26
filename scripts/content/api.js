@@ -13,7 +13,7 @@ const defaultHeaders = {
   'content-type': 'application/json',
 };
 function generateChat(message, conversationId, messageId, parentMessageId, saveHistory = true, role = 'user', pluginIds = []) {
-  return chrome.storage.local.get(['settings']).then((res) => chrome.storage.sync.get(['auth_token']).then((result) => {
+  return chrome.storage.local.get(['settings', 'enabledPluginIds']).then((res) => chrome.storage.sync.get(['auth_token']).then((result) => {
     const payload = {
       action: 'next',
       messages: messageId
@@ -31,7 +31,6 @@ function generateChat(message, conversationId, messageId, parentMessageId, saveH
       model: res.settings.selectedModel.slug,
       parent_message_id: parentMessageId,
       timezone_offset_min: new Date().getTimezoneOffset(),
-      variant_purpose: 'none',
     };
     if (!saveHistory) {
       payload.history_and_training_disabled = true;
@@ -40,8 +39,8 @@ function generateChat(message, conversationId, messageId, parentMessageId, saveH
       payload.conversation_id = conversationId;
     }
     // plugin model: text-davinci-002-plugins
-    if (res.settings.selectedModel.slug.includes('plugins')) {
-      payload.plugin_ids = pluginIds;
+    if (!conversationId && res.settings.selectedModel.slug.includes('plugins')) {
+      payload.plugin_ids = res.enabledPluginIds;
     }
     const eventSource = new SSE(
       '/backend-api/conversation',
@@ -123,12 +122,19 @@ function getModels() {
   }).then((response) => response.json()))
     .then((data) => {
       if (data.models) {
-        chrome.storage.local.get(['settings', 'models'], (res) => {
-          const { models, settings } = res;
+        chrome.storage.local.get(['settings', 'models', 'account'], (res) => {
+          const { models, settings, account } = res;
           chrome.storage.local.set({
             models: data.models,
             settings: { ...settings, selectedModel: settings.selectedModel || data.models?.[0] },
           });
+          if (data.models.map((m) => m.slug).find((m) => m.includes('plugins'))) {
+            const isPaid = account?.account_plan?.is_paid_subscription_active || account?.accounts?.default?.entitlement?.has_active_subscription || false;
+            if (isPaid) {
+              getAllPlugins();
+              getInstalledPlugins();
+            }
+          }
         });
       }
     });
@@ -168,10 +174,14 @@ function messageFeedback(conversationId, messageId, rating, text = '') {
   }).then((res) => res.json()));
 }
 function getAllPlugins() {
-  getPlugins(0, 100, undefined, undefined).then((res) => res);
+  return getPlugins(0, 250, undefined, 'approved').then((res) => {
+    chrome.storage.local.set({
+      allPlugins: res.items,
+    });
+  });
 }
 function getApprovedPlugins() {
-  getPlugins(0, 100, true, 'approved').then((res) => res);
+  getPlugins(0, 100, undefined, 'approved').then((res) => res);
 }
 function getInstalledPlugins() {
   getPlugins(0, 100, true, undefined).then((res) => {
@@ -198,6 +208,50 @@ function getPlugins(offset = 0, limit = 20, isInstalled = undefined, statuses = 
       ...defaultHeaders,
       Authorization: result.auth_token,
     },
+  }).then((res) => {
+    if (res.ok) {
+      return res.json();
+    }
+    return Promise.reject(res);
+  }));
+}
+function installPlugin(pluginId) {
+  const url = new URL(`https://chat.openai.com/backend-api/aip/p/${pluginId}/user-settings`);
+  // without passing limit it returns 20 by default
+  // limit cannot be more than 100
+  const data = {
+    is_installed: true,
+  };
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch(url, {
+    method: 'PATCH',
+    headers: {
+      ...defaultHeaders,
+      Authorization: result.auth_token,
+    },
+    body: JSON.stringify(data),
+
+  }).then((res) => {
+    if (res.ok) {
+      return res.json();
+    }
+    return Promise.reject(res);
+  }));
+}
+function uninstallPlugin(pluginId) {
+  const url = new URL(`https://chat.openai.com/backend-api/aip/p/${pluginId}/user-settings`);
+  // without passing limit it returns 20 by default
+  // limit cannot be more than 100
+  const data = {
+    is_installed: false,
+  };
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch(url, {
+    method: 'PATCH',
+    headers: {
+      ...defaultHeaders,
+      Authorization: result.auth_token,
+    },
+    body: JSON.stringify(data),
+
   }).then((res) => {
     if (res.ok) {
       return res.json();

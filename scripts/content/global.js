@@ -1,4 +1,4 @@
-/* global markdownit, hljs, resetSelection, getPrompt, newChatPage, initializeRegenerateResponseButton, notSelectedClassList, textAreaElementInputEventListener, addExamplePromptEventListener, textAreaElementKeydownEventListener */
+/* global markdownit, hljs, resetSelection, getPrompt, newChatPage, initializeRegenerateResponseButton, notSelectedClassList, textAreaElementInputEventListener, addExamplePromptEventListener,  initializePluginStoreModal, addPluginStoreEventListener, textAreaElementKeydownEventListener */
 /* eslint-disable no-unused-vars */
 // Gloab variables
 // const { version } = chrome.runtime.getManifest();
@@ -35,6 +35,14 @@ let shiftKeyPressed = false;
 //     });
 //   }
 // });
+function isWindows() {
+  return navigator.platform.indexOf('Win') > -1;
+}
+function openLinksInNewTab() {
+  const base = document.createElement('base');
+  base.target = '_blank';
+  document.head.appendChild(base);
+}
 function initializeStorage() {
   // clear storage
   // chrome.storage.local.clear();
@@ -259,34 +267,42 @@ function toggleTextAreaElemet(forceShow = false) {
 function showNewChatPage() {
   // chatStreamIsClosed = true;
   chrome.storage.local.get(['conversationsAreSynced', 'account'], (result) => {
-    const { conversationsAreSynced, account } = result;
-    document.title = 'New Page';
-    const planName = account?.account_plan?.subscription_plan || 'chatgptfreeplan';
-    if (!conversationsAreSynced) return;
-    const focusedConversations = document.querySelectorAll('.selected');
-    focusedConversations.forEach((c) => {
-      c.classList = notSelectedClassList;
+    chrome.storage.local.set({ enabledPluginIds: [] }, () => {
+      const pluginDropdownButton = document.querySelector('#navbar-plugins-dropdown-button');
+      if (pluginDropdownButton) {
+        pluginDropdownButton.disabled = false;
+        pluginDropdownButton.style.opacity = 1;
+        pluginDropdownButton.title = '';
+      }
+      const { conversationsAreSynced, account } = result;
+      document.title = 'New Page';
+      const planName = account?.account_plan?.subscription_plan || account?.accounts?.default?.entitlement?.subscription_plan || 'chatgptfreeplan';
+      if (!conversationsAreSynced) return;
+      const focusedConversations = document.querySelectorAll('.selected');
+      focusedConversations.forEach((c) => {
+        c.classList = notSelectedClassList;
+      });
+      const main = document.querySelector('main');
+      // div with class flex-1 overflow-hidden
+      const contentWrapper = main.querySelector('.flex-1.overflow-hidden');
+      contentWrapper.innerHTML = '';
+      contentWrapper.appendChild(newChatPage(planName));
+      // addExamplePromptEventListener();
+      const pinNav = document.querySelector('#pin-nav');
+      if (pinNav) {
+        pinNav.remove();
+      }
+      const { pathname, href, search } = new URL(window.location.toString());
+      if (href !== 'https://chat.openai.com') {
+        window.history.replaceState({}, '', 'https://chat.openai.com');
+        const inputForm = main.querySelector('form');
+        const textAreaElement = inputForm.querySelector('textarea');
+        textAreaElement.focus();
+      }
+      toggleTextAreaElemet();
+      initializeRegenerateResponseButton();// basically just hide the button, so conversationId is not needed
+      handleQueryParams(search);
     });
-    const main = document.querySelector('main');
-    // div with class flex-1 overflow-hidden
-    const contentWrapper = main.querySelector('.flex-1.overflow-hidden');
-    contentWrapper.innerHTML = '';
-    contentWrapper.appendChild(newChatPage(planName));
-    // addExamplePromptEventListener();
-    const pinNav = document.querySelector('#pin-nav');
-    if (pinNav) {
-      pinNav.remove();
-    }
-    const { pathname, href, search } = new URL(window.location.toString());
-    if (href !== 'https://chat.openai.com') {
-      window.history.replaceState({}, '', 'https://chat.openai.com');
-      const inputForm = main.querySelector('form');
-      const textAreaElement = inputForm.querySelector('textarea');
-      textAreaElement.focus();
-    }
-    toggleTextAreaElemet();
-    initializeRegenerateResponseButton();// basically just hide the button, so conversationId is not needed
-    handleQueryParams(search);
   });
 }
 function handleQueryParams(query) {
@@ -410,7 +426,7 @@ function addGpt4Counter() {
   const gpt4CounterElement = document.createElement('span');
   gpt4CounterElement.id = 'gpt4-counter';
   gpt4CounterElement.style = 'position: absolute; bottom: -15px; left: 0px; font-size: 10px; color: #999; opacity: 0.8; z-index: 100;display:none;';
-  chrome.storage.local.get(['gpt4Timestamps', 'models', 'conversationLimit', 'settings'], (result) => {
+  chrome.storage.local.get(['gpt4Timestamps', 'models', 'conversationLimit', 'settings', 'capExpiresAt'], (result) => {
     if (!result.models) return;
     if (!result.models.find((model) => model.slug === 'gpt-4')) return;
     gpt4CounterElement.style.display = result.settings.showGpt4Counter ? 'block' : 'none';
@@ -419,8 +435,9 @@ function addGpt4Counter() {
     const messageCapWindow = result?.conversationLimit?.message_cap_window || 181;
     const now = new Date().getTime();
     const gpt4counter = gpt4Timestamps.filter((timestamp) => now - timestamp < (messageCapWindow / 60) * 60 * 60 * 1000).length;
+    const capExpiresAtTimeString = result.capExpiresAt ? `(Cap Expires At: ${result.capExpiresAt})` : '';
     if (gpt4counter) {
-      gpt4CounterElement.innerText = `GPT4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): ${gpt4counter}/${messageCap}`;
+      gpt4CounterElement.innerText = `GPT4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): ${gpt4counter}/${messageCap} ${capExpiresAtTimeString}`;
     } else {
       gpt4CounterElement.innerText = `GPT4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): 0/${messageCap}`;
     }
@@ -483,10 +500,22 @@ function addActionButtonWrapperAboveInput() {
   const textAreaElementWrapper = textAreaElement.parentElement.parentElement;
   textAreaElementWrapper.insertBefore(actionButtonWrapper, textAreaElement.parentElement);
 }
-
+function showPluginStore() {
+  chrome.storage.local.get(['allPlugins'], (result) => {
+    const { allPlugins } = result;
+    const popularPlugins = allPlugins.filter((plugin) => plugin.categories.map((c) => c.id).includes('most_popular'));
+    const pluginStoreModal = initializePluginStoreModal(popularPlugins);
+    const pluginStoreWrapper = document.createElement('div');
+    pluginStoreWrapper.id = 'plugin-store-wrapper';
+    pluginStoreWrapper.classList = 'absolute inset-0 z-10';
+    pluginStoreWrapper.innerHTML = pluginStoreModal;
+    document.body.appendChild(pluginStoreWrapper);
+    addPluginStoreEventListener(popularPlugins);
+  });
+}
 function registerShortkeys() {
   document.addEventListener('keydown', (e) => {
-    if (e.metaKey || e.ctrlKey) {
+    if (e.metaKey || (isWindows() && e.ctrlKey)) {
       if (e.key === 'f' || e.key === 'F') {
         const searchbox = document.querySelector('#conversation-search');
         if (searchbox && searchbox !== document.activeElement) {
@@ -500,6 +529,8 @@ function registerShortkeys() {
     if (e.keyCode === 27) {
       if (document.querySelector('[id^=modal-close-button-]')) {
         document.querySelector('[id^=modal-close-button-]').click();
+      } else if (document.querySelector('[id^=plugin-store-close-button]')) {
+        document.querySelector('[id^=plugin-store-close-button]').click();
       } else {
         const stopGeneratingResponseButton = document.querySelector('#stop-generating-response-button');
         if (stopGeneratingResponseButton) {
@@ -507,6 +538,11 @@ function registerShortkeys() {
           stopGeneratingResponseButton.click();
         }
       }
+    }
+    // cmnd + shift + p
+    if ((e.metaKey || (isWindows() && e.ctrlKey)) && e.shiftKey && e.keyCode === 80) {
+      e.preventDefault();
+      showPluginStore();
     }
     // alt + shift + n
     if (e.altKey && e.shiftKey && e.keyCode === 78) {
@@ -529,7 +565,7 @@ function registerShortkeys() {
       }
     }
     // cm/ctrl + shift + s
-    if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.keyCode === 83) {
+    if ((e.metaKey || (isWindows() && e.ctrlKey)) && e.shiftKey && e.keyCode === 83) {
       if (!document.querySelector('#modal-settings')) {
         // open settings
         e.preventDefault();
@@ -537,7 +573,7 @@ function registerShortkeys() {
       }
     }
     // cm/ctrl + shift + l
-    if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.keyCode === 76) {
+    if ((e.metaKey || (isWindows() && e.ctrlKey)) && e.shiftKey && e.keyCode === 76) {
       if (!document.querySelector('#modal-newsletter-archive')) {
         // open newsletter
         e.preventDefault();

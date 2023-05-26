@@ -288,7 +288,7 @@ function generalTabContent() {
   linkWrapper.appendChild(updatesLink);
   // add link for feedback email
   const feedbackLink = document.createElement('a');
-  feedbackLink.href = 'mailto:m4rkobay@gmail.com?subject=Superpower for ChatGPT Feature Request&body=Hi Marko,%0DReporting a bug? Any of the following information would help me figure it out faster: %0D- What version of the extension do you have? (You can find that at the bottom of the "settings" menu) %0D- What browser are you using? %0D- Do you see any errors in the console log? %0D- Do you have a plus account? %0D- How many conversations do you have approximately? %0D- Do you have the Auto Sync feature ON? %0D- Are all of your conversations synced? %0D- Do you see the "settings" menu on the sidebar? %0D- Does your issue go away if you turn the Auto Sync OFF in the settings menu? %0D- Does this issue happen to all prompts? Or only the first prompt? %0D- Are you using any other ChatGPT extensions at the same time? %0D- Can you email me a screenshot or video of the ChatGPT page when the bug happens? (with the extension installed)%0DThanks!';
+  feedbackLink.href = 'mailto:m4rkobay@gmail.com?subject=Superpower ChatGPT Feature Request&body=Hi Marko,%0DReporting a bug? Any of the following information would help me figure it out faster: %0D- What version of the extension do you have? (You can find that at the bottom of the "settings" menu) %0D- What browser are you using? %0D- Do you see any errors in the console log? %0D- Do you have a plus account? %0D- How many conversations do you have approximately? %0D- Do you have the Auto Sync feature ON? %0D- Are all of your conversations synced? %0D- Do you see the "settings" menu on the sidebar? %0D- Does your issue go away if you turn the Auto Sync OFF in the settings menu? %0D- Does this issue happen to all prompts? Or only the first prompt? %0D- Are you using any other ChatGPT extensions at the same time? %0D- Can you email me a screenshot or video of the ChatGPT page when the bug happens? (with the extension installed)%0DThanks!';
   feedbackLink.target = '_blank';
   feedbackLink.textContent = 'Feature Request ➜';
   feedbackLink.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
@@ -348,7 +348,9 @@ function toggleCustomWidthInput(customConversationWidth) {
       Array.from(document.querySelectorAll('[id^=message-wrapper]')).forEach((el) => {
         el.querySelector('div').style.removeProperty('max-width');
       });
-      document.querySelector('#conversation-bottom').firstChild.style.removeProperty('max-width');
+      if (document.querySelector('#conversation-bottom')) {
+        document.querySelector('#conversation-bottom').firstChild.style.removeProperty('max-width');
+      }
       document.querySelector('main').querySelector('form').style.removeProperty('max-width');
     }
   });
@@ -658,7 +660,7 @@ function createPromptRow(promptTitle, promptText, isDefault, promptObjectName) {
   promptLabel.title = promptTitle;
   promptLabel.dir = 'auto';
   const promptInput = document.createElement('textarea');
-  promptInput.style = 'width: 100%; height: 34px; min-height: 34px; border-radius: 4px; border: 1px solid #565869; background-color: #1e1e2f; color: #eee; padding: 4px 8px; font-size: 14px;';
+  promptInput.style = 'width: 100%; height: 34px; min-height: 34px; border-radius: 4px; border: 1px solid #565869; background-color: #1e1e2f; color: #eee; padding: 4px 8px; font-size: 14px;margin-right: 8px;';
   promptInput.id = `${promptObjectName}-${promptTitle}`;
   promptInput.dir = 'auto';
   promptInput.value = promptText;
@@ -673,7 +675,7 @@ function createPromptRow(promptTitle, promptText, isDefault, promptObjectName) {
   promptWrapper.appendChild(promptInput);
   if (promptObjectName === 'customPrompts') {
     const deleteButton = document.createElement('button');
-    deleteButton.classList = 'btn flex justify-center gap-2 btn-dark border-0 md:border ml-2';
+    deleteButton.classList = 'btn flex justify-center gap-2 btn-dark border-0 md:border mr-2';
     deleteButton.style = 'min-width:72px;height:34px;';
     deleteButton.textContent = 'Delete';
     deleteButton.disabled = isDefault;
@@ -706,7 +708,7 @@ function createPromptRow(promptTitle, promptText, isDefault, promptObjectName) {
     promptWrapper.appendChild(deleteButton);
 
     const defaultButton = document.createElement('button');
-    defaultButton.classList = `btn flex justify-center gap-2 ${isDefault ? 'btn-primary' : 'btn-dark'} border-0 md:border ml-2`;
+    defaultButton.classList = `btn flex justify-center gap-2 ${isDefault ? 'btn-primary' : 'btn-dark'} border-0 md:border`;
     defaultButton.setAttribute('data-default', isDefault ? 'true' : 'false');
     defaultButton.style = 'min-width:72px;height:34px;';
     defaultButton.textContent = 'Default';
@@ -720,8 +722,8 @@ function createPromptRow(promptTitle, promptText, isDefault, promptObjectName) {
           const curDeleteButton = [...curDefaultButton.parentNode.querySelectorAll('button')].find((b) => b.textContent === 'Delete');
           curDeleteButton.disabled = false;
           curDefaultButton.setAttribute('data-default', 'false');
-          curDefaultButton.classList = 'btn flex justify-center gap-2 btn-dark border-0 md:border ml-2';
-          defaultButton.classList = 'btn flex justify-center gap-2 btn-primary border-0 md:border ml-2';
+          curDefaultButton.classList = 'btn flex justify-center gap-2 btn-dark border-0 md:border';
+          defaultButton.classList = 'btn flex justify-center gap-2 btn-primary border-0 md:border';
           defaultButton.textContent = 'Default';
           defaultButton.setAttribute('data-default', 'true');
           defaultButton.style = 'min-width:72px;height:34px;';
@@ -788,59 +790,110 @@ function splitterTabContent() {
   content.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;';
 
   // conversation width
-  const splitPromptSwitch = createSwitch('Auto Split', 'Automatically split long prompts into chunks equal to the below limit (1000-8000 char)', 'splitPrompt', true);
-
-  const splitPromptLimitInput = document.createElement('input');
-  splitPromptLimitInput.id = 'split-prompt-limit-input';
-  splitPromptLimitInput.type = 'number';
-  splitPromptLimitInput.classList = 'w-full px-4 py-2 mb-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800 disabled:opacity-40';
   chrome.storage.local.get(['settings'], (result) => {
-    splitPromptLimitInput.value = result.settings.splitPromptLimit;
-    splitPromptLimitInput.addEventListener('change', () => {
-      const curSplitPromptLimitInput = document.querySelector('#split-prompt-limit-input');
-      const newValue = Math.round(curSplitPromptLimitInput.value);
+    const { autoSync } = result.settings;
+    const splitterSwitchWrapper = document.createElement('div');
+    splitterSwitchWrapper.style = 'display: flex; gap:16px; justify-content: start; align-items: start; width: 100%; margin: 8px 0;';
+    const autoSplitSwitch = createSwitch('Auto Split', 'Automatically split long prompts into smaller chunks', 'autoSplit', true, null, 'Requires Auto-Sync', !autoSync);
+    const autoSummarizeSwitch = createSwitch('Auto Summarize', 'Automatically summarize each chunk after auto split', 'autoSummarize', false, updateAutoSplitPrompt, 'Requires Auto-Sync', !autoSync);
 
-      curSplitPromptLimitInput.value = newValue;
-      chrome.storage.local.set({ settings: { ...result.settings, splitPromptLimit: newValue } });
+    const autoSplitChunkSizeLabel = document.createElement('div');
+    autoSplitChunkSizeLabel.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0; color:white;';
+    autoSplitChunkSizeLabel.textContent = 'Auto Split Chunk Size (1000-16000)';
+
+    const autoSplitChunkSizeInput = document.createElement('input');
+    autoSplitChunkSizeInput.id = 'split-prompt-limit-input';
+    autoSplitChunkSizeInput.type = 'number';
+    autoSplitChunkSizeInput.classList = 'w-full px-4 py-2 mb-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800 disabled:opacity-40';
+    autoSplitChunkSizeInput.value = result.settings.autoSplitLimit;
+    autoSplitChunkSizeInput.addEventListener('change', () => {
+      const curAutoSplitChunkSizeInput = document.querySelector('#split-prompt-limit-input');
+      const newValue = Math.round(curAutoSplitChunkSizeInput.value);
+
+      curAutoSplitChunkSizeInput.value = newValue;
+      chrome.storage.local.set({ settings: { ...result.settings, autoSplitLimit: newValue } });
     });
-    splitPromptLimitInput.addEventListener('input', () => {
-      const curSplitPromptLimitInput = document.querySelector('#split-prompt-limit-input');
-      const newValue = Math.round(curSplitPromptLimitInput.value);
+    autoSplitChunkSizeInput.addEventListener('input', () => {
+      const curAutoSplitChunkSizeInput = document.querySelector('#split-prompt-limit-input');
+      const newValue = Math.round(curAutoSplitChunkSizeInput.value);
 
-      curSplitPromptLimitInput.value = newValue;
-      chrome.storage.local.set({ settings: { ...result.settings, splitPromptLimit: newValue } });
+      curAutoSplitChunkSizeInput.value = newValue;
+      chrome.storage.local.set({ settings: { ...result.settings, autoSplitLimit: newValue } });
     });
-  });
 
-  // splitter prompt
-  const splitPromptInstructionTitle = document.createElement('div');
-  splitPromptInstructionTitle.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0; color:white;';
-  splitPromptInstructionTitle.textContent = 'Splitter Prompt';
+    // splitter initial prompt
+    const autoSplitInitialPromptLabel = document.createElement('div');
+    autoSplitInitialPromptLabel.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin-top: 16px; color:white;';
+    autoSplitInitialPromptLabel.textContent = 'Auto Split Prompt';
 
-  const splitPromptInstructionHelper = document.createElement('div');
-  splitPromptInstructionHelper.style = 'font-size: 12px; color: #999;';
-  splitPromptInstructionHelper.textContent = 'Splitter prompt is a text that will be used when the user prompt in divided into chunkc due to the character limit.';
+    const autoSplitInitialPromptHelper = document.createElement('div');
+    autoSplitInitialPromptHelper.style = 'font-size: 12px; color: #999;margin-bottom: 8px;';
+    autoSplitInitialPromptHelper.textContent = 'Splitter prompt is a text that will be used when the user prompt in divided into chunkc due to the character limit.';
 
-  const splitPromptInstructionText = document.createElement('textarea');
-  splitPromptInstructionText.style = 'width: 100%; height: 240px; min-height: 240px; border-radius: 4px; border: 1px solid #565869; background-color: #0b0d0e; color: #eee; padding: 4px 8px; font-size: 14px;';
-  splitPromptInstructionText.placeholder = 'Enter splitter prompt here...';
-  chrome.storage.local.get('settings', ({ settings }) => {
-    splitPromptInstructionText.value = settings.splitPromptInstruction;
-  });
-  splitPromptInstructionText.dir = 'auto';
-  splitPromptInstructionText.addEventListener('input', () => {
-    splitPromptInstructionText.style.borderColor = '#565869';
+    const autoSplitInitialPromptText = document.createElement('textarea');
+    autoSplitInitialPromptText.id = 'split-initial-prompt-textarea';
+    autoSplitInitialPromptText.style = 'width: 100%; height: 200px; min-height: 200px; border-radius: 4px; border: 1px solid #565869; background-color: #0b0d0e; color: #eee; padding: 4px 8px; font-size: 14px;';
+    autoSplitInitialPromptText.placeholder = 'Enter splitter prompt here...';
     chrome.storage.local.get('settings', ({ settings }) => {
-      chrome.storage.local.set({ settings: { ...settings, splitPromptInstruction: splitPromptInstructionText.value } });
+      autoSplitInitialPromptText.value = settings.autoSplitInitialPrompt;
+    });
+    autoSplitInitialPromptText.dir = 'auto';
+    autoSplitInitialPromptText.addEventListener('input', () => {
+      autoSplitInitialPromptText.style.borderColor = '#565869';
+      chrome.storage.local.get('settings', ({ settings }) => {
+        chrome.storage.local.set({ settings: { ...settings, autoSplitInitialPrompt: autoSplitInitialPromptText.value } });
+      });
+    });
+
+    // splitter chunk prompt
+    const autoSplitChunkPromptLabel = document.createElement('div');
+    autoSplitChunkPromptLabel.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin-top: 16px; color:white;';
+    autoSplitChunkPromptLabel.textContent = 'Auto Split Chunk Prompt';
+
+    const autoSplitChunkPromptHelper = document.createElement('div');
+    autoSplitChunkPromptHelper.style = 'font-size: 12px; color: #999;margin-bottom: 8px;';
+    autoSplitChunkPromptHelper.textContent = 'Chunk prompt is a text that will be added to the end of each chunk. It can be used to summarize the previous chunk or do other things.';
+
+    const autoSplitChunkPromptText = document.createElement('textarea');
+    autoSplitChunkPromptText.id = 'split-chunk-prompt-textarea';
+    autoSplitChunkPromptText.style = 'width: 100%; height: 100px; min-height: 100px; border-radius: 4px; border: 1px solid #565869; background-color: #0b0d0e; color: #eee; padding: 4px 8px; font-size: 14px;';
+    autoSplitChunkPromptText.placeholder = 'Enter splitter prompt here...';
+    chrome.storage.local.get('settings', ({ settings }) => {
+      autoSplitChunkPromptText.value = settings.autoSplitChunkPrompt;
+    });
+    autoSplitChunkPromptText.dir = 'auto';
+    autoSplitChunkPromptText.addEventListener('input', () => {
+      autoSplitChunkPromptText.style.borderColor = '#565869';
+      chrome.storage.local.get('settings', ({ settings }) => {
+        chrome.storage.local.set({ settings: { ...settings, autoSplitChunkPrompt: autoSplitChunkPromptText.value } });
+      });
+    });
+
+    splitterSwitchWrapper.appendChild(autoSplitSwitch);
+    splitterSwitchWrapper.appendChild(autoSummarizeSwitch);
+    content.appendChild(splitterSwitchWrapper);
+    content.appendChild(autoSplitChunkSizeLabel);
+    content.appendChild(autoSplitChunkSizeInput);
+    content.appendChild(autoSplitInitialPromptLabel);
+    content.appendChild(autoSplitInitialPromptHelper);
+    content.appendChild(autoSplitInitialPromptText);
+    content.appendChild(autoSplitChunkPromptLabel);
+    content.appendChild(autoSplitChunkPromptHelper);
+    content.appendChild(autoSplitChunkPromptText);
+  });
+  return content;
+}
+function updateAutoSplitPrompt(autoSummarize) {
+  const autoSplitChunkPrompt = `Reply with OK: [CHUNK x/TOTAL]
+Don't reply with anything else!`;
+  const autoSplitChunkPromptSummarize = `Reply with OK: [CHUNK x/TOTAL]
+Summary: A short summary of the last chunk. Keep important facts and names in the summary. Don't reply with anything else!`;
+  chrome.storage.local.get('settings', ({ settings }) => {
+    chrome.storage.local.set({ settings: { ...settings, autoSplitChunkPrompt: autoSummarize ? autoSplitChunkPromptSummarize : autoSplitChunkPrompt } }, () => {
+      const autoSplitInitialPromptText = document.querySelector('#split-chunk-prompt-textarea');
+      autoSplitInitialPromptText.value = autoSummarize ? autoSplitChunkPromptSummarize : autoSplitChunkPrompt;
     });
   });
-
-  content.appendChild(splitPromptSwitch);
-  content.appendChild(splitPromptLimitInput);
-  content.appendChild(splitPromptInstructionTitle);
-  content.appendChild(splitPromptInstructionHelper);
-  content.appendChild(splitPromptInstructionText);
-  return content;
 }
 function newsletterTabContent() {
   const content = document.createElement('div');
@@ -850,7 +903,7 @@ function newsletterTabContent() {
   const dailyNewsletterSwitch = createSwitch('Hide daily newsletter', 'Automatically hide the daily newsletter popup.', 'hideNewsletter', false);
   content.appendChild(dailyNewsletterSwitch);
 
-  // const sendNewsletterToEmailSwitch = createSwitch('Email newsletter', 'Send the Superpower for ChatGPT daily newsletter to my email', 'emailNewsletter', false, updateEmailNewsletter, 'Coming soon');
+  // const sendNewsletterToEmailSwitch = createSwitch('Email newsletter', 'Send the Superpower ChatGPT daily newsletter to my email', 'emailNewsletter', false, updateEmailNewsletter, 'Coming soon');
 
   // content.appendChild(sendNewsletterToEmailSwitch);
   return content;
@@ -953,7 +1006,7 @@ function settingsModalActions() {
   const superpowerChatGPT = document.createElement('a');
   superpowerChatGPT.href = 'https://chrome.google.com/webstore/detail/superpower-chatgpt/amhmeenmapldpjdedekalnfifgnpfnkc';
   superpowerChatGPT.target = '_blank';
-  superpowerChatGPT.textContent = 'Superpower for ChatGPT';
+  superpowerChatGPT.textContent = 'Superpower ChatGPT';
   superpowerChatGPT.style = 'color: #999; font-size: 12px; margin-left: 4px; text-decoration: underline;';
   superpowerChatGPT.addEventListener('mouseover', () => {
     superpowerChatGPT.style = 'color: gold; font-size: 12px; margin-left: 4px;text-decoration: underline;';
@@ -1079,9 +1132,18 @@ function initializeSettings() {
         saveHistory: result.settings?.saveHistory !== undefined ? result.settings.saveHistory : true,
         emailNewsletter: result.settings?.emailNewsletter !== undefined ? result.settings.emailNewsletter : false,
         showGpt4Counter: result.settings?.showGpt4Counter !== undefined ? result.settings.showGpt4Counter : true,
-        splitPrompt: result.settings?.splitPrompt !== undefined ? result.settings.splitPrompt : true,
-        splitPromptLimit: result.settings?.splitPromptLimit !== undefined ? result.settings.splitPromptLimit : 8000,
-        splitPromptInstruction: result.settings?.splitPromptInstruction || "Act like a document/text loader until you load and remember the content of the next text/s or document/s.\nThere might be multiple files, each file is marked by name in the format ### DOCUMENT NAME.\nI will send you them in chunks. Each chunk starts will be noted as [START CHUNK x/TOTAL], and the end of this chunk will be noted as [END CHUNK x/TOTAL], where x is the number of current chunks, and TOTAL is the number of all chunks I will send you.\nI will send you multiple messages with chunks, for each message, just reply OK: [CHUNK x/TOTAL], don't reply anything else, don't explain the text!\nLet's begin:\n\n",
+        autoSummarize: result.settings?.autoSummarize !== undefined ? result.settings.autoSummarize : false,
+        autoSplit: result.settings?.autoSplit !== undefined ? result.settings.autoSplit : true,
+        autoSplitLimit: result.settings?.autoSplitLimit !== undefined ? result.settings.autoSplitLimit : 8000,
+        autoSplitInitialPrompt: result.settings?.autoSplitInitialPrompt || `Act like a document/text loader until you load and remember the content of the next text/s or document/s.
+There might be multiple files, each file is marked by name in the format ### DOCUMENT NAME.
+I will send them to you in chunks. Each chunk starts will be noted as [START CHUNK x/TOTAL], and the end of this chunk will be noted as [END CHUNK x/TOTAL], where x is the number of current chunks, and TOTAL is the number of all chunks I will send you.
+I will split the message in chunks, and send them to you one by one. For each message follow the instructions at the end of the message.
+Let's begin:
+
+`,
+        autoSplitChunkPrompt: result.settings?.autoSplitChunkPrompt || `Reply with OK: [CHUNK x/TOTAL]
+Don't reply with anything else!`,
         conversationTimestamp: result.settings?.conversationTimestamp !== undefined ? result.settings.conversationTimestamp : false,
         autoHideTopNav: result.settings?.autoHideTopNav !== undefined ? result.settings.autoHideTopNav : false,
         navOpen: result.settings?.navOpen !== undefined ? result.settings.navOpen : true,

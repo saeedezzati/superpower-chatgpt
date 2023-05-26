@@ -196,7 +196,9 @@ function initializeCopyAndCounter() {
   const contentWrapper = main.querySelector('.flex-1.overflow-hidden');
   const scrollableArea = contentWrapper.firstChild;
   // make scrollableArea scroll behavior smooth
-  scrollableArea.style.scrollBehavior = 'smooth';
+  if (scrollableArea) {
+    scrollableArea.style.scrollBehavior = 'smooth';
+  }
   // Event listener to body change
   updateCounters();
   const observer = new MutationObserver(() => {
@@ -208,5 +210,7 @@ function initializeCopyAndCounter() {
     childList: true,
     subtree: true,
   });
-  scrollableArea.scrollTop = scrollableArea.scrollHeight;
+  if (scrollableArea) {
+    scrollableArea.scrollTop = scrollableArea.scrollHeight;
+  }
 }
