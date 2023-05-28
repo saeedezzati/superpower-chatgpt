@@ -261,7 +261,7 @@ function exportAllConversations(exportFormat) {
         }
         // download as .txt file
         if (exportFormat === 'text') {
-          const conversationText = messages.reverse().filter((m) => ['user', 'assistant'].includes(m.role) || ['user', 'assistant'].includes(m.author?.role)).map((m) => `${exportMode === 'both' ? `>> ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}: ` : ''}${m.content.parts.join('\n').replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`).join('\n\n');
+          const conversationText = messages.reverse().filter((m) => ['user', 'assistant'].includes(m.role) || ['user', 'assistant'].includes(m.author?.role)).map((m) => `${exportMode === 'both' ? `>> ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}: ` : ''}${m.content?.parts?.join('\n').replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`)?.join('\n\n');
           zip.file(`${folderName}/${filePrefix}-${conversationTitle}.${fileFormatConverter(exportFormat)}`, conversationText);
         }
         // download as .json file
@@ -271,7 +271,7 @@ function exportAllConversations(exportFormat) {
         }
         // download as .md file
         if (exportFormat === 'markdown') {
-          const conversationMarkdown = messages.reverse().filter((m) => ['user', 'assistant'].includes(m.role) || ['user', 'assistant'].includes(m.author?.role)).map((m) => `${exportMode === 'both' ? `## ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}\n` : ''}${m.content.parts.join('\n').replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`).join('\n\n');
+          const conversationMarkdown = messages.reverse().filter((m) => ['user', 'assistant'].includes(m.role) || ['user', 'assistant'].includes(m.author?.role)).map((m) => `${exportMode === 'both' ? `## ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}\n` : ''}${m.content?.parts?.join('\n').replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`)?.join('\n\n');
           zip.file(`${folderName}/${filePrefix}-${conversationTitle}.${fileFormatConverter(exportFormat)}`, conversationMarkdown);
         }
 

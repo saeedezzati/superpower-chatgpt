@@ -189,7 +189,7 @@ function addScrollButtons() {
 function addNavToggleButton() {
   chrome.storage.local.get(['settings'], (result) => {
     const { settings } = result;
-    const sidebar = document.querySelector('.w-\\[260px\\]').parentElement;
+    const sidebar = document.querySelector('.w-\\[260px\\]')?.parentElement;
     const mainContent = sidebar?.nextElementSibling;
     if (!sidebar) return;
     if (!mainContent) return;
@@ -527,10 +527,8 @@ function registerShortkeys() {
     }
     // esc
     if (e.keyCode === 27) {
-      if (document.querySelector('[id^=modal-close-button-]')) {
-        document.querySelector('[id^=modal-close-button-]').click();
-      } else if (document.querySelector('[id^=plugin-store-close-button]')) {
-        document.querySelector('[id^=plugin-store-close-button]').click();
+      if (document.querySelector('[id*=close-button]')) {
+        document.querySelector('[id*=close-button]').click();
       } else {
         const stopGeneratingResponseButton = document.querySelector('#stop-generating-response-button');
         if (stopGeneratingResponseButton) {
@@ -658,9 +656,12 @@ function addExpandButton() {
   chrome.storage.local.get(['settings'], (result) => {
     const { settings } = result;
     const { hideBottomSidebar } = settings;
+    const userMenu = document.querySelector('#user-menu');
     if (!hideBottomSidebar) {
+      userMenu.style.paddingTop = '8px';
       expandButton.innerHTML = '<svg class="w-4 h-4 text-gray-100" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>';
     } else {
+      userMenu.style.paddingTop = '20px';
       expandButton.innerHTML = '<svg class="w-4 h-4 text-gray-100" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>';
       conversationListParent.style.minHeight = 'calc(100vh - 98px)';
       conversationListParent.style.maxHeight = 'calc(100vh - 98px)';
@@ -672,11 +673,14 @@ function addExpandButton() {
       const { hideBottomSidebar } = settings;
       chrome.storage.local.set({ settings: { ...settings, hideBottomSidebar: !hideBottomSidebar } }, () => {
         const curConversationListParent = document.querySelector('#conversation-list').parentElement;
+        const userMenu = document.querySelector('#user-menu');
         if (!hideBottomSidebar) {
+          userMenu.style.paddingTop = '20px';
           curConversationListParent.style.minHeight = 'calc(100vh - 98px)';
           curConversationListParent.style.maxHeight = 'calc(100vh - 98px)';
           expandButton.innerHTML = '<svg class="w-4 h-4 text-gray-100" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>';
         } else {
+          userMenu.style.paddingTop = '8px';
           curConversationListParent.style.minHeight = 'unset';
           curConversationListParent.style.maxHeight = 'unset';
           expandButton.innerHTML = '<svg class="w-4 h-4 text-gray-100" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>';

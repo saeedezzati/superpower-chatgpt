@@ -59,7 +59,7 @@ function createModal(title, subtitle, modalBodyContent, modalActionBarContent, a
   modalCloseButton.addEventListener('click', () => {
     modal.remove();
   });
-  modal.addEventListener('click', (event) => {
+  modal.addEventListener('mousedown', (event) => {
     if (modalWrapper.contains(event.target)) return;
     modal.remove();
   });

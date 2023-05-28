@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global markdown, markdownitSup, initializeNavbar, generateInstructions, generateChat, SSE, formatDate, loadConversation, resetSelection, katex, texmath, rowUser, rowAssistant, updateOrCreateConversation, replaceTextAreaElemet, highlight, isGenerating:true, disableTextInput:true, generateTitle, debounce, initializeRegenerateResponseButton, initializeStopGeneratingResponseButton, toggleTextAreaElemet, showNewChatPage, chatStreamIsClosed:true, addCopyCodeButtonsEventListeners, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams, addScrollButtons, updateTotalCounter, isWindows */
+/* global markdown, markdownitSup, initializeNavbar, generateInstructions, generateChat, SSE, formatDate, loadConversation, resetSelection, katex, texmath, rowUser, rowAssistant, updateOrCreateConversation, replaceTextAreaElemet, highlight, isGenerating:true, disableTextInput:true, generateTitle, debounce, initializeRegenerateResponseButton, initializeStopGeneratingResponseButton, toggleTextAreaElemet, showNewChatPage, chatStreamIsClosed:true, addCopyCodeButtonsEventListeners, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams, addScrollButtons, updateTotalCounter, isWindows, loadSharedConversation */
 
 // Initial state
 let userChatIsActuallySaved = false;
@@ -86,7 +86,7 @@ function deleteConversationOnDragToTrash(conversationId) {
   }
   conversationElement.classList = notSelectedClassList;
   conversationElement.style.opacity = 0.7;
-  conversationElement.classList.remove('hover:pr-14');
+  conversationElement.classList.remove('hover:pr-20');
   const conversationElementIcon = conversationElement.querySelector('img');
   conversationElementIcon.src = chrome.runtime.getURL('icons/trash.png');
 }
@@ -730,7 +730,7 @@ function insertNextChunk(settings, previousMessage) {
   if (!submitButton) return;
   const textAreaElement = inputForm.querySelector('textarea');
   if (!textAreaElement) return;
-  const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > remainingText.length ? settings.autoSplitLimit : remainingText.lastIndexOf('\n', settings.autoSplitLimit);
+  const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > remainingText.length ? settings.autoSplitLimit : getLastIndexOf(remainingText, settings.autoSplitLimit);
 
   textAreaElement.value = `[START CHUNK ${chunkNumber}/${totalChunks}]
 ${remainingText.slice(0, lastNewLineIndexBeforeLimit)}
@@ -740,6 +740,22 @@ ${settings.autoSplitChunkPrompt}`;
   textAreaElement.dispatchEvent(new Event('input', { bubbles: true }));
   textAreaElement.dispatchEvent(new Event('change', { bubbles: true }));
   submitButton.click();
+}
+function getLastIndexOf(text, position) {
+  // if text down't include \n or . or ? or ! return position
+  if (!text.includes('\n') && !text.includes('.') && !text.includes('?') && !text.includes('!')) return position;
+  // last index of space before position
+  const space = text.lastIndexOf(' ', position);
+  // last index of \n before position
+  const newLine = text.lastIndexOf('\n', position);
+  // last index of . before newLine
+  const period = text.lastIndexOf('.', position);
+  // last index of ? before newLine
+  const questionMark = text.lastIndexOf('?', position);
+  // last index of ! before newLine
+  const exclamationMark = text.lastIndexOf('!', position);
+  // return the closest index to position
+  return Math.max(space, newLine, period, questionMark, exclamationMark) + 1;
 }
 function overrideSubmitForm() {
   const main = document.querySelector('main');
@@ -752,6 +768,7 @@ function overrideSubmitForm() {
     e.stopPropagation();
     if (isGenerating) return;
     const { pathname } = new URL(window.location.toString());
+    // const isSharedConversation = pathname.startsWith('/share/') && window.location.href.endsWith('/continue');
     const conversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
     const anyUserMessageWrappers = document.querySelectorAll('[id^="message-wrapper-"][data-role="user"]').length > 0;
     if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId) && anyUserMessageWrappers) {
@@ -764,7 +781,7 @@ function overrideSubmitForm() {
             finalSummary = '';
             if (settings.autoSplit && text.length > settings.autoSplitLimit) {
               totalChunks = Math.ceil(text.length / settings.autoSplitLimit);
-              const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > text.length ? settings.autoSplitLimit : text.lastIndexOf('\n', settings.autoSplitLimit);
+              const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > text.length ? settings.autoSplitLimit : getLastIndexOf(text, settings.autoSplitLimit);
               remainingText = text.substring(lastNewLineIndexBeforeLimit);
               text = `${settings.autoSplitInitialPrompt}[START CHUNK ${chunkNumber}/${totalChunks}]
 ${text.substring(0, lastNewLineIndexBeforeLimit)}
@@ -781,7 +798,7 @@ ${settings.autoSplitChunkPrompt}`;
             remainingText = '';
           } else {
             chunkNumber += 1;
-            const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > remainingText.length ? settings.autoSplitLimit : remainingText.lastIndexOf('\n', settings.autoSplitLimit);
+            const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > remainingText.length ? settings.autoSplitLimit : getLastIndexOf(remainingText, settings.autoSplitLimit);
             remainingText = remainingText.slice(lastNewLineIndexBeforeLimit);
           }
           const messageId = self.crypto.randomUUID();
@@ -810,7 +827,7 @@ ${settings.autoSplitChunkPrompt}`;
             finalSummary = '';
             if (settings.autoSplit && text.length > settings.autoSplitLimit) {
               totalChunks = Math.ceil(text.length / settings.autoSplitLimit);
-              const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > text.length ? settings.autoSplitLimit : text.lastIndexOf('\n', settings.autoSplitLimit);
+              const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > text.length ? settings.autoSplitLimit : getLastIndexOf(text, settings.autoSplitLimit);
               remainingText = text.substring(lastNewLineIndexBeforeLimit);
               text = `${settings.autoSplitInitialPrompt}[START CHUNK ${chunkNumber}/${totalChunks}]
 ${text.substring(0, lastNewLineIndexBeforeLimit)}
@@ -827,7 +844,7 @@ ${settings.autoSplitChunkPrompt}`;
             remainingText = '';
           } else {
             chunkNumber += 1;
-            const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > remainingText.length ? settings.autoSplitLimit : remainingText.lastIndexOf('\n', settings.autoSplitLimit);
+            const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > remainingText.length ? settings.autoSplitLimit : getLastIndexOf(remainingText, settings.autoSplitLimit);
             remainingText = remainingText.slice(lastNewLineIndexBeforeLimit);
           }
 
@@ -945,14 +962,32 @@ function loadConversationList(skipInputFormReload = false) {
         createSearchBox();
         loadStorageConversations(result.conversations, res.conversationsOrder);
         const { origin, pathname, search } = new URL(window.location.toString());
+        // const isSharedConversation = pathname.startsWith('/share/') && window.location.href.endsWith('/continue');
+        // console.warn('isSharedConversation', isSharedConversation);
+        // if (isSharedConversation) {
+        //   const conversationId = pathname.split('/').pop().pop().replace(/[^a-z0-9-]/gi, '');
+        //   // get content of script element with id=__NEXT_DATA__
+        //   if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) {
+        //     const script = document.querySelector('#__NEXT_DATA__');
+        //     const scriptContent = JSON.parse(script.innerHTML);
+        //     const { props } = scriptContent;
+        //     const { pageProps } = props;
+        //     const conversation = pageProps.serverResponse.data;
+        //    console.warn('conversation', conversation);
+        //     loadSharedConversation(conversationId, conversation);
+        //   }
+        // } else {
         const conversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
         const conversationList = document.querySelector('#conversation-list');
         if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) {
           if (!result.conversations[conversationId].archived && !result.conversations[conversationId].skipped) {
-            const focusedConversation = conversationList.querySelector(`#conversation-button-${conversationId}`);
-            if (focusedConversation) {
-              focusedConversation.scrollIntoView();
-            }
+            setTimeout(() => {
+              const focusedConversation = conversationList.querySelector(`#conversation-button-${conversationId}`);
+
+              if (focusedConversation) {
+                focusedConversation.scrollIntoView({ block: 'nearest' });
+              }
+            }, 500);
             loadConversation(conversationId);
             if (search) {
               window.history.replaceState({}, '', `${origin}${pathname}`);
@@ -964,6 +999,7 @@ function loadConversationList(skipInputFormReload = false) {
         } else { // } if (url === 'https://chat.openai.com/') {
           showNewChatPage();
         }
+        // }
         if (!skipInputFormReload) addScrollButtons();
         if (!skipInputFormReload) overrideSubmitForm();
         if (!skipInputFormReload) setBackButtonDetection();

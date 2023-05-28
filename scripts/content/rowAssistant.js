@@ -8,6 +8,7 @@ function rowAssistant(conversation, node, childIndex, childCount, models, custom
 
   const modelTitle = models.find((m) => m.slug === modelSlug)?.title;
   let messageContentParts = highlight(message.content.parts.join('\n'), searchValue);
+
   // if citations array is not mpty, replace text from start_ix to end_ix position with citation
   if (citations?.length > 0) {
     citations.reverse().forEach((citation, index) => {

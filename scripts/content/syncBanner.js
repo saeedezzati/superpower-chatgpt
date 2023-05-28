@@ -11,11 +11,11 @@ function addSyncBanner() {
   navbar.className = 'w-full flex items-center justify-center border-b h-14 border-black/10 bg-gray-50 p-4 text-gray-500 dark:border-gray-900/50 dark:bg-gray-700 dark:text-gray-300 shadow-md text-sm';
   navbar.style.backgroundColor = '#ffd70036';
   const syncProgressLabel = document.querySelector('#sync-progresslabel');
-  navbar.textContent = `Syncing conversations to your computer. Some features like search and folders will be unavailable until sync is complete.${syncProgressLabel.textContent.split('Syncing')[1]}`;
+  navbar.textContent = `Syncing conversations to your computer. Some features like search and folders will be unavailable until sync is complete.${syncProgressLabel.textContent.split('Syncing')[1] || ''}`;
   navWrapper.appendChild(navbar);
   syncProgressLabel.addEventListener('DOMSubtreeModified', () => {
     // get text between (parentheses) in syncProgressLabel.textContent
-    navbar.textContent = `Syncing conversations to your computer. Some features like search and folders will be unavailable until sync is complete.${syncProgressLabel.textContent.split('Syncing')[1]}`;
+    navbar.textContent = `Syncing conversations to your computer. Some features like search and folders will be unavailable until sync is complete.${syncProgressLabel.textContent.split('Syncing')[1] || ''}`;
   });
 
   const main = document.querySelector('main');

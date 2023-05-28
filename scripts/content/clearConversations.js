@@ -62,7 +62,7 @@ function replaceDeleteConversationButton() {
                   conversationElement.querySelector('[id^=actions-wrapper-]')?.remove();
                   conversationElement.classList = notSelectedClassList;
                   conversationElement.style.opacity = 0.7;
-                  conversationElement.classList.remove('hover:pr-14');
+                  conversationElement.classList.remove('hover:pr-20');
                   const conversationElementIcon = conversationElement.querySelector('img');
                   conversationElementIcon.src = chrome.runtime.getURL('icons/trash.png');
                   // move conversation after archivedConversationsTitle
@@ -110,7 +110,7 @@ function replaceDeleteConversationButton() {
                   conversationElement.querySelector('[id^=actions-wrapper-]')?.remove();
                   conversationElement.classList = notSelectedClassList;
                   conversationElement.style.opacity = 0.7;
-                  conversationElement.classList.remove('hover:pr-14');
+                  conversationElement.classList.remove('hover:pr-20');
                   const conversationElementIcon = conversationElement.querySelector('img');
                   conversationElementIcon.src = chrome.runtime.getURL('icons/trash.png');
                   const trashFolderContent = document.querySelector('#folder-content-trash');

@@ -216,8 +216,8 @@ function folderActions(folderId) {
 }
 function colorPicker(folder) {
   const folderElement = document.querySelector(`#folder-${folder.id}`);
-  folderElement.classList.replace('pr-3', 'pr-14');
-  folderElement.classList.replace('hover:pr-20', 'hover:pr-14');
+  folderElement.classList.replace('pr-3', 'pr-20');
+  folderElement.classList.replace('hover:pr-20', 'hover:pr-20');
   const colorPickerElement = document.createElement('div');
   colorPickerElement.id = `actions-wrapper-${folder.id}`;
   colorPickerElement.tabIndex = 0;
@@ -264,8 +264,8 @@ function colorPicker(folder) {
     const curFolderElement = document.querySelector(`#folder-${folder.id}`);
     const folderContentElement = document.querySelector(`#folder-content-${folder.id}`);
     colorPickerElement.replaceWith(folderActions(folder.id));
-    curFolderElement.classList.replace('pr-14', 'pr-3');
-    folderElement.classList.replace('hover:pr-14', 'hover:pr-20');
+    curFolderElement.classList.replace('pr-20', 'pr-3');
+    folderElement.classList.replace('hover:pr-20', 'hover:pr-20');
   });
 
   return colorPickerElement;
@@ -273,8 +273,8 @@ function colorPicker(folder) {
 function folderConfirmActions(folder, action) {
   let skipBlur = false;
   const folderElement = document.querySelector(`#folder-${folder.id}`);
-  folderElement.classList.replace('pr-3', 'pr-14');
-  folderElement.classList.replace('hover:pr-20', 'hover:pr-14');
+  folderElement.classList.replace('pr-3', 'pr-20');
+  folderElement.classList.replace('hover:pr-20', 'hover:pr-20');
   const actionsWrapper = document.createElement('div');
   actionsWrapper.id = `actions-wrapper-${folder.id}`;
   actionsWrapper.classList = 'absolute flex right-1 z-10 text-gray-300';
@@ -300,8 +300,8 @@ function folderConfirmActions(folder, action) {
         conversationsOrder.find((f) => f.id === folder.id).name = textInput.value;
         chrome.storage.sync.set({ conversationsOrder });
       });
-      folderElement.classList.replace('pr-14', 'pr-3');
-      folderElement.classList.replace('hover:pr-14', 'hover:pr-20');
+      folderElement.classList.replace('pr-20', 'pr-3');
+      folderElement.classList.replace('hover:pr-20', 'hover:pr-20');
     } else if (action === 'delete') {
       if (folder.id === 'trash') {
         emptyTrash();
@@ -327,8 +327,8 @@ function folderConfirmActions(folder, action) {
       textInput.parentElement.replaceChild(folderTitle, textInput);
     }
     actionsWrapper.replaceWith(folderActions(folder.id));
-    folderElement.classList.replace('pr-14', 'pr-3');
-    folderElement.classList.replace('hover:pr-14', 'hover:pr-20');
+    folderElement.classList.replace('pr-20', 'pr-3');
+    folderElement.classList.replace('hover:pr-20', 'hover:pr-20');
   });
   actionsWrapper.appendChild(confirmButton);
   actionsWrapper.appendChild(cancelButton);
@@ -341,15 +341,15 @@ function folderConfirmActions(folder, action) {
       } else if (e.key === 'Escape') {
         cancelButton.click();
       }
-      folderElement.classList.replace('pr-14', 'pr-3');
-      folderElement.classList.replace('hover:pr-14', 'hover:pr-20');
+      folderElement.classList.replace('pr-20', 'pr-3');
+      folderElement.classList.replace('hover:pr-20', 'hover:pr-20');
     });
     textInput.addEventListener('blur', (e) => {
       if (skipBlur) return;
       if (e.relatedTarget?.id === `confirm-${folder.id}`) return;
       cancelButton.click();
-      folderElement.classList.replace('pr-14', 'pr-3');
-      folderElement.classList.replace('hover:pr-14', 'hover:pr-20');
+      folderElement.classList.replace('pr-20', 'pr-3');
+      folderElement.classList.replace('hover:pr-20', 'hover:pr-20');
     });
   }
   return actionsWrapper;
@@ -421,7 +421,7 @@ function deleteFolder(folder) {
             conversationElement.querySelector('[id^=actions-wrapper-]').remove();
             conversationElement.classList = notSelectedClassList;
             conversationElement.style.opacity = 0.7;
-            conversationElement.classList.remove('hover:pr-14');
+            conversationElement.classList.remove('hover:pr-20');
             const conversationElementIcon = conversationElement.querySelector('img');
             conversationElementIcon.src = chrome.runtime.getURL('icons/trash.png');
             const trashFolderContent = document.querySelector('#folder-content-trash');

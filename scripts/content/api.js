@@ -274,6 +274,95 @@ function userSettings(pluginId) {
     return Promise.reject(res);
   }));
 }
+
+function createShare(conversationId, currentNodeId, isAnnonymous = true) {
+  const url = new URL('https://chat.openai.com/backend-api/share/create');
+  // without passing limit it returns 50 by default
+  // limit cannot be more than 20
+  const data = {
+    is_anonymous: isAnnonymous,
+    conversation_id: conversationId,
+    current_node_id: currentNodeId,
+    message_id: `aaa1${self.crypto.randomUUID().slice(4)}`,
+  };
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch(url, {
+    method: 'POST',
+    headers: {
+      ...defaultHeaders,
+      Authorization: result.auth_token,
+    },
+    body: JSON.stringify(data),
+
+  }).then((res) => {
+    if (res.ok) {
+      const jsonData = res.json();
+      // if (!jsonData.already_exists) {
+      //   getSharedConversations().then((sharedConversations) => {
+      //     const conversation = sharedConversations.items.find((c) => c.conversation_id === conversationId);
+      //     chrome.storage.local.get(['conversations'], (localResult) => {
+      //       chrome.storage.local.set({
+      //         conversations: {
+      //           ...localResult.conversations,
+      //           [conversationId]: {
+      //             ...Object.values(localResult.conversations).find((c) => c.id === conversationId),
+      //             update_time: new Date(conversation.update_time).getTime() / 1000,
+      //           },
+      //         },
+      //       });
+      //     });
+      //   });
+      // }
+      return jsonData;
+    }
+    return Promise.reject(res);
+  }));
+}
+
+function share(shareId, title, highlightedMessageId, isAnonymous = true, isVisibile = true, isPublic = true) {
+  const url = new URL(`https://chat.openai.com/backend-api/share/${shareId}`);
+  // without passing limit it returns 50 by default
+  // limit cannot be more than 20
+  const data = {
+    is_public: isPublic,
+    is_anonymous: isAnonymous,
+    is_visible: isVisibile,
+    title,
+    highlighted_message_id: highlightedMessageId,
+    share_id: shareId,
+  };
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch(url, {
+    method: 'PATCH',
+    headers: {
+      ...defaultHeaders,
+      Authorization: result.auth_token,
+    },
+    body: JSON.stringify(data),
+
+  }).then((res) => {
+    if (res.ok) {
+      return res.json();
+    }
+    return Promise.reject(res);
+  }));
+}
+
+function deleteShare(shareId) {
+  const url = new URL(`https://chat.openai.com/backend-api/share/${shareId}`);
+  // without passing limit it returns 50 by default
+  // limit cannot be more than 20
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch(url, {
+    method: 'DELETE',
+    headers: {
+      ...defaultHeaders,
+      Authorization: result.auth_token,
+    },
+  }).then((res) => {
+    if (res.ok) {
+      return res.json();
+    }
+    return Promise.reject(res);
+  }));
+}
 // returnsa thenable promise. If selectedConversations exist, return them, otherwise get all conversations
 function getSelectedConversations(forceRefresh = false) {
   return new Promise((resolve) => {
@@ -340,7 +429,25 @@ function getAllConversations(forceRefresh = false) {
     });
   });
 }
-
+function getSharedConversations(offset = 0, limit = 100) {
+  const url = new URL('https://chat.openai.com/backend-api/shared_conversations');
+  // without passing limit it returns 50 by default
+  // limit cannot be more than 20
+  // const params = { offset, limit };
+  // url.search = new URLSearchParams(params).toString();
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch(url, {
+    method: 'GET',
+    headers: {
+      ...defaultHeaders,
+      Authorization: result.auth_token,
+    },
+  }).then((res) => {
+    if (res.ok) {
+      return res.json();
+    }
+    return Promise.reject(res);
+  }));
+}
 function getConversations(offset = 0, limit = 100) {
   const url = new URL('https://chat.openai.com/backend-api/conversations');
   // without passing limit it returns 50 by default
