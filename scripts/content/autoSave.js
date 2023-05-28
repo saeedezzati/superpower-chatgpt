@@ -60,6 +60,7 @@ async function addConversationToStorage(conv) {
         archived: false,
         saveHistory: true,
         skipped: true,
+        update_time: new Date(conv.update_time).getTime() / 1000,
       };
       if (Object.keys(localConversations).length > 0) {
         chrome.storage.sync.get(['conversationsOrder'], (result) => {
@@ -259,9 +260,9 @@ function inSyncConversations(localConvs, remoteConvs) {
   return Object.keys(localConvs).filter(
     (id) => !localConvs[id].archived
       && !localConvs[id].shouldRefresh
-      && localConvs[id].current_node
+      && (localConvs[id].current_node || localConvs[id].skipped)
       && remoteConvs.find((rc) => rc.id === id)?.update_time
-      && (localConvs[id].update_time === new Date(remoteConvs.find((rc) => rc.id === id).update_time).getTime() / 1000)
+      && ((localConvs[id].update_time === new Date(remoteConvs.find((rc) => rc.id === id).update_time).getTime() / 1000) || localConvs[id].skipped)
       && (typeof localConvs[id].saveHistory === 'undefined' || localConvs[id].saveHistory),
   );
 }
