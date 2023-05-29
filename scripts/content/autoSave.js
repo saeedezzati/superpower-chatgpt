@@ -172,6 +172,7 @@ function updateOrCreateConversation(conversationId, message, parentId, settings,
       current_node: message.id,
       title: 'New chat',
       create_time: (new Date()).getTime() / 1000,
+      update_time: 'initialize',
       mapping: {
         [parentId]: {
           children: [systemMessage.id], id: parentId, message: null, parent: null,
@@ -322,7 +323,9 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
               const remoteConv = remoteConversations.find((conv) => conv.id === localConvIds[i]) || localConversations[localConvIds[i]];
               localConversations[localConvIds[i]].title = remoteConv.title;
               // eslint-disable-next-line prefer-destructuring
-              // localConversations[localConvIds[i]].update_time = Math.trunc(localConv.mapping[localConv.current_node].message.create_time);
+              if (localConversations[localConvIds[i]].update_time === 'initialize') {
+                localConversations[localConvIds[i]].update_time = new Date(remoteConv.update_time).getTime() / 1000;
+              }
               // delete conversation key(legacy)
               if ('conversation' in localConversations[localConvIds[i]]) {
                 delete localConversations[localConvIds[i]].conversation;
