@@ -29,7 +29,7 @@ function rowAssistant(conversation, node, childIndex, childCount, models, custom
     .use(markdownitSup)
     .use(texmath, {
       engine: katex,
-      delimiters: 'dollars',
+      delimiters: 'brackets',
       katexOptions: { macros: { '\\RR': '\\mathbb{R}' } },
     }).render(messageContentParts);
 

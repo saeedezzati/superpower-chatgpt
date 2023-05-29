@@ -480,7 +480,7 @@ function assistantRow(message) {
     .use(markdownitSup)
     .use(texmath, {
       engine: katex,
-      delimiters: 'dollars',
+      delimiters: 'brackets',
       katexOptions: { macros: { '\\RR': '\\mathbb{R}' } },
     }).render(messageContent);
   const avatarColor = (message.metadata.model_slug?.includes('plugins') || message.metadata.model_slug?.startsWith('gpt-4')) ? 'rgb(171, 104, 255)' : 'rgb(25, 195, 125)';

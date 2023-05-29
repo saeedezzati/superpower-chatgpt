@@ -61,6 +61,7 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
         || !result.user_id
         || !result.openai_id
         || typeof result.mfa === 'undefined'
+        || !result.mfa
         || result.version !== version;
       if (shouldRegister && details.url === 'https://chat.openai.com/api/auth/session') {
         const requestHeaders = details.requestHeaders.reduce((acc, header) => {
