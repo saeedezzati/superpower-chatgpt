@@ -55,8 +55,8 @@ function rowAssistant(conversation, node, childIndex, childCount, models, custom
     </div>
     <div class="relative flex w-[calc(100%-50px)] flex-col gap-1 md:gap-3 lg:w-[calc(100%-115px)]">
       <div class="flex flex-grow flex-col gap-3">
-        <div dir="auto" class="min-h-[20px] flex flex-col items-start whitespace-pre-wra">
-          <div id="message-text-${id}" class="markdown prose w-full break-words dark:prose-invert dark">
+        <div dir="auto" class="min-h-[20px] flex flex-col items-start whitespace-pre-wrap">
+          <div id="message-text-${id}" class="markdown prose w-full flex flex-col break-words dark:prose-invert dark">
             ${messageContentPartsHTML}
           </div>
           <div id="result-action-wrapper-${id}"

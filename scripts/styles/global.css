@@ -216,7 +216,9 @@ input:checked + .slider:before {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
-
+.markdown ul li>eq {
+  margin: 0;
+}
 /* announcement */
 #modal-content-newsletter {
  line-height:28px;

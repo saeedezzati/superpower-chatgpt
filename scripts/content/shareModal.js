@@ -524,10 +524,10 @@ function assistantRow(message) {
     >
       <div class="flex flex-grow flex-col gap-3">
         <div
-          class="min-h-[20px] flex flex-col items-start gap-4 whitespace-pre-wra break-words"
+          class="min-h-[20px] flex flex-col items-start gap-4 whitespace-pre-wrap break-words"
         >
           <div
-            class="markdown prose w-full break-words dark:prose-invert dark"
+            class="markdown prose flex flex-col w-full break-words dark:prose-invert dark"
           >
             ${messageContentPartsHTML}
           </div>

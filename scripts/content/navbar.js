@@ -36,7 +36,7 @@ function addNavbar() {
     const leftSection = document.createElement('div');
     leftSection.style = 'display:flex;z-index:1000;margin-right:auto;';
     const modelSwitcherWrapper = document.createElement('div');
-    modelSwitcherWrapper.style = 'position:relative;width:200px;z-index:1000';
+    modelSwitcherWrapper.style = 'position:relative;width:240px;z-index:1000';
     const idPrefix = 'navbar';
     modelSwitcherWrapper.id = `model-switcher-wrapper-${idPrefix}`;
     modelSwitcherWrapper.innerHTML = modelSwitcher(allModels, settings.selectedModel, idPrefix, customModels);
