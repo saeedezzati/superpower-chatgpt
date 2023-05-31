@@ -18,18 +18,20 @@ function toggleOriginalRegenerateResponseButton() {
   const textAreaElementWrapper = textAreaElement.parentNode;
   const nodeBeforetTextAreaElement = textAreaElementWrapper.previousSibling;
   // find all button without id
-  const allButtons = Array.from(nodeBeforetTextAreaElement.querySelectorAll('button:not([id])'));
-  const originalRegenerateResponseButton = allButtons.find((button) => button.textContent.toLowerCase() === 'regenerate response');
-  if (originalRegenerateResponseButton) {
-    originalRegenerateResponseButton.remove();
+  if (nodeBeforetTextAreaElement) {
+    const allButtons = Array.from(nodeBeforetTextAreaElement.querySelectorAll('button:not([id])'));
+    const originalRegenerateResponseButton = allButtons.find((button) => button.textContent.toLowerCase() === 'regenerate response');
+    if (originalRegenerateResponseButton) {
+      originalRegenerateResponseButton.remove();
+    }
   }
   const existingRegenerateResponseButton = document.querySelector('#regenerate-response-button');
   if (existingRegenerateResponseButton) {
     existingRegenerateResponseButton.remove();
   }
-  const existingErrorMessage = nodeBeforetTextAreaElement.querySelector('span');
+  const existingErrorMessage = nodeBeforetTextAreaElement?.querySelector('span');
   if (existingErrorMessage && existingErrorMessage.textContent === 'There was an error generating a response') {
-    nodeBeforetTextAreaElement.style.flexWrap = 'unset';
+    if (nodeBeforetTextAreaElement) { nodeBeforetTextAreaElement.style.flexWrap = 'unset'; }
     existingErrorMessage.remove();
   }
   if (!canSubmit) return;
@@ -57,7 +59,13 @@ function toggleOriginalRegenerateResponseButton() {
       const newMessage = lastUserMessage.message.content.parts.join('\n');
       const parentId = lastUserMessage.parent;
       newRegenerateResponseButton.remove();
-      const errorMessage = nodeBeforetTextAreaElement.querySelector('span');
+
+      const curMain = document.querySelector('main');
+      const curInputForm = curMain.querySelector('form');
+      const curTextAreaElement = curInputForm.querySelector('textarea');
+      const curTextAreaElementWrapper = curTextAreaElement.parentNode;
+      const curNodeBeforetTextAreaElement = curTextAreaElementWrapper.previousSibling;
+      const errorMessage = curNodeBeforetTextAreaElement.querySelector('span');
       if (errorMessage && errorMessage.textContent === 'There was an error generating a response') {
         nodeBeforetTextAreaElement.style.flexWrap = 'unset';
         errorMessage.remove();

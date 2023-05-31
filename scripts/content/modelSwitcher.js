@@ -111,11 +111,13 @@ function addModelSwitcherEventListener(idPrefix, forceDark = false) {
         const modelSlug = option.id.split(`${idPrefix}-model-switcher-option-`)[1];
         const selectedModel = allModels.find((m) => m.slug === modelSlug);
         const pluginsDropdownWrapper = document.querySelector(`#plugins-dropdown-wrapper-${idPrefix}`);
-        if (selectedModel.slug.includes('plugins')) {
-          getInstalledPlugins();
-          pluginsDropdownWrapper.style.display = 'block';
-        } else {
-          pluginsDropdownWrapper.style.display = 'none';
+        if (pluginsDropdownWrapper) {
+          if (selectedModel.slug.includes('plugins')) {
+            getInstalledPlugins();
+            pluginsDropdownWrapper.style.display = 'block';
+          } else {
+            pluginsDropdownWrapper.style.display = 'none';
+          }
         }
         chrome.storage.local.set({ settings: { ...settings, selectedModel } });
       });

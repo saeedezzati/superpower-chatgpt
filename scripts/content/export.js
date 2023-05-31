@@ -196,6 +196,7 @@ function addExportButton() {
   if (canSubmit) {
     const textAreaElementWrapper = textAreaElement.parentNode;
     const nodeBeforetTextAreaElement = textAreaElementWrapper.previousSibling;
+    if (!nodeBeforetTextAreaElement) return;
     nodeBeforetTextAreaElement.style.minHeight = '38px';
     nodeBeforetTextAreaElement.appendChild(exportButton);
   }

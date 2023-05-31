@@ -147,5 +147,5 @@ function initializeAnnouncement() {
         });
       });
     });
-  }, 5000);
+  }, 7000);
 }
