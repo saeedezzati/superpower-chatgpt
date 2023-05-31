@@ -13,7 +13,11 @@ function toggleStopGeneratingResponseButton() {
   if (!textAreaElement) return;
   const textAreaElementWrapper = textAreaElement.parentNode;
   const nodeBeforetTextAreaElement = textAreaElementWrapper.previousSibling;
-
+  if (!nodeBeforetTextAreaElement) return;
+  if (nodeBeforetTextAreaElement.classList.length === 0) {
+    nodeBeforetTextAreaElement.classList = 'h-full flex ml-1 md:w-full md:m-auto md:mb-2 gap-0 md:gap-2 justify-center';
+    nodeBeforetTextAreaElement.firstChild.classList = '';
+  }
   const existingStopGeneratingResponseButton = document.querySelector('#stop-generating-response-button');
   if (existingStopGeneratingResponseButton && !isGenerating) {
     existingStopGeneratingResponseButton.remove();

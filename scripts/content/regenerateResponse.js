@@ -18,20 +18,24 @@ function toggleOriginalRegenerateResponseButton() {
   const textAreaElementWrapper = textAreaElement.parentNode;
   const nodeBeforetTextAreaElement = textAreaElementWrapper.previousSibling;
   // find all button without id
-  if (nodeBeforetTextAreaElement) {
-    const allButtons = Array.from(nodeBeforetTextAreaElement.querySelectorAll('button:not([id])'));
-    const originalRegenerateResponseButton = allButtons.find((button) => button.textContent.toLowerCase() === 'regenerate response');
-    if (originalRegenerateResponseButton) {
-      originalRegenerateResponseButton.remove();
-    }
+  if (!nodeBeforetTextAreaElement) return;
+  if (nodeBeforetTextAreaElement.classList.length === 0) {
+    nodeBeforetTextAreaElement.classList = 'h-full flex ml-1 md:w-full md:m-auto md:mb-2 gap-0 md:gap-2 justify-center';
+    nodeBeforetTextAreaElement.firstChild.classList = '';
   }
+  const allButtons = Array.from(nodeBeforetTextAreaElement.querySelectorAll('button:not([id])'));
+  const originalRegenerateResponseButton = allButtons.find((button) => button.textContent.toLowerCase() === 'regenerate response');
+  if (originalRegenerateResponseButton) {
+    originalRegenerateResponseButton.remove();
+  }
+
   const existingRegenerateResponseButton = document.querySelector('#regenerate-response-button');
   if (existingRegenerateResponseButton) {
     existingRegenerateResponseButton.remove();
   }
-  const existingErrorMessage = nodeBeforetTextAreaElement?.querySelector('span');
+  const existingErrorMessage = nodeBeforetTextAreaElement.querySelector('span');
   if (existingErrorMessage && existingErrorMessage.textContent === 'There was an error generating a response') {
-    if (nodeBeforetTextAreaElement) { nodeBeforetTextAreaElement.style.flexWrap = 'unset'; }
+    nodeBeforetTextAreaElement.style.flexWrap = 'unset';
     existingErrorMessage.remove();
   }
   if (!canSubmit) return;

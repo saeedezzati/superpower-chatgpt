@@ -338,7 +338,7 @@ function replaceTextAreaElemet(settings) {
   let textAreaElement = inputForm.querySelector('textarea');
 
   if (!textAreaElement) {
-    const textAreaElementWrapperHTML = '<div class="flex flex-col w-full py-2 flex-grow md:py-3 md:pl-4 relative border border-black/10 bg-white dark:border-gray-900/50 dark:text-white dark:bg-gray-700 rounded-md shadow-[0_0_10px_rgba(0,0,0,0.10)] dark:shadow-[0_0_15px_rgba(0,0,0,0.10)]" style="display: none;"><textarea tabindex="0" rows="1" class="m-0 w-full resize-none border-0 bg-transparent p-0 pl-2 pr-7 focus:ring-0 focus-visible:ring-0 dark:bg-transparent md:pl-0" style="max-height: 200px; height: 0px; overflow-y: hidden; padding-right: 40px;" id="gptx-textarea" dir="auto"></textarea><button class="absolute p-1 rounded-md text-gray-500 bottom-1.5 right-1 md:bottom-2.5 md:right-2 hover:bg-gray-100 dark:hover:text-gray-400 dark:hover:bg-gray-900 disabled:hover:bg-transparent dark:disabled:hover:bg-transparent" type="button"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-1" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button></div>';
+    const textAreaElementWrapperHTML = '<div class="flex flex-col w-full py-[10px] flex-grow md:py-4 md:pl-4 relative border border-black/10 bg-white dark:border-gray-900/50 dark:text-white dark:bg-gray-700 rounded-xl shadow-xs dark:shadow-xs"><textarea id="prompt-textarea" tabindex="0" data-id="request-:r4g:-0" rows="1" placeholder="Send a message." class="m-0 w-full resize-none border-0 bg-transparent p-0 pr-10 focus:ring-0 focus-visible:ring-0 dark:bg-transparent md:pr-12 pl-3 md:pl-0" style="max-height: 200px; height: 24px; overflow-y: hidden;"></textarea><button class="absolute p-1 rounded-md bottom-[10px] md:bottom-3 md:p-2 md:right-3 dark:hover:bg-gray-900 dark:disabled:hover:bg-transparent right-2 disabled:text-gray-400 text-white transition-colors disabled:opacity-40"><span class="" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" class="h-4 w-4" stroke-width="2"><path d="M.5 1.163A1 1 0 0 1 1.97.28l12.868 6.837a1 1 0 0 1 0 1.766L1.969 15.72A1 1 0 0 1 .5 14.836V10.33a1 1 0 0 1 .816-.983L8.5 8 1.316 6.653A1 1 0 0 1 .5 5.67V1.163Z" fill="currentColor"></path></svg></span></button></div>';
     // insert text area element wrapper in input form first child at the end
     inputForm.firstChild.insertAdjacentHTML('beforeend', textAreaElementWrapperHTML);
     textAreaElement = inputForm.querySelector('textarea');
@@ -476,6 +476,9 @@ function canSubmitPrompt() {
   if (!textAreaElement) { return false; }
   const submitButton = inputForm.querySelector('textarea ~ button');
   if (!submitButton) { return false; }
+  // if submit button not contained and svg element retur false
+  const submitSVG = submitButton.querySelector('svg');// (...)
+  if (!submitSVG) { return false; }
   if (isGenerating) { return false; }
   // if (submitButton.disabled) { return false; } // remove since openai now disables submit button when input is empty
   return true;
@@ -646,7 +649,9 @@ function addExpandButton() {
   }
   const originalExpandButton = document.querySelector('#expand-sidebar-bottom-button');
   if (originalExpandButton) originalExpandButton.remove();
-  const conversationListParent = document.querySelector('#conversation-list').parentElement;
+  const conversationList = document.querySelector('#conversation-list');
+  if (!conversationList) return;
+  const conversationListParent = conversationList.parentElement;
   conversationListParent.style.transition = 'all 1s ease-in-out';
   conversationListParent.style.position = 'relative';
   const expandButton = document.createElement('button');

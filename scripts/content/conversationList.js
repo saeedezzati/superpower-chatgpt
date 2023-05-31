@@ -351,6 +351,7 @@ function loadStorageConversations(conversations, conversationsOrder = [], search
       } else {
         const conv = Object.values(conversations).find((c) => c.id?.slice(0, 5) === conversation);
         if (!conv) continue;
+        if (conv.skipped) continue;
         const conversationElement = createConversation(conv, conversationTimestamp, searchValue);
         conversationList.appendChild(conversationElement);
       }
@@ -452,7 +453,7 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
         const textAreaElement = inputForm.querySelector('textarea');
         textAreaElement.focus();
         // submitButton.disabled = false;
-        submitButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-1" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>';
+        submitButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" class="h-4 w-4" stroke-width="2"><path d="M.5 1.163A1 1 0 0 1 1.97.28l12.868 6.837a1 1 0 0 1 0 1.766L1.969 15.72A1 1 0 0 1 .5 14.836V10.33a1 1 0 0 1 .816-.983L8.5 8 1.316 6.653A1 1 0 0 1 .5 5.67V1.163Z" fill="currentColor"></path></svg>';
         if (chatStreamIsClosed && e.data !== '[DONE]') {
           const data = JSON.parse(e.data);
           if (data.error) throw new Error(data.error);
@@ -662,7 +663,7 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
       const inputForm = main.querySelector('form');
       const submitButton = inputForm.querySelector('textarea ~ button');
       // submitButton.disabled = false;
-      submitButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-1" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>';
+      submitButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" class="h-4 w-4" stroke-width="2"><path d="M.5 1.163A1 1 0 0 1 1.97.28l12.868 6.837a1 1 0 0 1 0 1.766L1.969 15.72A1 1 0 0 1 .5 14.836V10.33a1 1 0 0 1 .816-.983L8.5 8 1.316 6.653A1 1 0 0 1 .5 5.67V1.163Z" fill="currentColor"></path></svg>';
       const error = JSON.parse(err.data);
       const errorCode = error?.detail?.code;
       let errorMessage = typeof error.detail === 'string' ? error.detail : error.detail.message;

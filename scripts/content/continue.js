@@ -153,8 +153,15 @@ function addContinueButton() {
     const textAreaElement = inputForm.querySelector('textarea');
     if (!textAreaElement) return;
     const textAreaElementWrapper = textAreaElement.parentNode;
-    const nodeBeforetTextAreaElement = textAreaElementWrapper.previousSibling;
-    if (!nodeBeforetTextAreaElement) return;
+    let nodeBeforetTextAreaElement = textAreaElementWrapper.previousSibling;
+    if (!nodeBeforetTextAreaElement) {
+      // create a new div
+      const newDiv = document.createElement('div');
+      newDiv.classList = 'h-full flex ml-1 md:w-full md:m-auto md:mb-2 gap-0 md:gap-2 justify-center';
+      // prepent inputform with new div
+      inputForm.firstChild.prepend(newDiv);
+      nodeBeforetTextAreaElement = newDiv;
+    }
     if (nodeBeforetTextAreaElement.classList.length === 0) {
       nodeBeforetTextAreaElement.classList = 'h-full flex ml-1 md:w-full md:m-auto md:mb-2 gap-0 md:gap-2 justify-center';
       nodeBeforetTextAreaElement.firstChild.classList = '';

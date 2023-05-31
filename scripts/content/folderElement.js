@@ -48,7 +48,7 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
   if (folder.conversationIds.length > 0) {
     folder.conversationIds.forEach((conversationId) => {
       const conversation = Object.values(conversations).find((c) => c.id?.slice(0, 5) === conversationId);
-      if (conversation) {
+      if (conversation && !conversation.skipped) {
         const conversationElement = createConversation(conversation, conversationTimestamp);
         folderContent.appendChild(conversationElement);
       }
