@@ -30,11 +30,9 @@ function generateChat(message, conversationId, messageId, parentMessageId, saveH
         : null,
       model: res.settings.selectedModel.slug,
       parent_message_id: parentMessageId,
+      history_and_training_disabled: !saveHistory,
       timezone_offset_min: new Date().getTimezoneOffset(),
     };
-    if (!saveHistory) {
-      payload.history_and_training_disabled = true;
-    }
     if (conversationId) {
       payload.conversation_id = conversationId;
     }
@@ -283,7 +281,7 @@ function createShare(conversationId, currentNodeId, isAnnonymous = true) {
     is_anonymous: isAnnonymous,
     conversation_id: conversationId,
     current_node_id: currentNodeId,
-    message_id: `aaa1${self.crypto.randomUUID().slice(4)}`,
+    // message_id: `aaa1${self.crypto.randomUUID().slice(4)}`,
   };
   return chrome.storage.sync.get(['auth_token']).then((result) => fetch(url, {
     method: 'POST',

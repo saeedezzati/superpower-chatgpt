@@ -389,7 +389,7 @@ function updateNewChatButtonSynced() {
     const textAreaElement = inputForm.querySelector('textarea');
     const nav = document.querySelector('nav');
     const newChatButton = nav?.querySelector('a');
-    newChatButton.classList = 'flex py-3 px-3 items-center gap-3 transition-colors duration-200 text-white cursor-pointer text-sm rounded-md border border-white/20 hover:bg-gray-500/10 mb-1 flex-shrink-0';
+    newChatButton.classList = 'flex py-3 px-3 w-full items-center gap-3 transition-colors duration-200 text-white cursor-pointer text-sm rounded-md border border-white/20 hover:bg-gray-500/10 mb-1 flex-shrink-0';
     // clone newChatButton
     if (conversationsAreSynced) {
       const newChatButtonClone = newChatButton.cloneNode(true);

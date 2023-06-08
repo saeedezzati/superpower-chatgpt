@@ -1135,14 +1135,14 @@ function initializeSettings() {
         autoSummarize: result.settings?.autoSummarize !== undefined ? result.settings.autoSummarize : false,
         autoSplit: result.settings?.autoSplit !== undefined ? result.settings.autoSplit : true,
         autoSplitLimit: result.settings?.autoSplitLimit !== undefined ? result.settings.autoSplitLimit : 8000,
-        autoSplitInitialPrompt: result.settings?.autoSplitInitialPrompt || `Act like a document/text loader until you load and remember the content of the next text/s or document/s.
+        autoSplitInitialPrompt: result.settings?.autoSplitInitialPrompt !== undefined ? result.settings?.autoSplitInitialPrompt : `Act like a document/text loader until you load and remember the content of the next text/s or document/s.
 There might be multiple files, each file is marked by name in the format ### DOCUMENT NAME.
 I will send them to you in chunks. Each chunk starts will be noted as [START CHUNK x/TOTAL], and the end of this chunk will be noted as [END CHUNK x/TOTAL], where x is the number of current chunks, and TOTAL is the number of all chunks I will send you.
 I will split the message in chunks, and send them to you one by one. For each message follow the instructions at the end of the message.
 Let's begin:
 
 `,
-        autoSplitChunkPrompt: result.settings?.autoSplitChunkPrompt || `Reply with OK: [CHUNK x/TOTAL]
+        autoSplitChunkPrompt: result.settings?.autoSplitChunkPrompt !== undefined ? result.settings?.autoSplitChunkPrompt : `Reply with OK: [CHUNK x/TOTAL]
 Don't reply with anything else!`,
         conversationTimestamp: result.settings?.conversationTimestamp !== undefined ? result.settings.conversationTimestamp : false,
         autoHideTopNav: result.settings?.autoHideTopNav !== undefined ? result.settings.autoHideTopNav : false,

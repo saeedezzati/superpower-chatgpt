@@ -38,6 +38,7 @@ function rowAssistant(conversation, node, childIndex, childCount, models, custom
 
   // eslint-disable-next-line no-nested-ternary
   const avatarColor = (modelSlug?.includes('plugins') || modelSlug?.startsWith('gpt-4')) ? 'rgb(171, 104, 255)' : 'rgb(25, 195, 125)';
+
   return `<div id="message-wrapper-${id}" data-role="assistant"
   class="w-full border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group ${pinned ? 'border-l-pinned bg-pinned dark:bg-pinned' : 'bg-gray-50 dark:bg-[#444654]'}">
   <div class="relative text-base gap-4 md:gap-6 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl p-4 md:py-6 flex lg:px-0" style="${customConversationWidth ? `max-width:${conversationWidth}%` : ''}">
@@ -55,7 +56,7 @@ function rowAssistant(conversation, node, childIndex, childCount, models, custom
     </div>
     <div class="relative flex w-[calc(100%-50px)] flex-col gap-1 md:gap-3 lg:w-[calc(100%-115px)]">
       <div class="flex flex-grow flex-col gap-3">
-        <div dir="auto" class="min-h-[20px] flex flex-col items-start whitespace-pre-wrap">
+        <div dir="auto" class="min-h-[20px] flex flex-col items-start whitespace-pre-wrap gap-4 break-words">
           <div id="message-text-${id}" class="markdown prose w-full flex flex-col break-words dark:prose-invert dark">
             ${messageContentPartsHTML}
           </div>

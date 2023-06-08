@@ -2,6 +2,7 @@
 const languageList = [
   { code: 'default', name: 'Default' },
   { code: 'en', name: 'English' },
+  { code: 'en-gb', name: 'English (UK)' },
   { code: 'zh', name: 'Chinese' },
   { code: 'hi', name: 'Hindi' },
   { code: 'es', name: 'Spanish' },

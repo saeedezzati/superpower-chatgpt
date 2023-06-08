@@ -35,8 +35,8 @@ function addPinNav(sortedNodes) {
 }
 function updateModel(modelSlug, pluginIds = []) {
   if (!modelSlug) return;
-  chrome.storage.local.get(['settings', 'models', 'unofficialModels', 'customModels'], ({
-    settings, models, unofficialModels, customModels,
+  chrome.storage.local.get(['settings', 'models', 'unofficialModels', 'customModels', 'enabledPluginIds'], ({
+    settings, models, unofficialModels, customModels, enabledPluginIds,
   }) => {
     const allModels = [...models, ...unofficialModels, ...customModels];
     const selectedModel = allModels.find((m) => m.slug === modelSlug);
@@ -54,7 +54,7 @@ function updateModel(modelSlug, pluginIds = []) {
       pluginDropdownButton.style.opacity = 0.75;
       pluginDropdownButton.title = 'Changing plugins in the middle of the conversation is not allowed';
     }
-    chrome.storage.local.set({ settings: { ...settings, selectedModel }, enabledPluginIds: pluginIds });
+    chrome.storage.local.set({ settings: { ...settings, selectedModel }, enabledPluginIds: pluginIds || enabledPluginIds });
   });
 }
 function loadConversationFromNode(conversationId, newMessageId, oldMessageId, searchValue = '') {
@@ -321,7 +321,7 @@ function addConversationsEventListeners(conversationId) {
           messageWrapper.id = `message-wrapper-${newMessageId}`;
           const parent = messageWrapper.previousElementSibling;
           // default parentId to root message
-          let parentId = Object.values(conversation.mapping).find((m) => m?.author?.role === 'system')?.id;
+          let parentId = Object.values(conversation.mapping).find((m) => m?.message?.author?.role === 'system')?.id;
 
           if (parent && parent.id.startsWith('message-wrapper-')) parentId = parent.id.split('message-wrapper-').pop();
           while (messageWrapper.nextElementSibling && messageWrapper.nextElementSibling.id.startsWith('message-wrapper-')) {

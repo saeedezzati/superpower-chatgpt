@@ -1,4 +1,4 @@
-/* global markdownit, hljs, resetSelection, getPrompt, newChatPage, initializeRegenerateResponseButton, notSelectedClassList, textAreaElementInputEventListener, addExamplePromptEventListener,  initializePluginStoreModal, addPluginStoreEventListener, textAreaElementKeydownEventListener */
+/* global markdownit, hljs, resetSelection, getPrompt, newChatPage, initializeRegenerateResponseButton, notSelectedClassList, textAreaElementInputEventListener,  initializePluginStoreModal, addPluginStoreEventListener, textAreaElementKeydownEventListener */
 /* eslint-disable no-unused-vars */
 // Gloab variables
 // const { version } = chrome.runtime.getManifest();
@@ -267,42 +267,39 @@ function toggleTextAreaElemet(forceShow = false) {
 function showNewChatPage() {
   // chatStreamIsClosed = true;
   chrome.storage.local.get(['conversationsAreSynced', 'account'], (result) => {
-    chrome.storage.local.set({ enabledPluginIds: [] }, () => {
-      const pluginDropdownButton = document.querySelector('#navbar-plugins-dropdown-button');
-      if (pluginDropdownButton) {
-        pluginDropdownButton.disabled = false;
-        pluginDropdownButton.style.opacity = 1;
-        pluginDropdownButton.title = '';
-      }
-      const { conversationsAreSynced, account } = result;
-      document.title = 'New Page';
-      const planName = account?.account_plan?.subscription_plan || account?.accounts?.default?.entitlement?.subscription_plan || 'chatgptfreeplan';
-      if (!conversationsAreSynced) return;
-      const focusedConversations = document.querySelectorAll('.selected');
-      focusedConversations.forEach((c) => {
-        c.classList = notSelectedClassList;
-      });
-      const main = document.querySelector('main');
-      // div with class flex-1 overflow-hidden
-      const contentWrapper = main.querySelector('.flex-1.overflow-hidden');
-      contentWrapper.innerHTML = '';
-      contentWrapper.appendChild(newChatPage(planName));
-      // addExamplePromptEventListener();
-      const pinNav = document.querySelector('#pin-nav');
-      if (pinNav) {
-        pinNav.remove();
-      }
-      const { pathname, href, search } = new URL(window.location.toString());
-      if (href !== 'https://chat.openai.com') {
-        window.history.replaceState({}, '', 'https://chat.openai.com');
-        const inputForm = main.querySelector('form');
-        const textAreaElement = inputForm.querySelector('textarea');
-        textAreaElement.focus();
-      }
-      toggleTextAreaElemet();
-      initializeRegenerateResponseButton();// basically just hide the button, so conversationId is not needed
-      handleQueryParams(search);
+    const pluginDropdownButton = document.querySelector('#navbar-plugins-dropdown-button');
+    if (pluginDropdownButton) {
+      pluginDropdownButton.disabled = false;
+      pluginDropdownButton.style.opacity = 1;
+      pluginDropdownButton.title = '';
+    }
+    const { conversationsAreSynced, account } = result;
+    document.title = 'New Page';
+    const planName = account?.account_plan?.subscription_plan || account?.accounts?.default?.entitlement?.subscription_plan || 'chatgptfreeplan';
+    if (!conversationsAreSynced) return;
+    const focusedConversations = document.querySelectorAll('.selected');
+    focusedConversations.forEach((c) => {
+      c.classList = notSelectedClassList;
     });
+    const main = document.querySelector('main');
+    // div with class flex-1 overflow-hidden
+    const contentWrapper = main.querySelector('.flex-1.overflow-hidden');
+    contentWrapper.innerHTML = '';
+    contentWrapper.appendChild(newChatPage(planName));
+    const pinNav = document.querySelector('#pin-nav');
+    if (pinNav) {
+      pinNav.remove();
+    }
+    const { pathname, href, search } = new URL(window.location.toString());
+    if (href !== 'https://chat.openai.com') {
+      window.history.replaceState({}, '', 'https://chat.openai.com');
+      const inputForm = main.querySelector('form');
+      const textAreaElement = inputForm.querySelector('textarea');
+      textAreaElement.focus();
+    }
+    toggleTextAreaElemet();
+    initializeRegenerateResponseButton();// basically just hide the button, so conversationId is not needed
+    handleQueryParams(search);
   });
 }
 function handleQueryParams(query) {
@@ -800,7 +797,7 @@ function updateNewChatButtonNotSynced() {
     const textAreaElement = inputForm.querySelector('textarea');
     const nav = document.querySelector('nav');
     const newChatButton = nav?.querySelector('a');
-    newChatButton.classList = 'flex py-3 px-3 items-center gap-3 transition-colors duration-200 text-white cursor-pointer text-sm rounded-md border border-white/20 hover:bg-gray-500/10 mb-1 flex-shrink-0';
+    newChatButton.classList = 'flex py-3 px-3 w-full items-center gap-3 transition-colors duration-200 text-white cursor-pointer text-sm rounded-md border border-white/20 hover:bg-gray-500/10 mb-1 flex-shrink-0';
     newChatButton.id = 'new-chat-button';
     newChatButton.addEventListener('click', () => {
       resetSelection();
