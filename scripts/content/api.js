@@ -12,11 +12,18 @@ chrome.storage.local.get(['environment'], (result) => {
 const defaultHeaders = {
   'content-type': 'application/json',
 };
-function generateChat(message, conversationId, messageId, parentMessageId, saveHistory = true, role = 'user', pluginIds = []) {
+function generateChat(message, conversationId, messageId, parentMessageId, saveHistory = true, role = 'user', action = 'next') {
   return chrome.storage.local.get(['settings', 'enabledPluginIds']).then((res) => chrome.storage.sync.get(['auth_token']).then((result) => {
     const payload = {
-      action: 'next',
-      messages: messageId
+      action,
+      arkose_token: null,
+      model: res.settings.selectedModel.slug,
+      parent_message_id: parentMessageId,
+      history_and_training_disabled: !saveHistory,
+      timezone_offset_min: new Date().getTimezoneOffset(),
+    };
+    if (action === 'next') {
+      payload.messages = messageId
         ? [
           {
             id: messageId,
@@ -27,12 +34,8 @@ function generateChat(message, conversationId, messageId, parentMessageId, saveH
             },
           },
         ]
-        : null,
-      model: res.settings.selectedModel.slug,
-      parent_message_id: parentMessageId,
-      history_and_training_disabled: !saveHistory,
-      timezone_offset_min: new Date().getTimezoneOffset(),
-    };
+        : null;
+    }
     if (conversationId) {
       payload.conversation_id = conversationId;
     }
@@ -388,7 +391,7 @@ function getAllConversations(forceRefresh = false) {
           const {
             limit, offset, items,
           } = convs;
-          const total = Math.min(convs.total, 10000); // sync last 10000 conversations
+          const total = convs.total ? Math.min(convs.total, 10000) : 10000; // sync last 10000 conversations
           if (items.length === 0 || total === 0) {
             resolve([]);
             return;
@@ -446,11 +449,11 @@ function getSharedConversations(offset = 0, limit = 100) {
     return Promise.reject(res);
   }));
 }
-function getConversations(offset = 0, limit = 100) {
+function getConversations(offset = 0, limit = 100, order = 'updated') {
   const url = new URL('https://chat.openai.com/backend-api/conversations');
   // without passing limit it returns 50 by default
   // limit cannot be more than 20
-  const params = { offset, limit };
+  const params = { offset, limit, order };
   url.search = new URLSearchParams(params).toString();
   return chrome.storage.sync.get(['auth_token']).then((result) => fetch(url, {
     method: 'GET',

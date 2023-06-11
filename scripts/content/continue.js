@@ -120,7 +120,7 @@ function addContinueButton() {
   continueButton.id = 'continue-conversation-button';
   continueButton.type = 'button';
   continueButton.dir = 'auto';
-  continueButton.style = 'width:96px;border-top-left-radius:0;border-bottom-left-radius:0;border-left:0;z-index:1;text-transform: capitalize;';
+  continueButton.style = 'width:96px;border-radius:0;border-left:0;z-index:1;text-transform: capitalize;';
   continueButton.classList.add('btn', 'block', 'justify-center', 'gap-2', 'btn-neutral', 'border-0', 'md:border', 'max-w-10', 'truncate');
 
   continueButton.addEventListener('click', (e) => {
@@ -144,31 +144,56 @@ function addContinueButton() {
   continueButton.addEventListener('mouseout', () => {
     shiftClickText.style = 'font-size:10px;position:absolute;left:0px;bottom:40px;display:none;color:lightslategray;width:200px;';
   });
-  continueButtonWrapper.appendChild(shiftClickText);
-  continueButtonWrapper.appendChild(continueButtonDropdown);
-  continueButtonWrapper.appendChild(promptDropdown());
-  continueButtonWrapper.appendChild(continueButton);
 
-  if (canSubmit) {
-    const textAreaElement = inputForm.querySelector('textarea');
-    if (!textAreaElement) return;
-    const textAreaElementWrapper = textAreaElement.parentNode;
-    let nodeBeforetTextAreaElement = textAreaElementWrapper.previousSibling;
-    if (!nodeBeforetTextAreaElement) {
-      // create a new div
-      const newDiv = document.createElement('div');
-      newDiv.classList = 'h-full flex ml-1 md:w-full md:m-auto md:mb-2 gap-0 md:gap-2 justify-center';
-      // prepent inputform with new div
-      inputForm.firstChild.prepend(newDiv);
-      nodeBeforetTextAreaElement = newDiv;
-    }
-    if (nodeBeforetTextAreaElement.classList.length === 0) {
-      nodeBeforetTextAreaElement.classList = 'h-full flex ml-1 md:w-full md:m-auto md:mb-2 gap-0 md:gap-2 justify-center';
-      nodeBeforetTextAreaElement.firstChild.classList = '';
-    }
-    nodeBeforetTextAreaElement.style.minHeight = '38px';
-    nodeBeforetTextAreaElement.appendChild(continueButtonWrapper);
-  }
+  const autoClickButton = document.createElement('button');
+  chrome.storage.local.get('settings', ({ settings }) => {
+    autoClickButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" stroke=${settings.autoClick ? '#19c37d' : 'currentColor'} fill=${settings.autoClick ? '#19c37d' : 'currentColor'} stroke-width="2" viewBox="0 0 512 512" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M256 464c114.9 0 208-93.1 208-208s-93.1-208-208-208S48 141.1 48 256c0 5.5 .2 10.9 .6 16.3L1.8 286.1C.6 276.2 0 266.2 0 256C0 114.6 114.6 0 256 0S512 114.6 512 256s-114.6 256-256 256c-10.2 0-20.2-.6-30.1-1.8l13.8-46.9c5.4 .4 10.8 .6 16.3 .6zm-2.4-48l14.3-48.6C324.2 361.4 368 313.8 368 256c0-61.9-50.1-112-112-112c-57.8 0-105.4 43.8-111.4 100.1L96 258.4c0-.8 0-1.6 0-2.4c0-88.4 71.6-160 160-160s160 71.6 160 160s-71.6 160-160 160c-.8 0-1.6 0-2.4 0zM39 308.5l204.8-60.2c12.1-3.6 23.4 7.7 19.9 19.9L203.5 473c-4.1 13.9-23.2 15.6-29.7 2.6l-28.7-57.3c-.7-1.3-1.5-2.6-2.5-3.7l-88 88c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l88-88c-1.1-1-2.3-1.9-3.7-2.5L36.4 338.2c-13-6.5-11.3-25.6 2.6-29.7z"/></svg>`;
+  });
+  autoClickButton.id = 'auto-click-button';
+  autoClickButton.type = 'button';
+  autoClickButton.title = 'Auto Click';
+  autoClickButton.style = 'width:38px;border-top-left-radius:0;border-bottom-left-radius:0;border-left:0;z-index:1;padding:0;';
+  autoClickButton.classList.add('btn', 'flex', 'justify-center', 'gap-2', 'btn-neutral', 'border-0', 'md:border');
+  autoClickButton.addEventListener('click', () => {
+    chrome.storage.local.get('settings', ({ settings }) => {
+      chrome.storage.local.set({ settings: { ...settings, autoClick: !settings.autoClick } }, () => {
+        autoClickButton.querySelector('svg').setAttribute('stroke', settings.autoClick ? 'currentColor' : '#19c37d');
+        autoClickButton.querySelector('svg').setAttribute('fill', settings.autoClick ? 'currentColor' : '#19c37d');
+      });
+    });
+  });
+
+  chrome.storage.local.get('settings', ({ settings }) => {
+    setTimeout(() => {
+      continueButtonWrapper.appendChild(shiftClickText);
+      continueButtonWrapper.appendChild(continueButtonDropdown);
+      continueButtonWrapper.appendChild(promptDropdown());
+      continueButtonWrapper.appendChild(continueButton);
+      if (settings.autoSync) {
+        continueButtonWrapper.appendChild(autoClickButton);
+      }
+      if (canSubmit) {
+        const textAreaElement = inputForm.querySelector('textarea');
+        if (!textAreaElement) return;
+        const textAreaElementWrapper = textAreaElement.parentNode;
+        let nodeBeforetTextAreaElement = textAreaElementWrapper.previousSibling;
+        if (!nodeBeforetTextAreaElement) {
+          // create a new div
+          const newDiv = document.createElement('div');
+          newDiv.classList = 'h-full flex ml-1 md:w-full md:m-auto md:mb-2 gap-0 md:gap-2 justify-center';
+          // prepent inputform with new div
+          inputForm.firstChild.prepend(newDiv);
+          nodeBeforetTextAreaElement = newDiv;
+        }
+        if (nodeBeforetTextAreaElement.classList.length === 0) {
+          nodeBeforetTextAreaElement.classList = 'h-full flex ml-1 md:w-full md:m-auto md:mb-2 gap-0 md:gap-2 justify-center';
+          nodeBeforetTextAreaElement.firstChild.classList = '';
+        }
+        nodeBeforetTextAreaElement.style.minHeight = '38px';
+        nodeBeforetTextAreaElement.appendChild(continueButtonWrapper);
+      }
+    }, 200);
+  });
 }
 
 // eslint-disable-next-line no-unused-vars

@@ -86,6 +86,13 @@ function loadConversationFromNode(conversationId, newMessageId, oldMessageId, se
           messageDiv += rowUser(fullConversation, sortedNodes[i], threadIndex, threadCount, result.name, result.avatar, settings.customConversationWidth, settings.conversationWidth, searchValue);
         }
         if (message.role === 'assistant' || message.author?.role === 'assistant') {
+          let nextMessage = sortedNodes[i + 1]?.message;
+          while (nextMessage && nextMessage.recipient === 'all' && (nextMessage.role === 'assistant' || nextMessage.author?.role === 'assistant')) {
+            message.content.parts = message.content.parts.concat(nextMessage.content.parts);
+            i += 1;
+            nextMessage = sortedNodes[i + 1]?.message;
+          }
+          sortedNodes[i].message = message;
           messageDiv += rowAssistant(fullConversation, sortedNodes[i], threadIndex, threadCount, res.models, settings.customConversationWidth, settings.conversationWidth, searchValue);
         }
       }
@@ -177,6 +184,13 @@ function loadConversation(conversationId, searchValue = '', focusOnInput = true)
           messageDiv += rowUser(fullConversation, sortedNodes[i], threadIndex, threadCount, result.name, result.avatar, settings.customConversationWidth, settings.conversationWidth, searchValue);
         }
         if (message.recipient === 'all' && (message.role === 'assistant' || message.author?.role === 'assistant')) {
+          let nextMessage = sortedNodes[i + 1]?.message;
+          while (nextMessage && nextMessage.recipient === 'all' && (nextMessage.role === 'assistant' || nextMessage.author?.role === 'assistant')) {
+            message.content.parts = message.content.parts.concat(nextMessage.content.parts);
+            i += 1;
+            nextMessage = sortedNodes[i + 1]?.message;
+          }
+          sortedNodes[i].message = message;
           messageDiv += rowAssistant(fullConversation, sortedNodes[i], threadIndex, threadCount, res.models, settings.customConversationWidth, settings.conversationWidth, searchValue);
         }
       }
@@ -238,7 +252,8 @@ function updateTotalCounter() {
   let totalCharacters = 0;
   allMessages.forEach((message) => {
     const text = message.innerText;
-    const words = text.split(' ');
+    const words = text.split(/[\s\n]+/);
+
     totalWords += words.length;
     totalCharacters += text.length;
   });

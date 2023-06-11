@@ -7,8 +7,8 @@ const subtitleMap = {
   general: 'You can see the latest announcement here',
   newsletter: 'Daily dose of AI news and resources from the community',
 };
-function createAnnouncementModal(data) {
-  const bodyContent = announcementModalContent(data);
+function createAnnouncementModal(data, email = '') {
+  const bodyContent = announcementModalContent(data, email);
   const actionsBarContent = announcementModalActions(data);
   const title = titleMap[data.category];
   const subtitle = subtitleMap[data.category];
@@ -45,7 +45,7 @@ function addSponsorElement(sponsor) {
     sponsor.appendChild(sponsorLink);
   });
 }
-function announcementModalContent(data) {
+function announcementModalContent(data, email = '') {
   // create announcement modal content
   const content = document.createElement('div');
   content.id = `modal-content-${data.category}`;
@@ -64,7 +64,7 @@ function announcementModalContent(data) {
   announcementText.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start; min-height: 100%; width: 100%; white-space: break-spaces; overflow-wrap: break-word;padding:16px;position: relative;z-index:10;color: #fff;';
   const announcement = data;
   // add ?ref=superpower-chatgpt-chrome-extension to the end of all href links
-  const updatedTextWithRef = announcement.text.replace(/href="([^"]*)"/g, 'href="$1?ref=superpower-chatgpt-extension"');
+  const updatedTextWithRef = announcement.text.replace(/href="([^"]*)"/g, 'href="$1?ref=superpower-chatgpt-extension"').replace(/\{\{email\}\}/g, email);
   announcementText.innerHTML = announcement.category === 'newsletter' ? updatedTextWithRef : `<h1 style="margin-bottom: 24px; ">${announcement.title}</h1>${announcement.text}`;
   // if release_data is before march 21, 2023, add sponsor
   if (announcement.category === 'newsletter' && new Date(announcement.release_date) < new Date('2023-03-20')) {
@@ -120,9 +120,9 @@ function announcementModalActions(data) {
 // eslint-disable-next-line no-unused-vars
 function initializeAnnouncement() {
   setTimeout(() => {
-    chrome.storage.sync.get(['lastSeenAnnouncementId', 'lastSeenNewsletterId'], (result) => {
+    chrome.storage.sync.get(['lastSeenAnnouncementId', 'lastSeenNewsletterId', 'email'], (result) => {
       chrome.storage.local.get(['settings'], (res) => {
-        const { lastSeenAnnouncementId, lastSeenNewsletterId } = result;
+        const { lastSeenAnnouncementId, lastSeenNewsletterId, email } = result;
         // try getting latest announcement first
         getLatestAnnouncement().then((announcement) => {
           if (announcement && announcement.id && lastSeenAnnouncementId !== announcement.id) {
@@ -134,7 +134,7 @@ function initializeAnnouncement() {
             getLatestNewsletter().then((newsletter) => {
               if (!newsletter || !newsletter.id) return;
               if (lastSeenNewsletterId !== newsletter.id) {
-                createAnnouncementModal(newsletter);
+                createAnnouncementModal(newsletter, email);
                 chrome.storage.sync.set({ lastSeenNewsletterId: newsletter.id });
                 chrome.storage.local.get(['readNewsletterIds'], (results) => {
                   const readNewsletterIds = results.readNewsletterIds || [];

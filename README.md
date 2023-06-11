@@ -15,7 +15,7 @@ A browser extension to add the missing features like **Folders**, **Search**, an
 [![Mozilla Add-on](https://img.shields.io/amo/users/superpower-chatgpt.svg)]([link-firefox])
 [![Mozilla Add-on](https://img.shields.io/amo/rating/superpower-chatgpt.svg)]([link-firefox])
 
-[![Discord](https://img.shields.io/discord/1060110102188797992?color=green&label=Discord&logo=discord)](https://discord.gg/Ma9VpTSct2)
+[![Discord](https://img.shields.io/discord/1060110102188797992?color=green&label=Discord&logo=discord)](https://discord.gg/superpower-chatgpt-1083455984489476220)
 [![Twitter Follow](https://img.shields.io/twitter/follow/eeeziii?label=follow%20me&style=social)](https://twitter.com/intent/user?screen_name=eeeziii)
 
 <div align="center">
@@ -35,7 +35,7 @@ https://user-images.githubusercontent.com/574142/232172841-50f1b114-ef47-4533-a6
 
 🔁 Auto Sync: Never lose your chats. Automatically sync a copy of all your chats on ChatGPT to your computer
 
-📥 Export: Select and Export any number of your chats into multiple formats(.txt, .json, .md)
+📥 Export: Select and Export any number of your chats into multiple formats(.txt, .json, .md). You can also export your prompt history, your settings, your shortcuts and your folders.
 
 🔎 Search and Highlight: Search through all your previous chats on ChatGPT and highlight results for quick review
 
@@ -59,6 +59,8 @@ https://user-images.githubusercontent.com/574142/232172841-50f1b114-ef47-4533-a6
 
 ⭐ Favorite prompts: Mark your prompts as favorite in your prompt history
 
+📄 Prompt templates: put words inside {{double curly brackets}} in your prompt, and you'll be asked to replace them before submitting the prompt
+
 🔍 Search Function: Easily search through your prompt history and hundreds of prompt examples from the ChatGPT community
 
 📜 Community Prompts: Get inspiration from hundreds of other prompts created by the ChatGPT Community and share your prompts too. Upvote, downvote, and report prompts, and sort them by the most used or most upvoted. Filter prompts by category and language
@@ -80,6 +82,12 @@ https://user-images.githubusercontent.com/574142/232172841-50f1b114-ef47-4533-a6
 🗒 Auto summarize: Using the power of auto-splitter, your long text will be summarized into a shorter version so you can ask question
 
 📏 Custom Conversation Width: Adjust the width of the conversation to your liking
+
+🔄  Smart Replace: Automatically replace pre-defined phrases with longer text as you type prompts
+
+🖱️ Auto Click: Automatically click on the defaul custom prompt button at the end of each response
+
+👉 Custom Instruction: Don't epeat yourself. Automatically  add a custom instruction to the end of each prompt
 
 📊 Word and Character Count: Add the word and character counters to both the user input and the ChatGPT responses
 
@@ -175,7 +183,7 @@ Read our [FAQ document](https://ezi.notion.site/Superpower-ChatGPT-FAQ-9d43a8a1c
 
 ## Feature Requests, Bugs, and Support
 
-Join our [Discord channel](https://discord.gg/Ma9VpTSct2) to stay up to date, submit feature requests, report bugs, and get faster support
+Join our [Discord channel](https://discord.gg/superpower-chatgpt-1083455984489476220) to stay up to date, submit feature requests, report bugs, and get faster support
 
 ## Privacy
 
@@ -189,7 +197,7 @@ I appreciate your interest in supporting this extension. Here are some ways you 
 [![Donate with Stripe](https://img.shields.io/badge/stripe-donate-blue.svg)](https://buy.stripe.com/6oE6s0dQS7y2bjG9AA)
 
 [![visitors](https://visitor-badge.glitch.me/badge?page_id=saeedezzati/superpower-chatgpt)](https://visitor-badge.glitch.me)
-[![Discord](https://img.shields.io/discord/1060110102188797992?color=green&label=Discord&logo=discord)](https://discord.gg/Ma9VpTSct2)
+[![Discord](https://img.shields.io/discord/1060110102188797992?color=green&label=Discord&logo=discord)](https://discord.gg/superpower-chatgpt-1083455984489476220)
 [![Twitter Follow](https://img.shields.io/twitter/follow/eeeziii?label=follow%20me&style=social)](https://twitter.com/intent/user?screen_name=eeeziii)
 
 ## Copyright

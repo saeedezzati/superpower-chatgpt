@@ -1,0 +1,19 @@
+body {
+  margin: 0;
+  padding: 4px 8px;
+  width: 140px;
+  background-color: gold;
+}
+button {
+  height: 36px;
+  width: 100%;
+  margin: 4px 0;
+  border: solid 1px #f1f1f1;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: white;
+  &:hover {
+    background-color: #f1f1f1;
+  }
+}
+

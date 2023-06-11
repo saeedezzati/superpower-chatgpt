@@ -219,6 +219,9 @@ input:checked + .slider:before {
 .markdown ul li>eq {
   margin: 0;
 }
+.markdown ol, .markdown ul {
+  white-space: initial;
+}
 /* announcement */
 #modal-content-newsletter {
  line-height:28px;

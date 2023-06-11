@@ -1,4 +1,4 @@
-/* global highlight,openSubmitPromptModal, updateInputCounter, addButtonToNavFooter,createModal, disableTextInput:true, isGenerating, addInputCounter */
+/* global highlight,openSubmitPromptModal, updateInputCounter, addButtonToNavFooter,createModal, disableTextInput:true, isGenerating, addInputCounter, toast */
 function createPromptHistoryModal() {
   chrome.storage.local.get(['userInputValueHistory', 'settings'], (result) => {
     const { userInputValueHistory, settings } = result;
@@ -40,12 +40,21 @@ function promptHistoryModalContent(userInputValueHistory, historyFilter) {
   // create history modal content
   const content = document.createElement('div');
   content.style = 'display: flex; flex-direction: column; justify-content: space-between; align-items: center;overflow-y: hidden;';
+  const historyList = promptHistoryList(userInputValueHistory, historyFilter);
+  const historyFilters = historyFilterButtonsContent(historyFilter);
+  content.appendChild(historyFilters);
+  content.appendChild(historyList);
+  return content;
+}
+
+function promptHistoryList(userInputValueHistory, historyFilter) {
+  // create history modal content
   const historyList = document.createElement('div');
   historyList.id = 'prompt-history-list';
   historyList.style = 'display: flex; flex-direction: column; justify-content: start; align-items: center; height: 100%; width:100%;padding: 16px;overflow-y: scroll;';
 
   if (userInputValueHistory && userInputValueHistory.length > 0) {
-    userInputValueHistory.reverse().forEach((userInputValue, index) => {
+    userInputValueHistory.sort((a, b) => b.timestamp - a.timestamp).forEach((userInputValue, index) => {
       const historyItem = document.createElement('div');
       historyItem.id = `history-item-${index}`;
       historyItem.style = 'display: flex; flex-direction: column; justify-content: space-between; align-items: end; width: 100%; margin: 8px 0; padding: 8px; background-color: #1f2123; border-radius: 8px;';
@@ -186,7 +195,9 @@ function promptHistoryModalContent(userInputValueHistory, historyFilter) {
       historyList.appendChild(historyItem);
     });
   }
-
+  return historyList;
+}
+function historyFilterButtonsContent(historyFilter) {
   // history filter
   const historyFilterElement = document.createElement('div');
   historyFilterElement.style = 'display: flex; flex-direction: row; justify-content: space-between; align-items: center; width: 100%; padding: 12px; background-color: #778899; z-index: 100; position: sticky; top: 0;';
@@ -213,6 +224,8 @@ function promptHistoryModalContent(userInputValueHistory, historyFilter) {
       }, () => {
         const historyItems = document.querySelectorAll('div[id^=history-item]');
         const searchValue = document.querySelector('input[id="history-search-input"]').value;
+        const exportHistoryButton = document.querySelector('button[id="export-history-button"]');
+        exportHistoryButton.textContent = 'Export Favorites';
         historyItems.forEach((historyItem) => {
           const historyItemText = historyItem.querySelector('pre[id^=text-history-item-]');
           historyItemText.innerHTML = highlight(historyItemText.textContent, searchValue);
@@ -247,6 +260,8 @@ function promptHistoryModalContent(userInputValueHistory, historyFilter) {
       }, () => {
         const historyItems = document.querySelectorAll('div[id^=history-item]');
         const searchValue = document.querySelector('input[id="history-search-input"]').value;
+        const exportHistoryButton = document.querySelector('button[id="export-history-button"]');
+        exportHistoryButton.textContent = 'Export All';
         historyItems.forEach((historyItem) => {
           const historyItemText = historyItem.querySelector('pre[id^=text-history-item-]');
           historyItemText.innerHTML = highlight(historyItemText.textContent, searchValue);
@@ -302,11 +317,7 @@ function promptHistoryModalContent(userInputValueHistory, historyFilter) {
     });
   });
   historyFilterElement.appendChild(historySearchInput);
-
-  content.appendChild(historyFilterElement);
-  content.appendChild(historyList);
-
-  return content;
+  return historyFilterElement;
 }
 function addReadMoreButtonsToHistory() {
   const historyItemTexts = document.querySelectorAll('pre[id^="text-history-item-"]');
@@ -340,7 +351,83 @@ function addReadMoreButtonsToHistory() {
 function historyModalActions() {
   // add actionbar at the bottom of the content
   const actionBar = document.createElement('div');
-  actionBar.style = 'display: flex; flex-direction: row; justify-content: end; align-items: end; width: 100%; margin: 8px 0;';
+  actionBar.style = 'display: flex; flex-direction: row; justify-content: space-between; align-items: end; width: 100%; margin: 8px 0;';
+  const exportImportWrapper = document.createElement('div');
+  exportImportWrapper.style = 'display: flex; flex-direction: row; justify-content: start; align-items: end;';
+
+  const exportHistoryButton = document.createElement('button');
+  exportHistoryButton.id = 'export-history-button';
+  exportHistoryButton.classList = 'btn flex justify-center gap-2 btn-dark border-0 md:border';
+  exportHistoryButton.style = 'font-size:0.7em; padding:4px 8px; width:130px;color:lightgray;';
+  chrome.storage.local.get(['settings'], (result) => {
+    exportHistoryButton.textContent = `Export ${result.settings.historyFilter === 'favorites' ? 'Favorites' : 'All'}`;
+  });
+  exportHistoryButton.addEventListener('click', () => {
+    chrome.storage.local.get(['userInputValueHistory', 'settings'], (result) => {
+      const { historyFilter } = result.settings;
+      const historyItems = historyFilter === 'favorites' ? result.userInputValueHistory.filter((item) => item.isFavorite) : result.userInputValueHistory;
+      const sortedHistoryItems = historyItems.sort((a, b) => b.timestamp - a.timestamp);
+      const element = document.createElement('a');
+      element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(JSON.stringify(sortedHistoryItems))}`);
+      const todatDate = new Date();
+      const filePostfix = `${todatDate.getFullYear()}-${todatDate.getMonth() + 1}-${todatDate.getDate()}`;
+
+      element.setAttribute('download', `superpower-chatgpt-prompt-history-${historyFilter === 'favorites' ? 'favorites' : 'all'}-${filePostfix}.json`);
+      element.style.display = 'none';
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+      navigator.clipboard.writeText(JSON.stringify(sortedHistoryItems));
+      toast('History exported and copied to clipboard');
+    });
+  });
+
+  const importHistoryButton = document.createElement('button');
+  importHistoryButton.id = 'import-history-button';
+  importHistoryButton.classList = 'btn flex justify-center gap-2 btn-dark border-0 md:border';
+  importHistoryButton.style = 'font-size:0.7em; padding:4px 8px; margin-right:8px; width:130px;color:lightgray;';
+  importHistoryButton.textContent = 'Import Prompts';
+  importHistoryButton.addEventListener('click', () => {
+    chrome.storage.local.get(['userInputValueHistory'], (result) => {
+      // open file picker
+      const filePicker = document.createElement('input');
+      filePicker.type = 'file';
+      filePicker.accept = '.json';
+      filePicker.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const importedHistory = JSON.parse(e.target.result);
+          const existingHistory = result.userInputValueHistory;
+          // only add new items
+          importedHistory.forEach((importedItem) => {
+            const existingItem = existingHistory.find((item) => item.text === importedItem.text);
+            if (!existingItem) {
+              existingHistory.push(importedItem);
+            }
+          });
+
+          chrome.storage.local.set({ userInputValueHistory: existingHistory }, () => {
+            toast('Imported prompts');
+            // click on all history button
+            const allHistoryButton = document.querySelector('button[id="history-filter-all-button"]');
+            allHistoryButton.click();
+            // reload history
+            const historyList = document.querySelector('div[id="prompt-history-list"]');
+            const newHistoryList = promptHistoryList(existingHistory, 'all');
+            historyList.replaceWith(newHistoryList);
+          });
+        };
+        reader.readAsText(file);
+      });
+      filePicker.click();
+    });
+  });
+
+  exportImportWrapper.appendChild(importHistoryButton);
+  exportImportWrapper.appendChild(exportHistoryButton);
+  actionBar.appendChild(exportImportWrapper);
+
   const clearHistoryButton = document.createElement('button');
   clearHistoryButton.classList = 'btn flex justify-center gap-2 btn-dark border-0 md:border';
   clearHistoryButton.style = 'font-size:0.7em; padding:4px 8px; margin-left:8px;width:130px;color:lightgray;';
@@ -450,12 +537,16 @@ function textAreaElementInputEventListener(event) {
 // Add keyboard event listener to text area
 function textAreaElementKeydownEventListener(event) {
   const textAreaElement = event.target;
+
   if (event.key === 'Enter' && event.which === 13 && !event.shiftKey) {
     updateInputCounter('');
     chrome.storage.local.get(['textInputValue'], (result) => {
       const textInputValue = result.textInputValue || '';
       if (textInputValue === '') return;
-      textAreaElement.style.height = '24px';
+      const templateWords = textAreaElement.value.match(/{{(.*?)}}/g);
+      if (!templateWords) {
+        textAreaElement.style.height = '24px';
+      }
       addUserPromptToHistory(textInputValue);
     });
   }
@@ -507,6 +598,24 @@ function textAreaElementKeydownEventListener(event) {
         }
         textAreaElement.dispatchEvent(new Event('input', { bubbles: true }));
       });
+    });
+  }
+  // space key
+  if (event.keyCode === 32) {
+    chrome.storage.local.get(['customPrompts'], (res) => {
+      // find any word that starts with @ and ends with space
+      // if the word is in customPrompts titles, replace it with the prompt.text
+      const customPrompts = res.customPrompts || [];
+      const textAreaValue = textAreaElement.value;
+      const words = textAreaValue.split(/[\s\n]+/);
+      const lastWord = words[words.length - 2];
+      if (lastWord.startsWith('@')) {
+        const prompt = customPrompts.find((p) => p.title.toLowerCase() === lastWord.substring(1).toLowerCase());
+        if (prompt) {
+          textAreaElement.value = textAreaValue.substring(0, textAreaValue.length - (lastWord.length + 1)) + prompt.text;
+          textAreaElement.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
     });
   }
 }

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Superpower ChatGPT",
-  "version": "3.4.0",
+  "version": "3.5.0",
   "description": "ChatGPT with superpowers! Sync/search history locally, create folders, export all chats, pin messages, access thousands of prompts",
   "icons": {
     "16": "images/icon-16.png",
@@ -10,6 +10,7 @@
     "128": "images/icon-128.png"
   },
   "action": {
+    "default_popup": "popup.html",
     "16": "images/icon-16.png",
     "32": "images/icon-32.png",
     "48": "images/icon-48.png",
@@ -53,6 +54,7 @@
         "scripts/content/enableMFA.js",
         "scripts/content/pluginsDropdown.js",
         "scripts/content/dropdown.js",
+        "scripts/content/templateWordsModal.js",
         "scripts/content/shareModal.js",
         "scripts/content/feedbackModal.js",
         "scripts/content/toneList.js",

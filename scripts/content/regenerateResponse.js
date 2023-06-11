@@ -95,7 +95,7 @@ function toggleOriginalRegenerateResponseButton() {
 function initializeRegenerateResponseButton() {
   toggleOriginalRegenerateResponseButton();
   // const observer = new MutationObserver(() => {
-  //   const { pathname } = new URL(window.location.toString());;
+  //   const { pathname } = new URL(window.location.toString());
   //   const urlConversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
   //   if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(urlConversationId)) {
   //     replaceOriginalRegenerateResponseButton(urlConversationId);

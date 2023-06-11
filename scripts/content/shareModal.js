@@ -45,7 +45,7 @@ function shareModal(conversation, shareData, name) {
   style="pointer-events: auto;"
 >
   <div
-    class="grid-cols-[10px_minmax(300px,_100%)_10px] md:grid-cols-[60px_minmax(300px,_100%)_60px] grid h-full w-full grid-rows-[minmax(10px,_1fr)_auto_minmax(10px,_1fr)] md:grid-rows-[minmax(20px,_1fr)_auto_minmax(20px,_1fr)] overflow-y-auto"
+    class="grid-cols-[minmax(10px,30px)_1fr_minmax(10px,30px)] grid h-full w-full grid-rows-[minmax(10px,_1fr)_auto_minmax(10px,_1fr)] md:grid-rows-[minmax(20px,_1fr)_auto_minmax(20px,_1fr)] overflow-y-auto"
   >
     <div
       role="dialog"
@@ -53,7 +53,7 @@ function shareModal(conversation, shareData, name) {
       aria-describedby="radix-:r5u:"
       aria-labelledby="radix-:r5t:"
       data-state="open"
-      class="relative col-auto col-start-2 row-auto row-start-2 w-full rounded-lg text-left shadow-xl transition-all left-1/2 -translate-x-1/2 bg-white dark:bg-gray-900 max-w-2xl"
+      class="relative col-auto col-start-2 row-auto row-start-2 w-full rounded-lg text-left shadow-xl transition-all left-1/2 -translate-x-1/2 bg-white dark:bg-gray-900 max-w-md max-w-[550px]"
       tabindex="-1"
       style="pointer-events: auto;"
     >

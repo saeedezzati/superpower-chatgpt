@@ -128,7 +128,7 @@ function generalTabContent() {
   const conversationWidthInput = document.createElement('input');
   conversationWidthInput.id = 'conversation-width-input';
   conversationWidthInput.type = 'number';
-  conversationWidthInput.classList = 'w-full px-4 py-2 mr-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800 disabled:opacity-40';
+  conversationWidthInput.classList = 'w-full px-4 py-2 mr-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800 disabled:opacity-40 text-white';
   chrome.storage.local.get(['settings'], (result) => {
     conversationWidthInput.disabled = !result.settings.customConversationWidth;
     conversationWidthInput.value = result.settings.conversationWidth;
@@ -160,6 +160,84 @@ function generalTabContent() {
     });
   });
   leftContent.appendChild(conversationWidthInput);
+
+  const importExportWrapper = document.createElement('div');
+  importExportWrapper.style = 'display: flex; flex-direction: row; flex-wrap: wrap; justify-content: start; align-items: center; width: 100%; margin: 8px 0; color:white;';
+  const importExportLabel = document.createElement('div');
+  importExportLabel.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start; width: 100%; margin: 8px 0;';
+  importExportLabel.textContent = 'Import / Export Settings, Custom Prompts, and Folders';
+  importExportWrapper.appendChild(importExportLabel);
+
+  const importExportButtonWrapper = document.createElement('div');
+  importExportButtonWrapper.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0;';
+
+  const importButton = document.createElement('button');
+  importButton.className = 'w-full px-4 py-2 mr-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800';
+  importButton.textContent = 'Import';
+  importButton.addEventListener('click', () => {
+    // open file picker
+    const filePicker = document.createElement('input');
+    filePicker.type = 'file';
+    filePicker.accept = '.json';
+    filePicker.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (document.querySelector('[id*=close-button]')) {
+          document.querySelector('[id*=close-button]').click();
+        }
+        const importedData = JSON.parse(e.target.result);
+        const {
+          settings, customModels, customPrompts, conversationsOrder,
+        } = importedData;
+        chrome.storage.local.set({
+          settings, customModels, customPrompts,
+        }, () => {
+          chrome.storage.sync.set({
+            conversationsOrder,
+          }, () => {
+            window.location.reload();
+          });
+          toast('Imported Settings Successfully');
+        });
+      };
+      reader.readAsText(file);
+    });
+    filePicker.click();
+  });
+  importExportButtonWrapper.appendChild(importButton);
+
+  const exportButton = document.createElement('button');
+  exportButton.className = 'w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800';
+  exportButton.textContent = 'Export';
+  exportButton.addEventListener('click', () => {
+    chrome.storage.sync.get(['conversationsOrder'], (res) => {
+      chrome.storage.local.get(['settings', 'customModels', 'customPrompts'], (result) => {
+        const {
+          settings, customModels, customPrompts,
+        } = result;
+        const { conversationsOrder } = res;
+        const data = {
+          settings, customModels, customPrompts, conversationsOrder,
+        };
+        const element = document.createElement('a');
+        element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(JSON.stringify(data))}`);
+        const todatDate = new Date();
+        const filePostfix = `${todatDate.getFullYear()}-${todatDate.getMonth() + 1}-${todatDate.getDate()}`;
+
+        element.setAttribute('download', `superpower-chatgpt-settings-${filePostfix}.json`);
+        element.style.display = 'none';
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+        toast('Settings exported');
+      });
+    });
+  });
+  importExportButtonWrapper.appendChild(exportButton);
+  importExportWrapper.appendChild(importExportButtonWrapper);
+
+  leftContent.appendChild(importExportWrapper);
 
   // discord widget
   const discordWidget = document.createElement('div');
@@ -542,7 +620,7 @@ function customPromptTabContent() {
   content.id = 'settings-modal-tab-content';
   content.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;';
 
-  chrome.storage.local.get(['customPrompts'], (result) => {
+  chrome.storage.local.get(['customPrompts', 'settings'], (result) => {
     // custom prompts section
     const customPromptSectionWrapper = document.createElement('div');
     customPromptSectionWrapper.style = 'display: flex; justify-content:space-between; align-items:center; width: 100%; color: lightslategray; font-size: 16px; margin: 24px 0 12px 0;';
@@ -577,9 +655,14 @@ function customPromptTabContent() {
       newCustomPromptText.addEventListener('input', () => {
         newCustomPromptText.style.borderColor = '#565869';
       });
+
+      const helperText = document.createElement('div');
+      helperText.style = 'color: #999; font-size: 12px; margin: 8px 0;';
+      helperText.textContent = 'Tip: You can use @promptTitle anywhere in your prompt input to replace it with the prompt text. For this feature to work make sure you don\'t have any space in the prompt title. Smart replace is not case sensitive.';
+
       const repeatedNameError = document.createElement('div');
       repeatedNameError.id = 'repeated-name-error';
-      repeatedNameError.style = 'color: #f56565; font-size: 10px;visibility: hidden;';
+      repeatedNameError.style = 'color: #f56565; font-size: 12px;visibility: hidden;';
       repeatedNameError.textContent = 'Another custom prompt with this name already exist. Please use a different name.';
       const newCustomPromptButtonWrapper = document.createElement('div');
       newCustomPromptButtonWrapper.style = 'display: flex; flex-direction: row; justify-content: end; align-items: center; width: 100%; margin-bottom: 16px;';
@@ -627,6 +710,7 @@ function customPromptTabContent() {
       newCustomPromptButtonWrapper.appendChild(newCustomPromptCancelButton);
       newCustomPromptButtonWrapper.appendChild(newCustomPromptSaveButton);
       newCustomPromptWrapper.appendChild(newCustomPromptInputWrapper);
+      newCustomPromptWrapper.appendChild(helperText);
       newCustomPromptWrapper.appendChild(repeatedNameError);
       newCustomPromptWrapper.appendChild(newCustomPromptButtonWrapper);
       // insert after customPromptSectionWrapper
@@ -635,7 +719,8 @@ function customPromptTabContent() {
     customPromptSectionWrapper.appendChild(customPromptSection);
     customPromptSectionWrapper.appendChild(newCustomPromptButton);
     content.appendChild(customPromptSectionWrapper);
-    const { customPrompts } = result;
+    const { customPrompts, settings } = result;
+    const { autoSync, customInstruction } = settings;
     if (customPrompts) {
       for (let i = 0; i < customPrompts?.length; i += 1) {
         const promptTitle = customPrompts[i].title;
@@ -645,18 +730,55 @@ function customPromptTabContent() {
         content.appendChild(promptRow);
       }
     }
+    // custom inststruction section
+    const customInstructionSection = document.createElement('div');
+    customInstructionSection.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start; width: 100%; margin: 16px 0;';
+
+    const customInstructionSwitch = createSwitch('Custom Instruction', 'Custom instruction will be added to the end of each promps. You can use it to add instructions that you like to include in every prompt. For example, you can add "Please repeat the prompt after me.", or "Please refrain from writing warnings about your knowledge cutoff" to the custom instruction, and it will be added to the end of every prompt.(Make sure to add a space or new-line in the beggining!)', 'useCustomInstruction', false, toggleCustomInstructionInput, 'Requires Auto-Sync', !autoSync);
+
+    const customInstructionInputWrapper = document.createElement('div');
+    customInstructionInputWrapper.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin-bottom: 8px;';
+    const customInstructionInput = document.createElement('textarea');
+    customInstructionInput.id = 'custom-instruction-input';
+    customInstructionInput.style = 'width: 100%; height: 100px; border-radius: 4px; border: 1px solid #565869; background-color: #2d2d3a; color: #eee; padding: 8px;';
+    customInstructionInput.placeholder = 'Enter your custom instruction here...';
+    customInstructionInput.value = customInstruction;
+    customInstructionInput.addEventListener('input', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const newCustomInstruction = e.target.value;
+      chrome.storage.local.get(['settings'], (res) => {
+        chrome.storage.local.set({ settings: { ...res.settings, customInstruction: newCustomInstruction } });
+      });
+    });
+    customInstructionInputWrapper.appendChild(customInstructionInput);
+
+    customInstructionSection.appendChild(customInstructionSwitch);
+    customInstructionSection.appendChild(customInstructionInputWrapper);
+    content.appendChild(customInstructionSection);
+
     const extraSpaceDiv = document.createElement('div');
     extraSpaceDiv.style = 'min-height: 200px;';
     content.appendChild(extraSpaceDiv);
   });
   return content;
 }
+function toggleCustomInstructionInput(isChecked) {
+  const customInstructionInput = document.getElementById('custom-instruction-input');
+  if (isChecked) {
+    customInstructionInput.style.opacity = '1';
+    customInstructionInput.disabled = false;
+  } else {
+    customInstructionInput.style.opacity = '0.5';
+    customInstructionInput.disabled = true;
+  }
+}
 function createPromptRow(promptTitle, promptText, isDefault, promptObjectName) {
   const promptWrapper = document.createElement('div');
   promptWrapper.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0;';
   const promptLabel = document.createElement('div');
-  promptLabel.style = 'min-width: 100px; max-width:100px; margin-right: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;;color:white;text-transform: capitalize;';
-  promptLabel.innerText = promptTitle;
+  promptLabel.style = 'min-width: 100px; max-width:100px; margin-right: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;color:white;text-transform: capitalize;';
+  promptLabel.innerText = `@${promptTitle}`;
   promptLabel.title = promptTitle;
   promptLabel.dir = 'auto';
   const promptInput = document.createElement('textarea');
@@ -1127,10 +1249,13 @@ function initializeSettings() {
         copyMode: result.settings?.copyMode !== undefined ? result.settings.copyMode : false,
         hideBottomSidebar: result.settings?.hideBottomSidebar !== undefined ? result.settings.hideBottomSidebar : false,
         hideNewsletter: result.settings?.hideNewsletter !== undefined ? result.settings.hideNewsletter : false,
+        customInstruction: result.settings?.customInstruction !== undefined ? result.settings.customInstruction : '',
+        useCustomInstruction: result.settings?.useCustomInstruction !== undefined ? result.settings.useCustomInstruction : false,
         customConversationWidth: result.settings?.customConversationWidth !== undefined ? result.settings.customConversationWidth : false,
         conversationWidth: result.settings?.conversationWidth !== undefined ? result.settings.conversationWidth : 50,
         saveHistory: result.settings?.saveHistory !== undefined ? result.settings.saveHistory : true,
         emailNewsletter: result.settings?.emailNewsletter !== undefined ? result.settings.emailNewsletter : false,
+        autoClick: result.settings?.autoClick !== undefined ? result.settings.autoClick : false,
         showGpt4Counter: result.settings?.showGpt4Counter !== undefined ? result.settings.showGpt4Counter : true,
         autoSummarize: result.settings?.autoSummarize !== undefined ? result.settings.autoSummarize : false,
         autoSplit: result.settings?.autoSplit !== undefined ? result.settings.autoSplit : true,

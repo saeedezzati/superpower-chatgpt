@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global markdown, markdownitSup, initializeNavbar, generateInstructions, generateChat, SSE, formatDate, loadConversation, resetSelection, katex, texmath, rowUser, rowAssistant, updateOrCreateConversation, replaceTextAreaElemet, highlight, isGenerating:true, disableTextInput:true, generateTitle, debounce, initializeRegenerateResponseButton, initializeStopGeneratingResponseButton, toggleTextAreaElemet, showNewChatPage, chatStreamIsClosed:true, addCopyCodeButtonsEventListeners, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams, addScrollButtons, updateTotalCounter, isWindows, loadSharedConversation */
+/* global markdown, markdownitSup, initializeNavbar, generateInstructions, generateChat, SSE, formatDate, loadConversation, resetSelection, katex, texmath, rowUser, rowAssistant, updateOrCreateConversation, replaceTextAreaElemet, highlight, isGenerating:true, disableTextInput:true, generateTitle, debounce, initializeRegenerateResponseButton, initializeStopGeneratingResponseButton, toggleTextAreaElemet, showNewChatPage, chatStreamIsClosed:true, addCopyCodeButtonsEventListeners, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams, addScrollButtons, updateTotalCounter, isWindows, loadSharedConversation, createTemplateWordsModal */
 
 // Initial state
 let userChatIsActuallySaved = false;
@@ -403,20 +403,21 @@ function updateNewChatButtonSynced() {
           resetSelection();
         } else {
           showNewChatPage();
-        }
-        if (textAreaElement) {
-          textAreaElement.focus();
-        }
-        // remove selected class from conversations from conversations list
-        const focusedConversations = document.querySelectorAll('.selected');
-        focusedConversations.forEach((c) => {
-          c.classList = notSelectedClassList;
-        });
-        // if search box has value reload conversations list
-        const searchBox = document.querySelector('#conversation-search');
-        if (searchBox?.value) {
-          searchBox.value = '';
-          searchBox.dispatchEvent(new Event('input'), { bubbles: true });
+
+          if (textAreaElement) {
+            textAreaElement.focus();
+          }
+          // remove selected class from conversations from conversations list
+          const focusedConversations = document.querySelectorAll('.selected');
+          focusedConversations.forEach((c) => {
+            c.classList = notSelectedClassList;
+          });
+          // if search box has value reload conversations list
+          const searchBox = document.querySelector('#conversation-search');
+          if (searchBox?.value) {
+            searchBox.value = '';
+            searchBox.dispatchEvent(new Event('input'), { bubbles: true });
+          }
         }
       });
       if (selectedConversations?.length > 0) {
@@ -472,9 +473,11 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
           if (userChatIsActuallySaved) {
             clearInterval(tempId);
             updateOrCreateConversation(finalConversationId, finalMessage, messageId, settings, true, chatStreamIsClosed).then(() => {
-              setTimeout(() => {
-                insertNextChunk(settings, finalMessage);
-              }, 700);
+              if (!chatStreamIsClosed) {
+                setTimeout(() => {
+                  insertNextChunk(settings, finalMessage);
+                }, 700);
+              }
             });
           }
         }, 1000);
@@ -721,10 +724,14 @@ function insertNextChunk(settings, previousMessage) {
       return;
     }
   }
-  if (!settings.autoSplit) return;
-  if (totalChunks === 1) return;
-  if (remainingText === '') return;
-
+  if (!settings.autoSplit || totalChunks === 1 || remainingText === '') {
+    if (settings.autoClick) {
+      const continueButton = document.getElementById('continue-conversation-button');
+      if (!continueButton) return;
+      continueButton.click();
+    }
+    return;
+  }
   const inputForm = document.querySelector('form');
   if (!inputForm) return;
   const submitButton = inputForm.querySelector('textarea ~ button');
@@ -742,6 +749,7 @@ ${settings.autoSplitChunkPrompt}`;
   textAreaElement.dispatchEvent(new Event('change', { bubbles: true }));
   submitButton.click();
 }
+
 function getLastIndexOf(text, position) {
   // if text down't include \n or . or ? or ! return position
   if (!text.includes('\n') && !text.includes('.') && !text.includes('?') && !text.includes('!')) return position;
@@ -768,135 +776,155 @@ function overrideSubmitForm() {
     e.preventDefault();
     e.stopPropagation();
     if (isGenerating) return;
-    const { pathname } = new URL(window.location.toString());
-    // const isSharedConversation = pathname.startsWith('/share/') && window.location.href.endsWith('/continue');
-    const conversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
-    const anyUserMessageWrappers = document.querySelectorAll('[id^="message-wrapper-"][data-role="user"]').length > 0;
-    if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId) && anyUserMessageWrappers) {
-      chrome.storage.local.get(['conversations', 'settings', 'models']).then((res) => {
-        const { conversations, settings, models } = res;
-        const conversation = conversations[conversationId];
-        chrome.storage.sync.get(['name', 'avatar'], (result) => {
-          let text = textAreaElement.value.trim();
-          if (chunkNumber === 1) {
-            finalSummary = '';
-            if (settings.autoSplit && text.length > settings.autoSplitLimit) {
-              totalChunks = Math.ceil(text.length / settings.autoSplitLimit);
-              const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > text.length ? settings.autoSplitLimit : getLastIndexOf(text, settings.autoSplitLimit);
-              remainingText = text.substring(lastNewLineIndexBeforeLimit);
-              text = `${settings.autoSplitInitialPrompt}[START CHUNK ${chunkNumber}/${totalChunks}]
-${text.substring(0, lastNewLineIndexBeforeLimit)}
-[END CHUNK ${chunkNumber}/${totalChunks}]
-${settings.autoSplitChunkPrompt}`;
-              chunkNumber += 1;
-            } else {
-              text = generateInstructions(conversation, settings, textAreaElement.value.trim());
-            }
-          } else if (chunkNumber === totalChunks) {
-            if (totalChunks > 1 && settings.autoSummarize) shouldSubmitFinalSummary = true;
-            chunkNumber = 1;
-            totalChunks = 1;
-            remainingText = '';
-          } else {
-            chunkNumber += 1;
-            const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > remainingText.length ? settings.autoSplitLimit : getLastIndexOf(remainingText, settings.autoSplitLimit);
-            remainingText = remainingText.slice(lastNewLineIndexBeforeLimit);
-          }
-          const messageId = self.crypto.randomUUID();
-          const allMessages = document.querySelectorAll('[id^="message-wrapper-"]');
-          const lastMessage = allMessages[allMessages.length - 1];
-          const parentId = lastMessage?.id?.split('message-wrapper-')[1] || self.crypto.randomUUID();
-          const conversationBottom = document.querySelector('#conversation-bottom');
-          const node = { message: { id: messageId, content: { parts: [text] } } };
-          const userRow = rowUser(conversation, node, 1, 1, result.name, result.avatar, settings.customConversationWidth, settings.conversationWidth);
-          conversationBottom.insertAdjacentHTML('beforebegin', userRow);
-          conversationBottom.scrollIntoView({ behavior: 'smooth' });
-          if (text) {
-            isGenerating = true;
-            submitChat(text, conversation, messageId, parentId, settings, models);
-            textAreaElement.value = '';
-            updateInputCounter('');
-          }
-        });
-      });
+    // get all words wrapped in {{ and }}
+    const templateWords = textAreaElement.value.match(/{{(.*?)}}/g);
+    if (templateWords?.length > 0) {
+      // open template words modal and wait for user to select a word. the when user submit, submit the input form with the replacement
+      createTemplateWordsModal(templateWords);
+      const firstTemplateWordInput = document.querySelector('[id^=template-input-]');
+      if (firstTemplateWordInput) {
+        firstTemplateWordInput.focus();
+        setTimeout(() => {
+          firstTemplateWordInput.value = '';
+        }, 100);
+      }
     } else {
-      chrome.storage.local.get(['settings', 'models']).then((res) => {
-        const { settings, models } = res;
-        chrome.storage.sync.get(['name', 'avatar'], (result) => {
-          let text = textAreaElement.value.trim();
-          if (chunkNumber === 1) {
-            finalSummary = '';
-            if (settings.autoSplit && text.length > settings.autoSplitLimit) {
-              totalChunks = Math.ceil(text.length / settings.autoSplitLimit);
-              const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > text.length ? settings.autoSplitLimit : getLastIndexOf(text, settings.autoSplitLimit);
-              remainingText = text.substring(lastNewLineIndexBeforeLimit);
-              text = `${settings.autoSplitInitialPrompt}[START CHUNK ${chunkNumber}/${totalChunks}]
+      const { pathname } = new URL(window.location.toString());
+      // const isSharedConversation = pathname.startsWith('/share/') && window.location.href.endsWith('/continue');
+      const conversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
+      const anyUserMessageWrappers = document.querySelectorAll('[id^="message-wrapper-"][data-role="user"]').length > 0;
+      if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId) && anyUserMessageWrappers) {
+        chrome.storage.local.get(['conversations', 'settings', 'models']).then((res) => {
+          const { conversations, settings, models } = res;
+          const conversation = conversations[conversationId];
+          chrome.storage.sync.get(['name', 'avatar'], (result) => {
+            let text = textAreaElement.value.trim();
+            if (chunkNumber === 1) {
+              finalSummary = '';
+              if (settings.autoSplit && text.length > settings.autoSplitLimit) {
+                totalChunks = Math.ceil(text.length / settings.autoSplitLimit);
+                const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > text.length ? settings.autoSplitLimit : getLastIndexOf(text, settings.autoSplitLimit);
+                remainingText = text.substring(lastNewLineIndexBeforeLimit);
+                text = `${settings.autoSplitInitialPrompt}[START CHUNK ${chunkNumber}/${totalChunks}]
 ${text.substring(0, lastNewLineIndexBeforeLimit)}
 [END CHUNK ${chunkNumber}/${totalChunks}]
 ${settings.autoSplitChunkPrompt}`;
-              chunkNumber += 1;
+                chunkNumber += 1;
+              } else {
+                text = generateInstructions(conversation, settings, textAreaElement.value.trim());
+              }
+            } else if (chunkNumber === totalChunks) {
+              if (totalChunks > 1 && settings.autoSummarize) shouldSubmitFinalSummary = true;
+              chunkNumber = 1;
+              totalChunks = 1;
+              remainingText = '';
             } else {
-              text = generateInstructions({}, settings, textAreaElement.value.trim());
+              chunkNumber += 1;
+              const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > remainingText.length ? settings.autoSplitLimit : getLastIndexOf(remainingText, settings.autoSplitLimit);
+              remainingText = remainingText.slice(lastNewLineIndexBeforeLimit);
             }
-          } else if (chunkNumber === totalChunks) {
-            if (totalChunks > 1 && settings.autoSummarize) shouldSubmitFinalSummary = true;
-            chunkNumber = 1;
-            totalChunks = 1;
-            remainingText = '';
-          } else {
-            chunkNumber += 1;
-            const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > remainingText.length ? settings.autoSplitLimit : getLastIndexOf(remainingText, settings.autoSplitLimit);
-            remainingText = remainingText.slice(lastNewLineIndexBeforeLimit);
-          }
-
-          const messageId = self.crypto.randomUUID();
-          const node = { message: { id: messageId, content: { parts: [text] } } };
-          const allMessages = document.querySelectorAll('[id^="message-wrapper-"]');
-          const lastMessage = allMessages[allMessages.length - 1];
-          const parentId = lastMessage?.id?.split('message-wrapper-')[1] || self.crypto.randomUUID();
-          // remove main first child
-          const contentWrapper = main.querySelector('.flex-1.overflow-hidden');
-          main.removeChild(contentWrapper);
-
-          const outerDiv = document.createElement('div');
-          outerDiv.classList = 'flex-1 overflow-hidden';
-          const innerDiv = document.createElement('div');
-          innerDiv.classList = 'h-full overflow-y-auto';
-          innerDiv.style = 'scroll-behavior: smooth;';
-          innerDiv.id = 'conversation-inner-div';
-          addScrollDetector(innerDiv);
-          const conversationDiv = document.createElement('div');
-          conversationDiv.classList = 'flex flex-col items-center text-sm h-full dark:bg-gray-800';
-          const userRow = rowUser({}, node, 1, 1, result.name, result.avatar, settings.customConversationWidth, settings.conversationWidth);
-          conversationDiv.innerHTML = userRow;
-          const topDiv = '<div id="conversation-top" class="w-full flex items-center justify-center border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group bg-gray-50 dark:bg-[#444654]" style="min-height:56px;z-index:1;">New chat</div>';
-          conversationDiv.insertAdjacentHTML('afterbegin', topDiv);
-          const bottomDiv = document.createElement('div');
-          bottomDiv.id = 'conversation-bottom';
-          bottomDiv.classList = 'w-full h-32 md:h-48 flex-shrink-0';
-          conversationDiv.appendChild(bottomDiv);
-          const bottomDivContent = document.createElement('div');
-          bottomDivContent.classList = 'relative text-base gap-4 md:gap-6 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl flex lg:px-0';
-          if (settings.customConversationWidth) {
-            bottomDivContent.style = `max-width: ${settings.conversationWidth}%`;
-          }
-          bottomDiv.appendChild(bottomDivContent);
-          const totalCounter = document.createElement('div');
-          totalCounter.id = 'total-counter';
-          totalCounter.style = 'position: absolute; top: 0px; right: 0px; font-size: 10px; color: rgb(153, 153, 153); opacity: 0.8;';
-          bottomDivContent.appendChild(totalCounter);
-
-          innerDiv.appendChild(conversationDiv);
-          outerDiv.appendChild(innerDiv);
-          main.prepend(outerDiv);
-          if (text) {
-            isGenerating = true;
-            submitChat(text, {}, messageId, parentId, settings, models);
-            textAreaElement.value = '';
-            updateInputCounter('');
-          }
+            const messageId = self.crypto.randomUUID();
+            const allMessages = document.querySelectorAll('[id^="message-wrapper-"]');
+            const lastMessage = allMessages[allMessages.length - 1];
+            const parentId = lastMessage?.id?.split('message-wrapper-')[1] || self.crypto.randomUUID();
+            const conversationBottom = document.querySelector('#conversation-bottom');
+            if (text && settings.useCustomInstruction) {
+              text += settings.customInstruction;
+            }
+            const node = { message: { id: messageId, content: { parts: [text] } } };
+            const userRow = rowUser(conversation, node, 1, 1, result.name, result.avatar, settings.customConversationWidth, settings.conversationWidth);
+            conversationBottom.insertAdjacentHTML('beforebegin', userRow);
+            conversationBottom.scrollIntoView({ behavior: 'smooth' });
+            if (text) {
+              isGenerating = true;
+              submitChat(text, conversation, messageId, parentId, settings, models);
+              textAreaElement.value = '';
+              updateInputCounter('');
+            }
+          });
         });
-      });
+      } else {
+        chrome.storage.local.get(['settings', 'models']).then((res) => {
+          const { settings, models } = res;
+          chrome.storage.sync.get(['name', 'avatar'], (result) => {
+            let text = textAreaElement.value.trim();
+            if (chunkNumber === 1) {
+              finalSummary = '';
+              if (settings.autoSplit && text.length > settings.autoSplitLimit) {
+                totalChunks = Math.ceil(text.length / settings.autoSplitLimit);
+                const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > text.length ? settings.autoSplitLimit : getLastIndexOf(text, settings.autoSplitLimit);
+                remainingText = text.substring(lastNewLineIndexBeforeLimit);
+                text = `${settings.autoSplitInitialPrompt}[START CHUNK ${chunkNumber}/${totalChunks}]
+${text.substring(0, lastNewLineIndexBeforeLimit)}
+[END CHUNK ${chunkNumber}/${totalChunks}]
+${settings.autoSplitChunkPrompt}`;
+                chunkNumber += 1;
+              } else {
+                text = generateInstructions({}, settings, textAreaElement.value.trim());
+              }
+            } else if (chunkNumber === totalChunks) {
+              if (totalChunks > 1 && settings.autoSummarize) shouldSubmitFinalSummary = true;
+              chunkNumber = 1;
+              totalChunks = 1;
+              remainingText = '';
+            } else {
+              chunkNumber += 1;
+              const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > remainingText.length ? settings.autoSplitLimit : getLastIndexOf(remainingText, settings.autoSplitLimit);
+              remainingText = remainingText.slice(lastNewLineIndexBeforeLimit);
+            }
+
+            const messageId = self.crypto.randomUUID();
+            if (text && settings.useCustomInstruction) {
+              text += settings.customInstruction;
+            }
+            const node = { message: { id: messageId, content: { parts: [text] } } };
+            const allMessages = document.querySelectorAll('[id^="message-wrapper-"]');
+            const lastMessage = allMessages[allMessages.length - 1];
+            const parentId = lastMessage?.id?.split('message-wrapper-')[1] || self.crypto.randomUUID();
+            // remove main first child
+            const contentWrapper = main.querySelector('.flex-1.overflow-hidden');
+            main.removeChild(contentWrapper);
+
+            const outerDiv = document.createElement('div');
+            outerDiv.classList = 'flex-1 overflow-hidden';
+            const innerDiv = document.createElement('div');
+            innerDiv.classList = 'h-full overflow-y-auto';
+            innerDiv.style = 'scroll-behavior: smooth;';
+            innerDiv.id = 'conversation-inner-div';
+            addScrollDetector(innerDiv);
+            const conversationDiv = document.createElement('div');
+            conversationDiv.classList = 'flex flex-col items-center text-sm h-full dark:bg-gray-800';
+            const userRow = rowUser({}, node, 1, 1, result.name, result.avatar, settings.customConversationWidth, settings.conversationWidth);
+            conversationDiv.innerHTML = userRow;
+            const topDiv = '<div id="conversation-top" class="w-full flex items-center justify-center border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group bg-gray-50 dark:bg-[#444654]" style="min-height:56px;z-index:1;">New chat</div>';
+            conversationDiv.insertAdjacentHTML('afterbegin', topDiv);
+            const bottomDiv = document.createElement('div');
+            bottomDiv.id = 'conversation-bottom';
+            bottomDiv.classList = 'w-full h-32 md:h-48 flex-shrink-0';
+            conversationDiv.appendChild(bottomDiv);
+            const bottomDivContent = document.createElement('div');
+            bottomDivContent.classList = 'relative text-base gap-4 md:gap-6 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl flex lg:px-0';
+            if (settings.customConversationWidth) {
+              bottomDivContent.style = `max-width: ${settings.conversationWidth}%`;
+            }
+            bottomDiv.appendChild(bottomDivContent);
+            const totalCounter = document.createElement('div');
+            totalCounter.id = 'total-counter';
+            totalCounter.style = 'position: absolute; top: 0px; right: 0px; font-size: 10px; color: rgb(153, 153, 153); opacity: 0.8;';
+            bottomDivContent.appendChild(totalCounter);
+
+            innerDiv.appendChild(conversationDiv);
+            outerDiv.appendChild(innerDiv);
+            main.prepend(outerDiv);
+            if (text) {
+              isGenerating = true;
+              submitChat(text, {}, messageId, parentId, settings, models);
+              textAreaElement.value = '';
+              updateInputCounter('');
+            }
+          });
+        });
+      }
     }
   });
   // textAreaElement.addEventListener('keydown', (e) => {
@@ -917,10 +945,23 @@ ${settings.autoSplitChunkPrompt}`;
   submitButtonClone.addEventListener('click', () => {
     const textAreaElement = inputForm.querySelector('textarea');
     if (isGenerating) return;
-    if (textAreaElement.value.trim().length === 0) return;
-    textAreaElement.style.height = '24px';
-    addUserPromptToHistory(textAreaElement.value.trim());
-    inputForm.dispatchEvent(new Event('submit', { cancelable: true }));
+    const templateWords = textAreaElement.value.match(/{{(.*?)}}/g);
+    if (templateWords?.length > 0) {
+      // open template words modal and wait for user to select a word. the when user submit, submit the input form with the replacement
+      createTemplateWordsModal(templateWords);
+      const firstTemplateWordInput = document.querySelector('[id^=template-input-]');
+      if (firstTemplateWordInput) {
+        firstTemplateWordInput.focus();
+        setTimeout(() => {
+          firstTemplateWordInput.value = '';
+        }, 100);
+      }
+    } else {
+      if (textAreaElement.value.trim().length === 0) return;
+      textAreaElement.style.height = '24px';
+      addUserPromptToHistory(textAreaElement.value.trim());
+      inputForm.dispatchEvent(new Event('submit', { cancelable: true }));
+    }
   });
   submitButton.parentNode.replaceChild(submitButtonClone, submitButton);
 }

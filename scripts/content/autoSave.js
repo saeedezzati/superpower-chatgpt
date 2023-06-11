@@ -109,6 +109,7 @@ function updateOrCreateConversation(conversationId, message, parentId, settings,
       existingConversation.writingStyleCode = settings.selectedWritingStyle.code;
       existingConversation.shouldRefresh = forceRefresh;
       existingConversation.current_node = message.id;
+      existingConversation.update_time = 'force_copy';
       if (existingConversation.mapping[message.id]?.id) {
         existingConversation.mapping[message.id].message = message;
       } else {
@@ -172,7 +173,7 @@ function updateOrCreateConversation(conversationId, message, parentId, settings,
       current_node: message.id,
       title: 'New chat',
       create_time: (new Date()).getTime() / 1000,
-      update_time: 'initialize',
+      update_time: 'force_copy',
       mapping: {
         [parentId]: {
           children: [systemMessage.id], id: parentId, message: null, parent: null,
@@ -323,7 +324,7 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
               const remoteConv = remoteConversations.find((conv) => conv.id === localConvIds[i]) || localConversations[localConvIds[i]];
               localConversations[localConvIds[i]].title = remoteConv.title;
               // eslint-disable-next-line prefer-destructuring
-              if (localConversations[localConvIds[i]].update_time === 'initialize') {
+              if (localConversations[localConvIds[i]].update_time === 'force_copy') {
                 localConversations[localConvIds[i]].update_time = new Date(remoteConv.update_time).getTime() / 1000;
               }
               // delete conversation key(legacy)
@@ -591,7 +592,7 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
     //     if (isGenerating || !canSubmit) return;
     //     const syncDiv = document.getElementById('sync-div');
     //     syncDiv.remove();
-    //     const { pathname } = new URL(window.location.toString());;
+    //     const { pathname } = new URL(window.location.toString());
     //     const conversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
     //     const refreshIds = [];
     //     if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) {
@@ -605,7 +606,7 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
     //     if (isGenerating || !canSubmit) return;
     //     const syncDiv = document.getElementById('sync-div');
     //     syncDiv.remove();
-    //     const { pathname } = new URL(window.location.toString());;
+    //     const { pathname } = new URL(window.location.toString())
     //     const conversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
     //     const refreshIds = [];
     //     if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) {

@@ -451,7 +451,8 @@ function addGpt4Counter() {
 function updateInputCounter(text) {
   const curInputCounterElement = document.querySelector('#gptx-input-counter');
   if (curInputCounterElement) {
-    const wordCount = text ? text.split(' ').length : 0;
+    // word count split by space or newline
+    const wordCount = text ? text.split(/[\s\n]+/).length : 0;
     const charCount = text.length;
     if (charCount < 16000) {
       curInputCounterElement.style.color = '#999';
