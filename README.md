@@ -85,9 +85,9 @@ https://user-images.githubusercontent.com/574142/232172841-50f1b114-ef47-4533-a6
 
 🔄  Smart Replace: Automatically replace pre-defined phrases with longer text as you type prompts
 
-🖱️ Auto Click: Automatically click on the defaul custom prompt button at the end of each response
+🖱️ Auto Click: Automatically click on the default custom prompt button at the end of each response
 
-👉 Custom Instruction: Don't epeat yourself. Automatically  add a custom instruction to the end of each prompt
+👉 Custom Instruction: Don't repeat yourself. Automatically  add a custom instruction to the end of each prompt
 
 📊 Word and Character Count: Add the word and character counters to both the user input and the ChatGPT responses
 

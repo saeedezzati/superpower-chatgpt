@@ -29,7 +29,7 @@ function addSponsorElement(sponsor) {
     sponsorImage.style = 'border-radius: 3px;margin:0 !important;';
     sponsorLink.appendChild(sponsorImage);
     const sponsorTag = document.createElement('a');
-    sponsorTag.href = 'https://ezi.notion.site/Sponsorship-3d0442f1e8634978902cf366c44be016';
+    sponsorTag.href = 'https://www.passionfroot.me/superpower';
     sponsorTag.target = '_blank';
     sponsorTag.rel = 'noopener noreferrer';
     sponsorTag.style = 'background-color:#595959;color:darkgrey;padding:0px 2px;border-radius: 0px 3px 0px 3px;font-size:10px;position:absolute;top:2px;right:2px;';

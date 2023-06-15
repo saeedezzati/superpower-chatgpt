@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global markdown, markdownitSup, initializeNavbar, generateInstructions, generateChat, SSE, formatDate, loadConversation, resetSelection, katex, texmath, rowUser, rowAssistant, updateOrCreateConversation, replaceTextAreaElemet, highlight, isGenerating:true, disableTextInput:true, generateTitle, debounce, initializeRegenerateResponseButton, initializeStopGeneratingResponseButton, toggleTextAreaElemet, showNewChatPage, chatStreamIsClosed:true, addCopyCodeButtonsEventListeners, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams, addScrollButtons, updateTotalCounter, isWindows, loadSharedConversation, createTemplateWordsModal */
+/* global markdown, markdownitSup, initializeNavbar, generateInstructions, generateChat, SSE, formatDate, loadConversation, resetSelection, katex, texmath, rowUser, rowAssistant, updateOrCreateConversation, replaceTextAreaElemet, highlight, isGenerating:true, disableTextInput:true, generateTitle, debounce, initializeRegenerateResponseButton, initializeStopGeneratingResponseButton, toggleTextAreaElemet, showNewChatPage, chatStreamIsClosed:true, addCopyCodeButtonsEventListeners, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams, addScrollButtons, updateTotalCounter, isWindows, loadSharedConversation, createTemplateWordsModal, arkose */
 
 // Initial state
 let userChatIsActuallySaved = false;
@@ -438,7 +438,7 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
   if (!regenerateResponse) initializeRegenerateResponseButton();
   chatStreamIsClosed = false;
   const saveHistory = conversation?.id ? conversation.saveHistory : settings.saveHistory;
-  generateChat(userInput, conversation?.id, messageId, parentId, saveHistory).then((chatStream) => {
+  arkose().then((arkoseRes) => generateChat(userInput, conversation?.id, messageId, parentId, arkoseRes.token, saveHistory).then((chatStream) => {
     userChatIsActuallySaved = regenerateResponse;
     let userChatSavedLocally = regenerateResponse; // false by default unless regenerateResponse is true
     let assistantChatSavedLocally = false;
@@ -667,33 +667,36 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
       const submitButton = inputForm.querySelector('textarea ~ button');
       // submitButton.disabled = false;
       submitButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" class="h-4 w-4" stroke-width="2"><path d="M.5 1.163A1 1 0 0 1 1.97.28l12.868 6.837a1 1 0 0 1 0 1.766L1.969 15.72A1 1 0 0 1 .5 14.836V10.33a1 1 0 0 1 .816-.983L8.5 8 1.316 6.653A1 1 0 0 1 .5 5.67V1.163Z" fill="currentColor"></path></svg>';
-      const error = JSON.parse(err.data);
-      const errorCode = error?.detail?.code;
-      let errorMessage = typeof error.detail === 'string' ? error.detail : error.detail.message;
-      if (errorCode === 'model_cap_exceeded') {
-        // seconds until cap is cleared
-        const clearsIn = error?.detail?.clears_in;
-        const date = new Date();
-        date.setSeconds(date.getSeconds() + clearsIn);
-        // print expire hour minute from local time
-        const hour = date.getHours();
-        const minute = date.getMinutes();
-        const ampm = hour >= 12 ? 'pm' : 'am';
-        const hour12 = hour % 12;
-        const hour12Display = hour12 || 12;
-        const minuteDisplay = minute < 10 ? `0${minute}` : minute;
-        const capExpiresAt = `${hour12Display}:${minuteDisplay}${ampm}`;
-        chrome.storage.local.set({ capExpiresAt });
-        errorMessage = `You've reached the current usage cap for this model. You can continue with the default model now, or try again after ${capExpiresAt}.`;
-      } else {
-        chrome.storage.local.set({ capExpiresAt: '' });
+      console.warn(err);
+      if (err.data) {
+        const error = JSON.parse(err.data);
+        const errorCode = error?.detail?.code;
+        let errorMessage = typeof error.detail === 'string' ? error.detail : error.detail.message;
+        if (errorCode === 'model_cap_exceeded') {
+          // seconds until cap is cleared
+          const clearsIn = error?.detail?.clears_in;
+          const date = new Date();
+          date.setSeconds(date.getSeconds() + clearsIn);
+          // print expire hour minute from local time
+          const hour = date.getHours();
+          const minute = date.getMinutes();
+          const ampm = hour >= 12 ? 'pm' : 'am';
+          const hour12 = hour % 12;
+          const hour12Display = hour12 || 12;
+          const minuteDisplay = minute < 10 ? `0${minute}` : minute;
+          const capExpiresAt = `${hour12Display}:${minuteDisplay}${ampm}`;
+          chrome.storage.local.set({ capExpiresAt });
+          errorMessage = `You've reached the current usage cap for this model. You can continue with the default model now, or try again after ${capExpiresAt}.`;
+        } else {
+          chrome.storage.local.set({ capExpiresAt: '' });
+        }
+        const conversationBottom = document.querySelector('#conversation-bottom');
+        const errorMessageElement = `<div style="max-width:400px" class="py-2 px-3 my-2 border text-gray-600 rounded-md text-sm dark:text-gray-100 border-red-500 bg-red-500/10">${errorMessage}</div>`;
+        conversationBottom.insertAdjacentHTML('beforebegin', errorMessageElement);
+        conversationBottom.scrollIntoView({ behavior: 'smooth' });
       }
-      const conversationBottom = document.querySelector('#conversation-bottom');
-      const errorMessageElement = `<div style="max-width:400px" class="py-2 px-3 my-2 border text-gray-600 rounded-md text-sm dark:text-gray-100 border-red-500 bg-red-500/10">${errorMessage}</div>`;
-      conversationBottom.insertAdjacentHTML('beforebegin', errorMessageElement);
-      conversationBottom.scrollIntoView({ behavior: 'smooth' });
     });
-  });
+  }));
 }
 function submitFinalSummary() {
   if (!shouldSubmitFinalSummary) return;

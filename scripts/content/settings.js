@@ -121,6 +121,10 @@ function generalTabContent() {
   const copyModeSwitch = createSwitch('Copy mode', 'OFF: only copy response / ON: copy both request and response', 'copyMode', false);
   leftContent.appendChild(copyModeSwitch);
 
+  // prompt template
+  const promptTemplateSwitch = createSwitch('Prompt Template', 'Enable/disable the doube {{curly}} brackets replacement', 'promptTemplate', false);
+  leftContent.appendChild(promptTemplateSwitch);
+
   // conversation width
   const customConversationWidthSwitch = createSwitch('Custom Conversation Width', 'OFF: Use default / ON: Set Conversation Width (30%-90%)', 'customConversationWidth', false, toggleCustomWidthInput);
   leftContent.appendChild(customConversationWidthSwitch);
@@ -380,9 +384,9 @@ function generalTabContent() {
 
   // add link for sponsorship
   const sponsorLink = document.createElement('a');
-  sponsorLink.href = 'https://ezi.notion.site/Sponsorship-3d0442f1e8634978902cf366c44be016';
+  sponsorLink.href = 'https://www.passionfroot.me/superpower';
   sponsorLink.target = '_blank';
-  sponsorLink.textContent = 'Sponsorship ➜';
+  sponsorLink.textContent = 'Advertise with us ➜';
   sponsorLink.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
   sponsorLink.addEventListener('mouseover', () => {
     sponsorLink.style = 'color: gold; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
@@ -392,7 +396,7 @@ function generalTabContent() {
   });
   linkWrapper.appendChild(sponsorLink);
 
-  // add link for sponsorship
+  // add link for FAQ
   const faqLink = document.createElement('a');
   faqLink.href = 'https://ezi.notion.site/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24';
   faqLink.target = '_blank';
@@ -1254,6 +1258,7 @@ function initializeSettings() {
         customConversationWidth: result.settings?.customConversationWidth !== undefined ? result.settings.customConversationWidth : false,
         conversationWidth: result.settings?.conversationWidth !== undefined ? result.settings.conversationWidth : 50,
         saveHistory: result.settings?.saveHistory !== undefined ? result.settings.saveHistory : true,
+        promptTemplate: result.settings?.promptTemplate !== undefined ? result.settings.promptTemplate : false,
         emailNewsletter: result.settings?.emailNewsletter !== undefined ? result.settings.emailNewsletter : false,
         autoClick: result.settings?.autoClick !== undefined ? result.settings.autoClick : false,
         showGpt4Counter: result.settings?.showGpt4Counter !== undefined ? result.settings.showGpt4Counter : true,

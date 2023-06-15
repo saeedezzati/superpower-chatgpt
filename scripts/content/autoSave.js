@@ -284,7 +284,7 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
         if (result.conversations && Object.keys(result.conversations).length > 0) {
           localConversations = result.conversations;
         }
-        const oldConversationsOrder = conversationsOrder && (conversationsOrder?.findIndex((f) => f.id === 'trash') !== -1)
+        const oldConversationsOrder = conversationsOrder && (conversationsOrder?.findIndex((f) => f && f.id === 'trash') !== -1)
           ? conversationsOrder
           : [{
             id: 'trash',
