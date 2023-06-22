@@ -122,7 +122,7 @@ function generalTabContent() {
   leftContent.appendChild(copyModeSwitch);
 
   // prompt template
-  const promptTemplateSwitch = createSwitch('Prompt Template', 'Enable/disable the doube {{curly}} brackets replacement', 'promptTemplate', false);
+  const promptTemplateSwitch = createSwitch('Prompt Template', 'Enable/disable the doube {{curly}} brackets replacement', 'promptTemplate', true);
   leftContent.appendChild(promptTemplateSwitch);
 
   // conversation width
@@ -1258,7 +1258,7 @@ function initializeSettings() {
         customConversationWidth: result.settings?.customConversationWidth !== undefined ? result.settings.customConversationWidth : false,
         conversationWidth: result.settings?.conversationWidth !== undefined ? result.settings.conversationWidth : 50,
         saveHistory: result.settings?.saveHistory !== undefined ? result.settings.saveHistory : true,
-        promptTemplate: result.settings?.promptTemplate !== undefined ? result.settings.promptTemplate : false,
+        promptTemplate: result.settings?.promptTemplate !== undefined ? result.settings.promptTemplate : true,
         emailNewsletter: result.settings?.emailNewsletter !== undefined ? result.settings.emailNewsletter : false,
         autoClick: result.settings?.autoClick !== undefined ? result.settings.autoClick : false,
         showGpt4Counter: result.settings?.showGpt4Counter !== undefined ? result.settings.showGpt4Counter : true,

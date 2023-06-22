@@ -563,7 +563,7 @@ function registerShortkeys() {
         document.querySelector('#scroll-down-button').click();
       }
     }
-    // cm/ctrl + shift + s
+    // cmd/ctrl + shift + s
     if ((e.metaKey || (isWindows() && e.ctrlKey)) && e.shiftKey && e.keyCode === 83) {
       if (!document.querySelector('#modal-settings')) {
         // open settings
@@ -571,7 +571,7 @@ function registerShortkeys() {
         document.querySelector('#settings-button')?.click();
       }
     }
-    // cm/ctrl + shift + l
+    // cmd/ctrl + shift + l
     if ((e.metaKey || (isWindows() && e.ctrlKey)) && e.shiftKey && e.keyCode === 76) {
       if (!document.querySelector('#modal-newsletter-archive')) {
         // open newsletter
