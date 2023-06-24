@@ -1,4 +1,4 @@
-/* global getAccount, getModels, getConversationLimit, initializeStorage, cleanNav, initializeContinue, initializeExport, initializeSettings, initializePromptHistory, initializePromptLibrary, initializeNewsletter, initializeAutoSave, addNavToggleButton, initializeAnnouncement, initializeReleaseNote, initializeReplaceDeleteConversationButton, initializeCopyAndCounter, initializeAddToPromptLibrary, initializeTimestamp, updateNewChatButtonNotSynced, addAsyncInputEvents, initializeContentMessageListeners, registerShortkeys, addDevIndicator, addExpandButton, openLinksInNewTab */
+/* global getAccount, getModels, getConversationLimit, initializeStorage, cleanNav, initializeContinue, initializeExport, initializeSettings, initializePromptHistory, initializePromptLibrary, initializeNewsletter, initializeAutoSave, addNavToggleButton, initializeAnnouncement, initializeReleaseNote, initializeReplaceDeleteConversationButton, initializeCopyAndCounter, initializeAddToPromptLibrary, initializeTimestamp, updateNewChatButtonNotSynced, addAsyncInputEvents, initializeContentMessageListeners, registerShortkeys, addDevIndicator, addExpandButton, openLinksInNewTab, getArkose */
 
 // eslint-disable-next-line no-unused-vars
 function initialize() {
@@ -8,6 +8,7 @@ function initialize() {
     setTimeout(() => {
       initializeStorage().then(() => {
         registerShortkeys();
+        getArkose();
         getAccount();
         getModels();
         getConversationLimit();

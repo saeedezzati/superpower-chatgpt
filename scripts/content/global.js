@@ -157,13 +157,13 @@ function addScrollButtons() {
 
   const scrollButtonWrapper = document.createElement('div');
   scrollButtonWrapper.id = 'scroll-button-wrapper';
-  scrollButtonWrapper.className = 'absolute flex items-center justify-center bg-gray-100 dark:bg-gray-600 text-gray-200 text-xs font-sans cursor-pointer rounded-md z-10';
+  scrollButtonWrapper.className = 'absolute flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-gray-200 text-xs font-sans cursor-pointer rounded-md z-10';
   scrollButtonWrapper.style = 'bottom: 6rem;right: 3rem;width: 2rem;height: 4rem;flex-wrap:wrap;';
   const scrollUpButton = document.createElement('button');
   scrollUpButton.id = 'scroll-up-button';
   scrollUpButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 48 48" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M24 44V4m20 20L24 4 4 24"></path></svg>';
   scrollUpButton.className = 'flex items-center justify-center border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 hover:bg-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-900 dark:hover:text-gray-200 text-xs font-sans cursor-pointer rounded-t-md z-10';
-  scrollUpButton.style = 'width: 2rem;height: 2rem;border-bottom: 1px solid;';
+  scrollUpButton.style = 'width: 2rem;height: 2rem;border: 1px solid;';
   scrollUpButton.addEventListener('click', () => {
     const conversationTop = document.querySelector('[id^=message-wrapper-]');
     if (!conversationTop) return;
@@ -174,7 +174,7 @@ function addScrollButtons() {
   scrollDownButton.id = 'scroll-down-button';
   scrollDownButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 48 48" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M24 4v40M4 24l20 20 20-20"></path></svg>';
   scrollDownButton.className = 'flex items-center justify-center border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 hover:bg-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-900 dark:hover:text-gray-200 text-xs font-sans cursor-pointer rounded-b-md z-10';
-  scrollDownButton.style = 'width: 2rem;height: 2rem;';
+  scrollDownButton.style = 'width: 2rem;height: 2rem;border: 1px solid; border-top: none;';
   scrollDownButton.addEventListener('click', () => {
     const conversationBottom = document.querySelector('#conversation-bottom');
 
@@ -241,7 +241,7 @@ function addNavToggleButton() {
     sidebar.appendChild(navToggleButton);
   });
 }
-function toggleTextAreaElemet(forceShow = false) {
+function toggleTextAreaElement(forceShow = false) {
   const main = document.querySelector('main');
   if (!main) return;
   const inputForm = main.querySelector('form');
@@ -297,7 +297,7 @@ function showNewChatPage() {
       const textAreaElement = inputForm.querySelector('textarea');
       textAreaElement.focus();
     }
-    toggleTextAreaElemet();
+    toggleTextAreaElement();
     initializeRegenerateResponseButton();// basically just hide the button, so conversationId is not needed
     handleQueryParams(search);
   });

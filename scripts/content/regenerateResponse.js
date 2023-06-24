@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global canSubmitPrompt, submitChat, toggleTextAreaElemet, isGenerating:true */
+/* global canSubmitPrompt, submitChat, toggleTextAreaElement, isGenerating:true */
 function toggleOriginalRegenerateResponseButton() {
   const allMessageWrapper = document.querySelectorAll('[id^="message-wrapper-"]');
   const lastMessageWrapperElement = allMessageWrapper[allMessageWrapper.length - 1];
@@ -27,6 +27,10 @@ function toggleOriginalRegenerateResponseButton() {
   const originalRegenerateResponseButton = allButtons.find((button) => button.textContent.toLowerCase() === 'regenerate response');
   if (originalRegenerateResponseButton) {
     originalRegenerateResponseButton.remove();
+  }
+  const originalContinueGeneratingButton = allButtons.find((button) => button.textContent.toLowerCase() === 'continue generating');
+  if (originalContinueGeneratingButton) {
+    originalContinueGeneratingButton.remove();
   }
 
   const existingRegenerateResponseButton = document.querySelector('#regenerate-response-button');
@@ -78,9 +82,9 @@ function toggleOriginalRegenerateResponseButton() {
         nodeBeforetTextAreaElement.style.flexWrap = 'unset';
         errorMessage.remove();
       }
-      toggleTextAreaElemet(true);
+      toggleTextAreaElement(true);
       isGenerating = true;
-      submitChat(newMessage, conversation, lastUserChatMessageId, parentId, result.settings, result.models, true);
+      submitChat(newMessage, conversation, lastUserChatMessageId, parentId, result.settings, result.models, false, true);
     });
   });
 
@@ -96,30 +100,12 @@ function toggleOriginalRegenerateResponseButton() {
       if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) return;
       const conversation = result.conversations?.[conversationId];
       // last element with id starting with message-wrapepr and data-role=user
-      const allUserMessageWrappers = document.querySelectorAll('[id^="message-wrapper-"][data-role="user"]');
-      const lastUserMessageWrapper = allUserMessageWrappers.item(allUserMessageWrappers.length - 1);
-      while (lastUserMessageWrapper.nextElementSibling && lastUserMessageWrapper.nextElementSibling.id.startsWith('message-wrapper-')) {
-        lastUserMessageWrapper.nextElementSibling.remove();
-      }
-      const lastUserChatMessageId = lastUserMessageWrapper.id.split('message-wrapper-')[1];
-      const lastUserMessage = conversation.mapping[lastUserChatMessageId];
-      const newMessage = lastUserMessage.message.content.parts.join('\n');
-      const parentId = lastUserMessage.parent;
+
       newContinueGeneratingButton.remove();
 
-      const curMain = document.querySelector('main');
-      const curInputForm = curMain.querySelector('form');
-      const curTextAreaElement = curInputForm.querySelector('textarea');
-      const curTextAreaElementWrapper = curTextAreaElement.parentNode;
-      const curNodeBeforetTextAreaElement = curTextAreaElementWrapper.previousSibling;
-      const errorMessage = curNodeBeforetTextAreaElement.querySelector('span');
-      if (errorMessage && errorMessage.textContent === 'There was an error generating a response') {
-        nodeBeforetTextAreaElement.style.flexWrap = 'unset';
-        errorMessage.remove();
-      }
-      toggleTextAreaElemet(true);
+      toggleTextAreaElement(true);
       isGenerating = true;
-      submitChat(newMessage, conversation, lastUserChatMessageId, parentId, result.settings, result.models, true);
+      submitChat(null, conversation, conversation.current_node, conversation.current_node, result.settings, result.models, true);
     });
   });
 
@@ -133,12 +119,14 @@ function toggleOriginalRegenerateResponseButton() {
   }
 
   nodeBeforetTextAreaElement.appendChild(newRegenerateResponseButton);
-  // nodeBeforetTextAreaElement.appendChild(newContinueGeneratingButton);
+  nodeBeforetTextAreaElement.appendChild(newContinueGeneratingButton);
 }
 
 // eslint-disable-next-line no-unused-vars
 function initializeRegenerateResponseButton() {
-  toggleOriginalRegenerateResponseButton();
+  setTimeout(() => {
+    toggleOriginalRegenerateResponseButton();
+  }, 500);
   // const observer = new MutationObserver(() => {
   //   const { pathname } = new URL(window.location.toString());
   //   const urlConversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');

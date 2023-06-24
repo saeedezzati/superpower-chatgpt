@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global markdown, markdownitSup, initializeNavbar, generateInstructions, generateChat, SSE, formatDate, loadConversation, resetSelection, katex, texmath, rowUser, rowAssistant, updateOrCreateConversation, replaceTextAreaElemet, highlight, isGenerating:true, disableTextInput:true, generateTitle, debounce, initializeRegenerateResponseButton, initializeStopGeneratingResponseButton, toggleTextAreaElemet, showNewChatPage, chatStreamIsClosed:true, addCopyCodeButtonsEventListeners, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams, addScrollButtons, updateTotalCounter, isWindows, loadSharedConversation, createTemplateWordsModal, arkose */
+/* global markdown, markdownitSup, initializeNavbar, generateInstructions, generateChat, SSE, formatDate, loadConversation, resetSelection, katex, texmath, rowUser, rowAssistant, updateOrCreateConversation, replaceTextAreaElemet, highlight, isGenerating:true, disableTextInput:true, generateTitle, debounce, initializeRegenerateResponseButton, initializeStopGeneratingResponseButton, toggleTextAreaElement, showNewChatPage, chatStreamIsClosed:true, addCopyCodeButtonsEventListeners, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams, addScrollButtons, updateTotalCounter, isWindows, loadSharedConversation, createTemplateWordsModal, arkose */
 
 // Initial state
 let userChatIsActuallySaved = false;
@@ -428,7 +428,7 @@ function updateNewChatButtonSynced() {
     }
   });
 }
-function submitChat(userInput, conversation, messageId, parentId, settings, models, regenerateResponse = false) {
+function submitChat(userInput, conversation, messageId, parentId, settings, models, continueGenerating = false, regenerateResponse = false) {
   scrolUpDetected = false;
   const curSubmitButton = document.querySelector('main').querySelector('form').querySelector('textarea ~ button');
   curSubmitButton.disabled = true;
@@ -437,10 +437,19 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
   if (syncDiv) syncDiv.style.opacity = '0.3';
   if (!regenerateResponse) initializeRegenerateResponseButton();
   chatStreamIsClosed = false;
+  let existingInnerHTML = '';
+  let existingWordCount = 0;
+  let existingCharCount = 0;
+  if (continueGenerating) {
+    const incompleteAssistant = [...document.querySelectorAll('[id^="message-wrapper-"][data-role="assistant"]')].pop();
+    existingInnerHTML = incompleteAssistant.querySelector('[id^=message-text-]').innerHTML;
+    existingWordCount = incompleteAssistant.querySelector('[id^=message-text-]').innerText.split(/[ /]/).length;
+    existingCharCount = incompleteAssistant.querySelector('[id^=message-text-]').innerText.length;
+  }
   const saveHistory = conversation?.id ? conversation.saveHistory : settings.saveHistory;
-  arkose().then((arkoseRes) => generateChat(userInput, conversation?.id, messageId, parentId, arkoseRes.token, saveHistory).then((chatStream) => {
-    userChatIsActuallySaved = regenerateResponse;
-    let userChatSavedLocally = regenerateResponse; // false by default unless regenerateResponse is true
+  arkose().then((arkoseRes) => generateChat(userInput, conversation?.id, messageId, parentId, arkoseRes.token, saveHistory, 'user', continueGenerating ? 'continue' : 'next').then((chatStream) => {
+    userChatIsActuallySaved = regenerateResponse || continueGenerating;
+    let userChatSavedLocally = regenerateResponse || continueGenerating; // false by default unless regenerateResponse is true
     let assistantChatSavedLocally = false;
     let finalMessage = '';
     let finalConversationId = '';
@@ -484,7 +493,7 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
         isGenerating = false;
         chatStream.close();
         if (syncDiv) syncDiv.style.opacity = '1';
-        toggleTextAreaElemet();
+        toggleTextAreaElement();
         initializeStopGeneratingResponseButton();
         initializeRegenerateResponseButton();
         updateTotalCounter();
@@ -502,29 +511,31 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
             }
             initializeStopGeneratingResponseButton();
             // update gpt4 counter
-            chrome.storage.local.get(['gpt4Timestamps', 'settings', 'conversationLimit'], (result) => {
-              const { gpt4Timestamps } = result;
-              if (!result.settings.selectedModel.tags.includes('gpt4') && result.settings.selectedModel.slug !== 'gpt-4') return;
-              const now = new Date().getTime();
-              const gpt4CounterElement = document.querySelector('#gpt4-counter');
-              gpt4CounterElement.style.display = result.settings.showGpt4Counter ? 'block' : 'none';
-              const messageCap = result?.conversationLimit?.message_cap || 25;
-              const messageCapWindow = result?.conversationLimit?.message_cap_window || 180;
-              if (gpt4Timestamps) {
-                gpt4Timestamps.push(now);
-                const hoursAgo = now - (messageCapWindow / 60) * 60 * 60 * 1000;
-                const gpt4TimestampsFiltered = gpt4Timestamps.filter((timestamp) => timestamp > hoursAgo);
-                chrome.storage.local.set({ gpt4Timestamps: gpt4TimestampsFiltered, capExpiresAt: '' });
-                if (gpt4CounterElement) {
-                  gpt4CounterElement.innerText = `GPT4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): ${gpt4TimestampsFiltered.length}/${messageCap}`;
+            if (!continueGenerating) {
+              chrome.storage.local.get(['gpt4Timestamps', 'settings', 'conversationLimit'], (result) => {
+                const { gpt4Timestamps } = result;
+                if (!result.settings.selectedModel.tags.includes('gpt4') && result.settings.selectedModel.slug !== 'gpt-4') return;
+                const now = new Date().getTime();
+                const gpt4CounterElement = document.querySelector('#gpt4-counter');
+                gpt4CounterElement.style.display = result.settings.showGpt4Counter ? 'block' : 'none';
+                const messageCap = result?.conversationLimit?.message_cap || 25;
+                const messageCapWindow = result?.conversationLimit?.message_cap_window || 180;
+                if (gpt4Timestamps) {
+                  gpt4Timestamps.push(now);
+                  const hoursAgo = now - (messageCapWindow / 60) * 60 * 60 * 1000;
+                  const gpt4TimestampsFiltered = gpt4Timestamps.filter((timestamp) => timestamp > hoursAgo);
+                  chrome.storage.local.set({ gpt4Timestamps: gpt4TimestampsFiltered, capExpiresAt: '' });
+                  if (gpt4CounterElement) {
+                    gpt4CounterElement.innerText = `GPT4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): ${gpt4TimestampsFiltered.length}/${messageCap}`;
+                  }
+                } else {
+                  chrome.storage.local.set({ gpt4Timestamps: [now] });
+                  if (gpt4CounterElement) {
+                    gpt4CounterElement.innerText = `GPT4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): 1/${messageCap}`;
+                  }
                 }
-              } else {
-                chrome.storage.local.set({ gpt4Timestamps: [now] });
-                if (gpt4CounterElement) {
-                  gpt4CounterElement.innerText = `GPT4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): 1/${messageCap}`;
-                }
-              }
-            });
+              });
+            }
           }
 
           const data = JSON.parse(e.data);
@@ -592,13 +603,17 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
           if (role !== 'assistant' && role !== 'user') return;
           if (recipient !== 'all') return;
 
-          const existingRowAssistant = document.querySelector(`[id="message-wrapper-${message.id}"][data-role="assistant"]`);
+          const lastRowAssistant = [...document.querySelectorAll('[id^="message-wrapper-"][data-role="assistant"]')].pop();
+          const existingRowAssistant = continueGenerating ? lastRowAssistant : document.querySelector(`[id="message-wrapper-${message.id}"][data-role="assistant"]`);
+
           if (existingRowAssistant) {
             if (!scrolUpDetected) {
               document.querySelector('#conversation-bottom').scrollIntoView();
             }
-            const existingRowAssistantTextWrapper = existingRowAssistant.querySelector(`#message-text-${message.id}`);
-            const resultCounter = existingRowAssistant.querySelector(`#result-counter-${message.id}`);
+
+            const existingRowAssistantTextWrapper = existingRowAssistant.querySelector('[id^=message-text-]');
+
+            const resultCounter = existingRowAssistant.querySelector('[id^=result-counter-]');
             const searchValue = document.querySelector('#conversation-search')?.value;
             let messageContentParts = searchValue ? highlight(finalMessage.content.parts.join('\n'), searchValue) : finalMessage.content.parts.join('\n');
             const { citations } = finalMessage.metadata;
@@ -625,10 +640,11 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
                 delimiters: 'brackets',
                 katexOptions: { macros: { '\\RR': '\\mathbb{R}' } },
               }).render(messageContentParts);
-            const wordCount = messageContentParts.split(/[ /]/).length;
-            const charCount = messageContentParts.length;
+            const wordCount = messageContentParts.split(/[ /]/).length + existingWordCount;
+            const charCount = messageContentParts.replace(/\n/g, '').length + existingCharCount;
 
-            existingRowAssistantTextWrapper.innerHTML = `${messageContentPartsHTML}`;
+            existingRowAssistantTextWrapper.innerHTML = `${existingInnerHTML}${messageContentPartsHTML}`;
+
             resultCounter.innerHTML = `${charCount} chars / ${wordCount} words`;
           } else {
             const lastMessageWrapper = [...document.querySelectorAll('[id^="message-wrapper-"]')].pop();
@@ -798,8 +814,8 @@ function overrideSubmitForm() {
         const conversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
         const anyUserMessageWrappers = document.querySelectorAll('[id^="message-wrapper-"][data-role="user"]').length > 0;
         if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId) && anyUserMessageWrappers) {
-          chrome.storage.local.get(['conversations', 'settings', 'models']).then((res) => {
-            const { conversations, settings, models } = res;
+          chrome.storage.local.get(['conversations', 'models']).then((res) => {
+            const { conversations, models } = res;
             const conversation = conversations[conversationId];
             chrome.storage.sync.get(['name', 'avatar'], (result) => {
               let text = textAreaElement.value.trim();
@@ -848,8 +864,8 @@ ${settings.autoSplitChunkPrompt}`;
             });
           });
         } else {
-          chrome.storage.local.get(['settings', 'models']).then((res) => {
-            const { settings, models } = res;
+          chrome.storage.local.get(['models']).then((res) => {
+            const { models } = res;
             chrome.storage.sync.get(['name', 'avatar'], (result) => {
               let text = textAreaElement.value.trim();
               if (chunkNumber === 1) {

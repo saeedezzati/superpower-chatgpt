@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global getConversation, submitChat, openSubmitPromptModal, initializeRegenerateResponseButton, toggleTextAreaElemet, rowAssistant, rowUser, copyRichText, messageFeedback, openFeedbackModal, refreshConversations, initializeStopGeneratingResponseButton, chatStreamIsClosed:true, generateInstructions, isGenerating:true, scrolUpDetected:true, addScrollDetector, generateSuggestions */
+/* global getConversation, submitChat, openSubmitPromptModal, initializeRegenerateResponseButton, toggleTextAreaElement, rowAssistant, rowUser, copyRichText, messageFeedback, openFeedbackModal, refreshConversations, initializeStopGeneratingResponseButton, chatStreamIsClosed:true, generateInstructions, isGenerating:true, scrolUpDetected:true, addScrollDetector, generateSuggestions */
 
 function addPinNav(sortedNodes) {
   chrome.storage.local.get(['settings'], (res) => {
@@ -107,7 +107,7 @@ function loadConversationFromNode(conversationId, newMessageId, oldMessageId, se
       // inser messageDiv html above conversation bottom
       conversationBottom.insertAdjacentHTML('beforebegin', messageDiv);
 
-      toggleTextAreaElemet();
+      toggleTextAreaElement();
       addConversationsEventListeners(fullConversation.id);
       initializeRegenerateResponseButton();
       initializeStopGeneratingResponseButton();
@@ -186,7 +186,7 @@ function loadConversation(conversationId, searchValue = '', focusOnInput = true)
         if (message.recipient === 'all' && (message.role === 'assistant' || message.author?.role === 'assistant')) {
           let nextMessage = sortedNodes[i + 1]?.message;
           while (nextMessage && nextMessage.recipient === 'all' && (nextMessage.role === 'assistant' || nextMessage.author?.role === 'assistant')) {
-            message.content.parts = message.content.parts.concat(nextMessage.content.parts);
+            message.content.parts = [`${message.content.parts.join('')}${nextMessage.content.parts.join('')}`];
             i += 1;
             nextMessage = sortedNodes[i + 1]?.message;
           }
@@ -202,7 +202,7 @@ function loadConversation(conversationId, searchValue = '', focusOnInput = true)
       const bottomDivContent = document.createElement('div');
       bottomDivContent.classList = 'relative text-base gap-4 md:gap-6 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl flex lg:px-0';
       if (settings.customConversationWidth) {
-        bottomDivContent.style = `max-width: ${settings.conversationWidth}%`;
+        bottomDivContent.style = `max - width: ${settings.conversationWidth} % `;
       }
       bottomDiv.appendChild(bottomDivContent);
       const totalCounter = document.createElement('div');
@@ -229,7 +229,7 @@ function loadConversation(conversationId, searchValue = '', focusOnInput = true)
           searchElement.scrollIntoView();
         }
       }
-      toggleTextAreaElemet();
+      toggleTextAreaElement();
       addConversationsEventListeners(fullConversation.id);
       initializeRegenerateResponseButton();
       initializeStopGeneratingResponseButton();
@@ -299,24 +299,24 @@ function addConversationsEventListeners(conversationId) {
       chrome.storage.local.get(['conversations', 'settings', 'models'], (result) => {
         const conversation = result.conversations[conversationId];
         const messageId = button.id.split('edit-button-').pop();
-        const existingActionDiv = document.querySelector(`#action-div-${messageId}`);
+        const existingActionDiv = document.querySelector(`#action - div - ${messageId}`);
         if (existingActionDiv) return;
-        const oldElement = document.querySelector(`#message-text-${messageId}`);
+        const oldElement = document.querySelector(`#message - text - ${messageId}`);
         const userInput = oldElement.innerText;
         const textArea = document.createElement('textarea');
         textArea.classList = 'm-0 resize-none border-0 bg-transparent p-0 focus:ring-0 focus-visible:ring-0';
-        textArea.style = `height: ${oldElement.offsetHeight}px; overflow-y: hidden;`;
+        textArea.style = `height: ${oldElement.offsetHeight}px; overflow - y: hidden; `;
         textArea.value = userInput;
         textArea.spellcheck = false;
-        textArea.id = `message-text-${messageId}`;
+        textArea.id = `message - text - ${messageId} `;
         textArea.addEventListener('input', (e) => {
-          e.target.style.height = `${e.target.scrollHeight}px`;
+          e.target.style.height = `${e.target.scrollHeight} px`;
         });
         oldElement.parentElement.replaceChild(textArea, oldElement);
         textArea.focus();
         const actionDiv = document.createElement('div');
         actionDiv.classList = 'text-center mt-2 flex justify-center';
-        actionDiv.id = `action-div-${messageId}`;
+        actionDiv.id = `action - div - ${messageId} `;
         const saveButton = document.createElement('button');
         saveButton.classList = 'btn flex justify-center gap-2 btn-primary mr-2';
         saveButton.innerText = 'Save & Submit';
@@ -327,13 +327,13 @@ function addConversationsEventListeners(conversationId) {
           const newMessageId = self.crypto.randomUUID();
           const newElement = document.createElement('div');
           newElement.classList = oldElement.classList;
-          newElement.id = `message-text-${newMessageId}`;
+          newElement.id = `message - text - ${newMessageId} `;
           newElement.innerText = newMessage;
           textArea.parentElement.replaceChild(newElement, textArea);
           actionDiv.remove();
           // if (newMessage.trim() !== userInput.trim()) {
-          const messageWrapper = document.querySelector(`#message-wrapper-${messageId}`);
-          messageWrapper.id = `message-wrapper-${newMessageId}`;
+          const messageWrapper = document.querySelector(`#message - wrapper - ${messageId} `);
+          messageWrapper.id = `message - wrapper - ${newMessageId} `;
           const parent = messageWrapper.previousElementSibling;
           // default parentId to root message
           let parentId = Object.values(conversation.mapping).find((m) => m?.message?.author?.role === 'system')?.id;
@@ -343,11 +343,11 @@ function addConversationsEventListeners(conversationId) {
             messageWrapper.nextElementSibling.remove();
           }
           // messageWrapper.remove();
-          const threadCountWrapper = messageWrapper.querySelector(`#thread-count-wrapper-${messageId}`);
+          const threadCountWrapper = messageWrapper.querySelector(`#thread - count - wrapper - ${messageId} `);
           const [, childCount] = threadCountWrapper.textContent.split(' / ');
-          const threadPrevButton = messageWrapper.querySelector(`#thread-prev-button-${messageId}`);
+          const threadPrevButton = messageWrapper.querySelector(`#thread - prev - button - ${messageId} `);
           threadPrevButton.disabled = false;
-          const threadNextButton = messageWrapper.querySelector(`#thread-next-button-${messageId}`);
+          const threadNextButton = messageWrapper.querySelector(`#thread - next - button - ${messageId} `);
           threadNextButton.disabled = true;
           threadCountWrapper.innerText = `${parseInt(childCount, 10) + 1} / ${parseInt(childCount, 10) + 1}`;
           const threadButtonsWrapper = messageWrapper.querySelector(`#thread-buttons-wrapper-${messageId}`);

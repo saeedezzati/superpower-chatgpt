@@ -34,7 +34,7 @@ function rowAssistant(conversation, node, childIndex, childCount, models, custom
     }).render(messageContentParts);
 
   const wordCount = messageContentParts.split(/[ /]/).length;
-  const charCount = messageContentParts.length;
+  const charCount = messageContentParts.replace(/\n/g, '').length;
 
   // eslint-disable-next-line no-nested-ternary
   const avatarColor = (modelSlug?.includes('plugins') || modelSlug?.startsWith('gpt-4')) ? 'rgb(171, 104, 255)' : 'rgb(25, 195, 125)';

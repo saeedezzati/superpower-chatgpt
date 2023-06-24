@@ -274,6 +274,7 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
   addProgressBar();
   clearAllTimeouts();
   localConversations = {};
+
   const forceRefresh = true;
   getAllConversations(forceRefresh).then((remoteConversations) => {
     chrome.storage.sync.get(['conversationsOrder'], (res) => {
@@ -521,7 +522,6 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
   }, () => {
     // if the conversation history endpoint failed, set conversationsAreSynced to true
     chrome.storage.local.set({
-      conversations: localConversations,
       conversationsAreSynced: true,
     }, () => {
       clearTimeout(initializeTimoutId);
