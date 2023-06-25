@@ -28,7 +28,7 @@ function promptDropdown() {
         dropdownOption.style.color = 'lightslategray';
       }
       dropdownOption.innerText = promptTitle;
-      dropdownOption.title = `${promptTitle} - ${promptText}`;
+      dropdownOption.title = `${promptTitle}-${promptText}`;
       dropdownItem.appendChild(dropdownOption);
       dropdownItem.setAttribute('role', 'option');
       dropdownItem.setAttribute('tabindex', '-1');
