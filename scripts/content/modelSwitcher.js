@@ -1,7 +1,10 @@
 /* eslint-disable no-unused-vars */
-/* global getInstalledPlugins */
+/* global getInstalledPlugins, addArkoseScript */
 // eslint-disable-next-line no-unused-vars
 function modelSwitcher(models, selectedModel, idPrefix, customModels, forceDark = false) {
+  if (selectedModel.slug.includes('gpt-4')) {
+    addArkoseScript();
+  }
   return `<button id="${idPrefix}-model-switcher-button" class="relative w-full cursor-pointer rounded-md border ${forceDark ? 'border-white/20 bg-gray-800' : 'border-gray-300 bg-white'} pt-1 pl-3 pr-10 text-left focus:border-green-600 focus:outline-none focus:ring-1 focus:ring-green-600 dark:border-white/20 dark:bg-gray-800 sm:text-sm" type="button">
   <label class="block text-xs ${forceDark ? 'text-gray-500' : 'text-gray-700'} dark:text-gray-500">Model</label>
   <span class="inline-flex w-full truncate font-semibold ${forceDark ? 'text-gray-100' : 'text-gray-800'} dark:text-gray-100">
@@ -119,7 +122,9 @@ function addModelSwitcherEventListener(idPrefix, forceDark = false) {
             pluginsDropdownWrapper.style.display = 'none';
           }
         }
-        chrome.storage.local.set({ settings: { ...settings, selectedModel } });
+        chrome.storage.local.set({ settings: { ...settings, selectedModel } }, () => {
+          addArkoseScript();
+        });
       });
     });
     chrome.storage.onChanged.addListener((e) => {

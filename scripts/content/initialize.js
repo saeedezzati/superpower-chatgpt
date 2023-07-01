@@ -1,14 +1,15 @@
-/* global getAccount, getModels, getConversationLimit, initializeStorage, cleanNav, initializeContinue, initializeExport, initializeSettings, initializePromptHistory, initializePromptLibrary, initializeNewsletter, initializeAutoSave, addNavToggleButton, initializeAnnouncement, initializeReleaseNote, initializeReplaceDeleteConversationButton, initializeCopyAndCounter, initializeAddToPromptLibrary, initializeTimestamp, updateNewChatButtonNotSynced, addAsyncInputEvents, initializeContentMessageListeners, registerShortkeys, addDevIndicator, addExpandButton, openLinksInNewTab, getArkose */
+/* global getAccount, getModels, getConversationLimit, initializeStorage, cleanNav, initializeContinue, initializeExport, initializeSettings, initializePromptHistory, initializePromptLibrary, initializeNewsletter, initializeAutoSave, addNavToggleButton, initializeAnnouncement, initializeReleaseNote, initializeReplaceDeleteConversationButton, initializeCopyAndCounter, initializeAddToPromptLibrary, initializeTimestamp, updateNewChatButtonNotSynced, addAsyncInputEvents, initializeContentMessageListeners, registerShortkeys, addDevIndicator, addExpandButton, openLinksInNewTab, addEnforcementTriggerElement, addArkoseCallback */
 
 // eslint-disable-next-line no-unused-vars
 function initialize() {
   const historyButton = document.querySelector('a[id="my-prompt-history-button"]');
   if (window.location.pathname.startsWith('/share/') && !window.location.pathname.endsWith('/continue')) return;
+
   if (!historyButton) {
     setTimeout(() => {
       initializeStorage().then(() => {
         registerShortkeys();
-        getArkose();
+        addEnforcementTriggerElement();
         getAccount();
         getModels();
         getConversationLimit();
@@ -26,11 +27,13 @@ function initialize() {
         initializePromptHistory();
         addExpandButton();
         addDevIndicator();
+        addArkoseCallback();
+
         setTimeout(() => {
           chrome.storage.local.get(['settings'], (result) => {
             const { settings } = result;
             if ((typeof settings?.autoSync === 'undefined' || settings?.autoSync) && !window.location.pathname.startsWith('/share/')) {
-            // if (typeof settings?.autoSync === 'undefined' || settings?.autoSync) {
+              // if (typeof settings?.autoSync === 'undefined' || settings?.autoSync) {
               initializeAutoSave();
             } else {
               initializeCopyAndCounter();

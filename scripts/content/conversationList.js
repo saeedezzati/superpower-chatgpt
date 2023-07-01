@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global markdown, markdownitSup, initializeNavbar, generateInstructions, generateChat, SSE, formatDate, loadConversation, resetSelection, katex, texmath, rowUser, rowAssistant, updateOrCreateConversation, replaceTextAreaElemet, highlight, isGenerating:true, disableTextInput:true, generateTitle, debounce, initializeRegenerateResponseButton, initializeStopGeneratingResponseButton, toggleTextAreaElement, showNewChatPage, chatStreamIsClosed:true, addCopyCodeButtonsEventListeners, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams, addScrollButtons, updateTotalCounter, isWindows, loadSharedConversation, createTemplateWordsModal, arkose */
+/* global markdown, markdownitSup, initializeNavbar, generateInstructions, generateChat, SSE, formatDate, loadConversation, resetSelection, katex, texmath, rowUser, rowAssistant, updateOrCreateConversation, replaceTextAreaElemet, highlight, isGenerating:true, disableTextInput:true, generateTitle, debounce, initializeRegenerateResponseButton, initializeStopGeneratingResponseButton, toggleTextAreaElement, showNewChatPage, chatStreamIsClosed:true, addCopyCodeButtonsEventListeners, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams, addScrollButtons, updateTotalCounter, isWindows, loadSharedConversation, createTemplateWordsModal */
 
 // Initial state
 let userChatIsActuallySaved = false;
@@ -429,290 +429,304 @@ function updateNewChatButtonSynced() {
   });
 }
 function submitChat(userInput, conversation, messageId, parentId, settings, models, continueGenerating = false, regenerateResponse = false) {
-  scrolUpDetected = false;
-  const curSubmitButton = document.querySelector('main').querySelector('form').querySelector('textarea ~ button');
-  curSubmitButton.disabled = true;
-  curSubmitButton.innerHTML = '<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"> <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"></circle> <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path> </svg>';
-  const syncDiv = document.getElementById('sync-div');
-  if (syncDiv) syncDiv.style.opacity = '0.3';
-  if (!regenerateResponse) initializeRegenerateResponseButton();
-  chatStreamIsClosed = false;
-  let existingInnerHTML = '';
-  let existingWordCount = 0;
-  let existingCharCount = 0;
-  if (continueGenerating) {
-    const incompleteAssistant = [...document.querySelectorAll('[id^="message-wrapper-"][data-role="assistant"]')].pop();
-    existingInnerHTML = incompleteAssistant.querySelector('[id^=message-text-]').innerHTML;
-    existingWordCount = incompleteAssistant.querySelector('[id^=message-text-]').innerText.split(/[ /]/).length;
-    existingCharCount = incompleteAssistant.querySelector('[id^=message-text-]').innerText.length;
-  }
-  const saveHistory = conversation?.id ? conversation.saveHistory : settings.saveHistory;
-  arkose().then((arkoseRes) => generateChat(userInput, conversation?.id, messageId, parentId, arkoseRes.token, saveHistory, 'user', continueGenerating ? 'continue' : 'next').then((chatStream) => {
-    userChatIsActuallySaved = regenerateResponse || continueGenerating;
-    let userChatSavedLocally = regenerateResponse || continueGenerating; // false by default unless regenerateResponse is true
-    let assistantChatSavedLocally = false;
-    let finalMessage = '';
-    let finalConversationId = '';
-    let initialUserMessage = {};
-    let systemMessage = {};
-    chatStream.addEventListener('message', (e) => {
-      if (e.data === '[DONE]' || chatStreamIsClosed) {
-        const main = document.querySelector('main');
-        const inputForm = main.querySelector('form');
-        const submitButton = inputForm.querySelector('textarea ~ button');
-        const textAreaElement = inputForm.querySelector('textarea');
-        textAreaElement.focus();
-        // submitButton.disabled = false;
-        submitButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" class="h-4 w-4" stroke-width="2"><path d="M.5 1.163A1 1 0 0 1 1.97.28l12.868 6.837a1 1 0 0 1 0 1.766L1.969 15.72A1 1 0 0 1 .5 14.836V10.33a1 1 0 0 1 .816-.983L8.5 8 1.316 6.653A1 1 0 0 1 .5 5.67V1.163Z" fill="currentColor"></path></svg>';
-        if (chatStreamIsClosed && e.data !== '[DONE]') {
-          const data = JSON.parse(e.data);
-          if (data.error) throw new Error(data.error);
-          const { conversation_id: conversationId, message } = data;
-          finalConversationId = conversationId;
-          finalMessage = message;
-          // reset splitter stuff
+  // check window. localstorage every 200ms until arkoseToken is set
+  let arkoseToken;
+  const startTime = Date.now();
+  const interval = setInterval(() => {
+    arkoseToken = window.localStorage.getItem('arkoseToken');
+    if (Date.now() - startTime > 30000) {
+      clearInterval(interval);
+      return;
+    }
+    if (arkoseToken || !settings.selectedModel.slug.includes('gpt-4')) {
+      clearInterval(interval);
+
+      scrolUpDetected = false;
+      const curSubmitButton = document.querySelector('main').querySelector('form').querySelector('textarea ~ button');
+      curSubmitButton.disabled = true;
+      curSubmitButton.innerHTML = '<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"> <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"></circle> <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path> </svg>';
+      const syncDiv = document.getElementById('sync-div');
+      if (syncDiv) syncDiv.style.opacity = '0.3';
+      if (!regenerateResponse) initializeRegenerateResponseButton();
+      chatStreamIsClosed = false;
+      let existingInnerHTML = '';
+      let existingWordCount = 0;
+      let existingCharCount = 0;
+      if (continueGenerating) {
+        const incompleteAssistant = [...document.querySelectorAll('[id^="message-wrapper-"][data-role="assistant"]')].pop();
+        existingInnerHTML = incompleteAssistant.querySelector('[id^=message-text-]').innerHTML;
+        existingWordCount = incompleteAssistant.querySelector('[id^=message-text-]').innerText.split(/[ /]/).length;
+        existingCharCount = incompleteAssistant.querySelector('[id^=message-text-]').innerText.length;
+      }
+      const saveHistory = conversation?.id ? conversation.saveHistory : settings.saveHistory;
+      generateChat(userInput, conversation?.id, messageId, parentId, arkoseToken, saveHistory, 'user', continueGenerating ? 'continue' : 'next').then((chatStream) => {
+        userChatIsActuallySaved = regenerateResponse || continueGenerating;
+        let userChatSavedLocally = regenerateResponse || continueGenerating; // false by default unless regenerateResponse is true
+        let assistantChatSavedLocally = false;
+        let finalMessage = '';
+        let finalConversationId = '';
+        let initialUserMessage = {};
+        let systemMessage = {};
+        chatStream.addEventListener('message', (e) => {
+          if (e.data === '[DONE]' || chatStreamIsClosed) {
+            const main = document.querySelector('main');
+            const inputForm = main.querySelector('form');
+            const submitButton = inputForm.querySelector('textarea ~ button');
+            const textAreaElement = inputForm.querySelector('textarea');
+            textAreaElement.focus();
+            // submitButton.disabled = false;
+            submitButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" class="h-4 w-4" stroke-width="2"><path d="M.5 1.163A1 1 0 0 1 1.97.28l12.868 6.837a1 1 0 0 1 0 1.766L1.969 15.72A1 1 0 0 1 .5 14.836V10.33a1 1 0 0 1 .816-.983L8.5 8 1.316 6.653A1 1 0 0 1 .5 5.67V1.163Z" fill="currentColor"></path></svg>';
+            if (chatStreamIsClosed && e.data !== '[DONE]') {
+              const data = JSON.parse(e.data);
+              if (data.error) throw new Error(data.error);
+              const { conversation_id: conversationId, message } = data;
+              finalConversationId = conversationId;
+              finalMessage = message;
+              // reset splitter stuff
+              chunkNumber = 1;
+              totalChunks = 1;
+              remainingText = '';
+              finalSummary = '';
+              shouldSubmitFinalSummary = false;
+              // update rowAssistant?
+            }
+            const tempId = setInterval(() => {
+              if (userChatIsActuallySaved) {
+                clearInterval(tempId);
+                updateOrCreateConversation(finalConversationId, finalMessage, messageId, settings, true, chatStreamIsClosed).then(() => {
+                  if (!chatStreamIsClosed) {
+                    setTimeout(() => {
+                      insertNextChunk(settings, finalMessage);
+                    }, 700);
+                  }
+                });
+              }
+            }, 1000);
+            isGenerating = false;
+            chatStream.close();
+            if (syncDiv) syncDiv.style.opacity = '1';
+            toggleTextAreaElement();
+            initializeStopGeneratingResponseButton();
+            initializeRegenerateResponseButton();
+            updateTotalCounter();
+          } else if (e.event === 'ping') {
+            // console.error('PING RECEIVED', e);
+          } else {
+            try {
+              isGenerating = true;
+              if (finalMessage === '') {
+                const pluginDropdownButton = document.querySelector('#navbar-plugins-dropdown-button');
+                if (pluginDropdownButton) {
+                  pluginDropdownButton.disabled = true;
+                  pluginDropdownButton.style.opacity = 0.75;
+                  pluginDropdownButton.title = 'Changing plugins in the middle of the conversation is not allowed';
+                }
+                initializeStopGeneratingResponseButton();
+                // update gpt4 counter
+                if (!continueGenerating) {
+                  chrome.storage.local.get(['gpt4Timestamps', 'settings', 'conversationLimit'], (result) => {
+                    const { gpt4Timestamps } = result;
+                    if (!result.settings.selectedModel.tags.includes('gpt4') && result.settings.selectedModel.slug !== 'gpt-4') return;
+                    const now = new Date().getTime();
+                    const gpt4CounterElement = document.querySelector('#gpt4-counter');
+                    gpt4CounterElement.style.display = result.settings.showGpt4Counter ? 'block' : 'none';
+                    const messageCap = result?.conversationLimit?.message_cap || 25;
+                    const messageCapWindow = result?.conversationLimit?.message_cap_window || 180;
+                    if (gpt4Timestamps) {
+                      gpt4Timestamps.push(now);
+                      const hoursAgo = now - (messageCapWindow / 60) * 60 * 60 * 1000;
+                      const gpt4TimestampsFiltered = gpt4Timestamps.filter((timestamp) => timestamp > hoursAgo);
+                      chrome.storage.local.set({ gpt4Timestamps: gpt4TimestampsFiltered, capExpiresAt: '' });
+                      if (gpt4CounterElement) {
+                        gpt4CounterElement.innerText = `GPT4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): ${gpt4TimestampsFiltered.length}/${messageCap}`;
+                      }
+                    } else {
+                      chrome.storage.local.set({ gpt4Timestamps: [now] });
+                      if (gpt4CounterElement) {
+                        gpt4CounterElement.innerText = `GPT4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): 1/${messageCap}`;
+                      }
+                    }
+                  });
+                }
+              }
+
+              const data = JSON.parse(e.data);
+
+              if (data.error) throw new Error(data.error);
+              const { conversation_id: conversationId, message } = data;
+              const { role } = message.author;
+              const { recipient } = message;
+
+              finalConversationId = conversationId;
+              const { pathname } = new URL(window.location.toString());
+              const urlConversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
+              if (pathname === '/') { // https://chat.openai.com/
+                // only change url if there are any user messages. if user switch to new page while generating, don't change url when done generating
+                const anyUserMessageWrappers = document.querySelectorAll('[id^="message-wrapper-"][data-role="user"]').length > 0;
+                if (anyUserMessageWrappers) {
+                  window.history.pushState({}, '', `https://chat.openai.com/c/${finalConversationId}`);
+                }
+              }
+              // save user chat locally
+              if (!conversation?.id) {
+                if (role === 'system') {
+                  systemMessage = message;
+                  return;
+                }
+                if (role === 'user') {
+                  initialUserMessage = message;
+                  initialUserMessage.metadata = { ...initialUserMessage.metadata, model_slug: settings.selectedModel.slug };
+                  // set forcerefresh=true when adding user chat, and set it to false when stream ends. This way if something goes wrong in between, the conversation will be refreshed later
+                  updateOrCreateConversation(finalConversationId, initialUserMessage, parentId, settings, false, true, systemMessage);
+                  return;
+                }
+              } else if (!userChatSavedLocally) {
+                const userMessage = {
+                  id: messageId,
+                  role: 'user',
+                  content: {
+                    content_type: 'text',
+                    parts: [userInput],
+                  },
+                  metadata: { model_slug: settings.selectedModel.slug },
+                };
+
+                // set forcerefresh=true when adding user chat, and set it to false when stream ends. This way if something goes wrong in between, the conversation will be refreshed later
+                updateOrCreateConversation(finalConversationId, userMessage, parentId, settings, false, true);
+                userChatSavedLocally = true;
+              }
+              if (!conversation?.id || userChatSavedLocally) {
+                // save assistant chat locally
+                finalMessage = message;
+                if (!assistantChatSavedLocally && message.author.role === 'assistant' && message.recipient === 'all') {
+                  assistantChatSavedLocally = true;
+                  const tempId = setInterval(() => {
+                    if (userChatIsActuallySaved) {
+                      clearInterval(tempId);
+                      updateOrCreateConversation(finalConversationId, finalMessage, messageId, settings);
+                    }
+                  }, 1000);
+                }
+              }
+
+              // if user switch conv while generating, dont show the assistant row until the user switch back to the original conv
+              if (finalConversationId !== urlConversationId) return;
+
+              if (role !== 'assistant' && role !== 'user') return;
+              if (recipient !== 'all') return;
+
+              const lastRowAssistant = [...document.querySelectorAll('[id^="message-wrapper-"][data-role="assistant"]')].pop();
+              const existingRowAssistant = continueGenerating ? lastRowAssistant : document.querySelector(`[id="message-wrapper-${message.id}"][data-role="assistant"]`);
+
+              if (existingRowAssistant) {
+                if (!scrolUpDetected) {
+                  document.querySelector('#conversation-bottom').scrollIntoView();
+                }
+
+                const existingRowAssistantTextWrapper = existingRowAssistant.querySelector('[id^=message-text-]');
+
+                const resultCounter = existingRowAssistant.querySelector('[id^=result-counter-]');
+                const searchValue = document.querySelector('#conversation-search')?.value;
+                let messageContentParts = searchValue ? highlight(finalMessage.content.parts.join('\n'), searchValue) : finalMessage.content.parts.join('\n');
+                const { citations } = finalMessage.metadata;
+                if (citations?.length > 0) {
+                  citations.reverse().forEach((citation, index) => {
+                    const startIndex = citation.start_ix;
+                    const endIndex = citation.end_ix;
+                    const citationMetadata = citation.metadata;
+                    const { url } = citationMetadata;
+                    // number 1 with link to  url
+                    let citationText = `[^1^](${url})`;
+                    if (endIndex === citations[index - 1]?.start_ix) {
+                      citationText = '';
+                    }
+
+                    messageContentParts = messageContentParts.replace(messageContentParts.substring(startIndex, endIndex), citationText);
+                  });
+                }
+
+                const messageContentPartsHTML = markdown('assistant')
+                  .use(markdownitSup)
+                  .use(texmath, {
+                    engine: katex,
+                    delimiters: 'brackets',
+                    katexOptions: { macros: { '\\RR': '\\mathbb{R}' } },
+                  }).render(messageContentParts);
+                const wordCount = messageContentParts.split(/[ /]/).length + existingWordCount;
+                const charCount = messageContentParts.replace(/\n/g, '').length + existingCharCount;
+
+                existingRowAssistantTextWrapper.innerHTML = `${existingInnerHTML}${messageContentPartsHTML}`;
+
+                resultCounter.innerHTML = `${charCount} chars / ${wordCount} words`;
+              } else {
+                const lastMessageWrapper = [...document.querySelectorAll('[id^="message-wrapper-"]')].pop();
+                if (lastMessageWrapper?.dataset?.role !== 'assistant') {
+                  const existingRowUser = document.querySelector(`[id="message-wrapper-${messageId}"][data-role="user"]`);
+                  if (existingRowUser) {
+                    let threadCount = Object.keys(conversation).length > 0 ? conversation?.mapping[messageId]?.children?.length || 1 : 1;
+                    if (regenerateResponse) threadCount += 1;
+                    const assistantRow = rowAssistant(conversation, data, threadCount, threadCount, models, settings.customConversationWidth, settings.conversationWidth);
+                    const conversationBottom = document.querySelector('#conversation-bottom');
+                    conversationBottom.insertAdjacentHTML('beforebegin', assistantRow);
+                    if (!scrolUpDetected) {
+                      conversationBottom.scrollIntoView();
+                    }
+                  }
+                }
+              }
+              // addCopyCodeButtonsEventListeners();
+            } catch (err) {
+              syncDiv.style.opacity = '1';
+              // if (err.message === 'Unexpected end of JSON input') {
+              // }
+            }
+          }
+        });
+        chatStream.addEventListener('error', (err) => {
+          isGenerating = false;
           chunkNumber = 1;
           totalChunks = 1;
           remainingText = '';
           finalSummary = '';
           shouldSubmitFinalSummary = false;
-          // update rowAssistant?
-        }
-        const tempId = setInterval(() => {
-          if (userChatIsActuallySaved) {
-            clearInterval(tempId);
-            updateOrCreateConversation(finalConversationId, finalMessage, messageId, settings, true, chatStreamIsClosed).then(() => {
-              if (!chatStreamIsClosed) {
-                setTimeout(() => {
-                  insertNextChunk(settings, finalMessage);
-                }, 700);
-              }
-            });
-          }
-        }, 1000);
-        isGenerating = false;
-        chatStream.close();
-        if (syncDiv) syncDiv.style.opacity = '1';
-        toggleTextAreaElement();
-        initializeStopGeneratingResponseButton();
-        initializeRegenerateResponseButton();
-        updateTotalCounter();
-      } else if (e.event === 'ping') {
-        // console.error('PING RECEIVED', e);
-      } else {
-        try {
-          isGenerating = true;
-          if (finalMessage === '') {
-            const pluginDropdownButton = document.querySelector('#navbar-plugins-dropdown-button');
-            if (pluginDropdownButton) {
-              pluginDropdownButton.disabled = true;
-              pluginDropdownButton.style.opacity = 0.75;
-              pluginDropdownButton.title = 'Changing plugins in the middle of the conversation is not allowed';
-            }
-            initializeStopGeneratingResponseButton();
-            // update gpt4 counter
-            if (!continueGenerating) {
-              chrome.storage.local.get(['gpt4Timestamps', 'settings', 'conversationLimit'], (result) => {
-                const { gpt4Timestamps } = result;
-                if (!result.settings.selectedModel.tags.includes('gpt4') && result.settings.selectedModel.slug !== 'gpt-4') return;
-                const now = new Date().getTime();
-                const gpt4CounterElement = document.querySelector('#gpt4-counter');
-                gpt4CounterElement.style.display = result.settings.showGpt4Counter ? 'block' : 'none';
-                const messageCap = result?.conversationLimit?.message_cap || 25;
-                const messageCapWindow = result?.conversationLimit?.message_cap_window || 180;
-                if (gpt4Timestamps) {
-                  gpt4Timestamps.push(now);
-                  const hoursAgo = now - (messageCapWindow / 60) * 60 * 60 * 1000;
-                  const gpt4TimestampsFiltered = gpt4Timestamps.filter((timestamp) => timestamp > hoursAgo);
-                  chrome.storage.local.set({ gpt4Timestamps: gpt4TimestampsFiltered, capExpiresAt: '' });
-                  if (gpt4CounterElement) {
-                    gpt4CounterElement.innerText = `GPT4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): ${gpt4TimestampsFiltered.length}/${messageCap}`;
-                  }
-                } else {
-                  chrome.storage.local.set({ gpt4Timestamps: [now] });
-                  if (gpt4CounterElement) {
-                    gpt4CounterElement.innerText = `GPT4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): 1/${messageCap}`;
-                  }
-                }
-              });
-            }
-          }
-
-          const data = JSON.parse(e.data);
-
-          if (data.error) throw new Error(data.error);
-          const { conversation_id: conversationId, message } = data;
-          const { role } = message.author;
-          const { recipient } = message;
-
-          finalConversationId = conversationId;
-          const { pathname } = new URL(window.location.toString());
-          const urlConversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
-          if (pathname === '/') { // https://chat.openai.com/
-            // only change url if there are any user messages. if user switch to new page while generating, don't change url when done generating
-            const anyUserMessageWrappers = document.querySelectorAll('[id^="message-wrapper-"][data-role="user"]').length > 0;
-            if (anyUserMessageWrappers) {
-              window.history.pushState({}, '', `https://chat.openai.com/c/${finalConversationId}`);
-            }
-          }
-          // save user chat locally
-          if (!conversation?.id) {
-            if (role === 'system') {
-              systemMessage = message;
-              return;
-            }
-            if (role === 'user') {
-              initialUserMessage = message;
-              initialUserMessage.metadata = { ...initialUserMessage.metadata, model_slug: settings.selectedModel.slug };
-              // set forcerefresh=true when adding user chat, and set it to false when stream ends. This way if something goes wrong in between, the conversation will be refreshed later
-              updateOrCreateConversation(finalConversationId, initialUserMessage, parentId, settings, false, true, systemMessage);
-              return;
-            }
-          } else if (!userChatSavedLocally) {
-            const userMessage = {
-              id: messageId,
-              role: 'user',
-              content: {
-                content_type: 'text',
-                parts: [userInput],
-              },
-              metadata: { model_slug: settings.selectedModel.slug },
-            };
-
-            // set forcerefresh=true when adding user chat, and set it to false when stream ends. This way if something goes wrong in between, the conversation will be refreshed later
-            updateOrCreateConversation(finalConversationId, userMessage, parentId, settings, false, true);
-            userChatSavedLocally = true;
-          }
-          if (!conversation?.id || userChatSavedLocally) {
-            // save assistant chat locally
-            finalMessage = message;
-            if (!assistantChatSavedLocally && message.author.role === 'assistant' && message.recipient === 'all') {
-              assistantChatSavedLocally = true;
-              const tempId = setInterval(() => {
-                if (userChatIsActuallySaved) {
-                  clearInterval(tempId);
-                  updateOrCreateConversation(finalConversationId, finalMessage, messageId, settings);
-                }
-              }, 1000);
-            }
-          }
-
-          // if user switch conv while generating, dont show the assistant row until the user switch back to the original conv
-          if (finalConversationId !== urlConversationId) return;
-
-          if (role !== 'assistant' && role !== 'user') return;
-          if (recipient !== 'all') return;
-
-          const lastRowAssistant = [...document.querySelectorAll('[id^="message-wrapper-"][data-role="assistant"]')].pop();
-          const existingRowAssistant = continueGenerating ? lastRowAssistant : document.querySelector(`[id="message-wrapper-${message.id}"][data-role="assistant"]`);
-
-          if (existingRowAssistant) {
-            if (!scrolUpDetected) {
-              document.querySelector('#conversation-bottom').scrollIntoView();
-            }
-
-            const existingRowAssistantTextWrapper = existingRowAssistant.querySelector('[id^=message-text-]');
-
-            const resultCounter = existingRowAssistant.querySelector('[id^=result-counter-]');
-            const searchValue = document.querySelector('#conversation-search')?.value;
-            let messageContentParts = searchValue ? highlight(finalMessage.content.parts.join('\n'), searchValue) : finalMessage.content.parts.join('\n');
-            const { citations } = finalMessage.metadata;
-            if (citations?.length > 0) {
-              citations.reverse().forEach((citation, index) => {
-                const startIndex = citation.start_ix;
-                const endIndex = citation.end_ix;
-                const citationMetadata = citation.metadata;
-                const { url } = citationMetadata;
-                // number 1 with link to  url
-                let citationText = `[^1^](${url})`;
-                if (endIndex === citations[index - 1]?.start_ix) {
-                  citationText = '';
-                }
-
-                messageContentParts = messageContentParts.replace(messageContentParts.substring(startIndex, endIndex), citationText);
-              });
-            }
-
-            const messageContentPartsHTML = markdown('assistant')
-              .use(markdownitSup)
-              .use(texmath, {
-                engine: katex,
-                delimiters: 'brackets',
-                katexOptions: { macros: { '\\RR': '\\mathbb{R}' } },
-              }).render(messageContentParts);
-            const wordCount = messageContentParts.split(/[ /]/).length + existingWordCount;
-            const charCount = messageContentParts.replace(/\n/g, '').length + existingCharCount;
-
-            existingRowAssistantTextWrapper.innerHTML = `${existingInnerHTML}${messageContentPartsHTML}`;
-
-            resultCounter.innerHTML = `${charCount} chars / ${wordCount} words`;
-          } else {
-            const lastMessageWrapper = [...document.querySelectorAll('[id^="message-wrapper-"]')].pop();
-            if (lastMessageWrapper?.dataset?.role !== 'assistant') {
-              const existingRowUser = document.querySelector(`[id="message-wrapper-${messageId}"][data-role="user"]`);
-              if (existingRowUser) {
-                let threadCount = Object.keys(conversation).length > 0 ? conversation?.mapping[messageId]?.children?.length || 1 : 1;
-                if (regenerateResponse) threadCount += 1;
-                const assistantRow = rowAssistant(conversation, data, threadCount, threadCount, models, settings.customConversationWidth, settings.conversationWidth);
-                const conversationBottom = document.querySelector('#conversation-bottom');
-                conversationBottom.insertAdjacentHTML('beforebegin', assistantRow);
-                if (!scrolUpDetected) {
-                  conversationBottom.scrollIntoView();
-                }
-              }
-            }
-          }
-          // addCopyCodeButtonsEventListeners();
-        } catch (err) {
           syncDiv.style.opacity = '1';
-          // if (err.message === 'Unexpected end of JSON input') {
-          // }
-        }
-      }
-    });
-    chatStream.addEventListener('error', (err) => {
-      isGenerating = false;
-      chunkNumber = 1;
-      totalChunks = 1;
-      remainingText = '';
-      finalSummary = '';
-      shouldSubmitFinalSummary = false;
-      syncDiv.style.opacity = '1';
-      const main = document.querySelector('main');
-      const inputForm = main.querySelector('form');
-      const submitButton = inputForm.querySelector('textarea ~ button');
-      // submitButton.disabled = false;
-      submitButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" class="h-4 w-4" stroke-width="2"><path d="M.5 1.163A1 1 0 0 1 1.97.28l12.868 6.837a1 1 0 0 1 0 1.766L1.969 15.72A1 1 0 0 1 .5 14.836V10.33a1 1 0 0 1 .816-.983L8.5 8 1.316 6.653A1 1 0 0 1 .5 5.67V1.163Z" fill="currentColor"></path></svg>';
-      console.warn(err);
-      if (err.data) {
-        const error = JSON.parse(err.data);
-        const errorCode = error?.detail?.code;
-        let errorMessage = typeof error.detail === 'string' ? error.detail : error.detail.message;
-        if (errorCode === 'model_cap_exceeded') {
-          // seconds until cap is cleared
-          const clearsIn = error?.detail?.clears_in;
-          const date = new Date();
-          date.setSeconds(date.getSeconds() + clearsIn);
-          // print expire hour minute from local time
-          const hour = date.getHours();
-          const minute = date.getMinutes();
-          const ampm = hour >= 12 ? 'pm' : 'am';
-          const hour12 = hour % 12;
-          const hour12Display = hour12 || 12;
-          const minuteDisplay = minute < 10 ? `0${minute}` : minute;
-          const capExpiresAt = `${hour12Display}:${minuteDisplay}${ampm}`;
-          chrome.storage.local.set({ capExpiresAt });
-          errorMessage = `You've reached the current usage cap for this model. You can continue with the default model now, or try again after ${capExpiresAt}.`;
-        } else {
-          chrome.storage.local.set({ capExpiresAt: '' });
-        }
-        const conversationBottom = document.querySelector('#conversation-bottom');
-        const errorMessageElement = `<div style="max-width:400px" class="py-2 px-3 my-2 border text-gray-600 rounded-md text-sm dark:text-gray-100 border-red-500 bg-red-500/10">${errorMessage}</div>`;
-        conversationBottom.insertAdjacentHTML('beforebegin', errorMessageElement);
-        conversationBottom.scrollIntoView({ behavior: 'smooth' });
-      }
-    });
-  }));
+          const main = document.querySelector('main');
+          const inputForm = main.querySelector('form');
+          const submitButton = inputForm.querySelector('textarea ~ button');
+          // submitButton.disabled = false;
+          submitButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" class="h-4 w-4" stroke-width="2"><path d="M.5 1.163A1 1 0 0 1 1.97.28l12.868 6.837a1 1 0 0 1 0 1.766L1.969 15.72A1 1 0 0 1 .5 14.836V10.33a1 1 0 0 1 .816-.983L8.5 8 1.316 6.653A1 1 0 0 1 .5 5.67V1.163Z" fill="currentColor"></path></svg>';
+          console.warn(err);
+          if (err.data) {
+            const error = JSON.parse(err.data);
+            const errorCode = error?.detail?.code;
+            let errorMessage = typeof error.detail === 'string' ? error.detail : error.detail.message;
+            if (errorCode === 'model_cap_exceeded') {
+              // seconds until cap is cleared
+              const clearsIn = error?.detail?.clears_in;
+              const date = new Date();
+              date.setSeconds(date.getSeconds() + clearsIn);
+              // print expire hour minute from local time
+              const hour = date.getHours();
+              const minute = date.getMinutes();
+              const ampm = hour >= 12 ? 'pm' : 'am';
+              const hour12 = hour % 12;
+              const hour12Display = hour12 || 12;
+              const minuteDisplay = minute < 10 ? `0${minute}` : minute;
+              const capExpiresAt = `${hour12Display}:${minuteDisplay}${ampm}`;
+              chrome.storage.local.set({ capExpiresAt });
+              errorMessage = `You've reached the current usage cap for this model. You can continue with the default model now, or try again after ${capExpiresAt}.`;
+            } else {
+              chrome.storage.local.set({ capExpiresAt: '' });
+            }
+            const conversationBottom = document.querySelector('#conversation-bottom');
+            const errorMessageElement = `<div style="max-width:400px" class="py-2 px-3 my-2 border text-gray-600 rounded-md text-sm dark:text-gray-100 border-red-500 bg-red-500/10">${errorMessage}</div>`;
+            conversationBottom.insertAdjacentHTML('beforebegin', errorMessageElement);
+            conversationBottom.scrollIntoView({ behavior: 'smooth' });
+          }
+        });
+      });
+    }
+  }, 200);
 }
 function submitFinalSummary() {
   if (!shouldSubmitFinalSummary) return;
@@ -791,12 +805,16 @@ function overrideSubmitForm() {
   const inputForm = main.querySelector('form');
   if (!inputForm) return;
   inputForm.addEventListener('submit', (e) => {
+    window.localStorage.removeItem('arkoseToken');
     const textAreaElement = inputForm.querySelector('textarea');
     e.preventDefault();
     e.stopPropagation();
     if (isGenerating) return;
     // get all words wrapped in {{ and }}
     chrome.storage.local.get(['settings'], ({ settings }) => {
+      if (settings.selectedModel.slug.includes('gpt-4')) {
+        inputForm.querySelector('#enforcement-trigger').click();
+      }
       const templateWords = textAreaElement.value.match(/{{(.*?)}}/g);
       if (settings.promptTemplate && templateWords?.length > 0) {
         // open template words modal and wait for user to select a word. the when user submit, submit the input form with the replacement
@@ -964,27 +982,33 @@ ${settings.autoSplitChunkPrompt}`;
   const submitButtonClone = submitButton.cloneNode(true);
   submitButtonClone.type = 'button';
   submitButtonClone.addEventListener('click', () => {
-    const textAreaElement = inputForm.querySelector('textarea');
-    if (isGenerating) return;
-    const templateWords = textAreaElement.value.match(/{{(.*?)}}/g);
-    if (templateWords?.length > 0) {
-      // open template words modal and wait for user to select a word. the when user submit, submit the input form with the replacement
-      createTemplateWordsModal(templateWords);
-      const firstTemplateWordInput = document.querySelector('[id^=template-input-]');
-      if (firstTemplateWordInput) {
-        firstTemplateWordInput.focus();
-        setTimeout(() => {
-          firstTemplateWordInput.value = '';
-        }, 100);
+    window.localStorage.removeItem('arkoseToken');
+    chrome.storage.local.get(['settings'], ({ settings }) => {
+      if (settings.selectedModel.slug.includes('gpt-4')) {
+        inputForm.querySelector('#enforcement-trigger').click();
       }
-    } else {
-      if (textAreaElement.value.trim().length === 0) return;
-      textAreaElement.style.height = '24px';
-      addUserPromptToHistory(textAreaElement.value.trim());
-      inputForm.dispatchEvent(new Event('submit', { cancelable: true }));
-    }
+      const textAreaElement = inputForm.querySelector('textarea');
+      if (isGenerating) return;
+      const templateWords = textAreaElement.value.match(/{{(.*?)}}/g);
+      if (templateWords?.length > 0) {
+        // open template words modal and wait for user to select a word. the when user submit, submit the input form with the replacement
+        createTemplateWordsModal(templateWords);
+        const firstTemplateWordInput = document.querySelector('[id^=template-input-]');
+        if (firstTemplateWordInput) {
+          firstTemplateWordInput.focus();
+          setTimeout(() => {
+            firstTemplateWordInput.value = '';
+          }, 100);
+        }
+      } else {
+        if (textAreaElement.value.trim().length === 0) return;
+        textAreaElement.style.height = '24px';
+        addUserPromptToHistory(textAreaElement.value.trim());
+        inputForm.dispatchEvent(new Event('submit', { cancelable: true }));
+      }
+    });
+    submitButton.parentNode.replaceChild(submitButtonClone, submitButton);
   });
-  submitButton.parentNode.replaceChild(submitButtonClone, submitButton);
 }
 
 function setBackButtonDetection() {

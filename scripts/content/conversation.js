@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global getConversation, submitChat, openSubmitPromptModal, initializeRegenerateResponseButton, toggleTextAreaElement, rowAssistant, rowUser, copyRichText, messageFeedback, openFeedbackModal, refreshConversations, initializeStopGeneratingResponseButton, chatStreamIsClosed:true, generateInstructions, isGenerating:true, scrolUpDetected:true, addScrollDetector, generateSuggestions */
+/* global getConversation, submitChat, openSubmitPromptModal, initializeRegenerateResponseButton, toggleTextAreaElement, rowAssistant, rowUser, copyRichText, messageFeedback, openFeedbackModal, refreshConversations, initializeStopGeneratingResponseButton, chatStreamIsClosed:true, generateInstructions, isGenerating:true, scrolUpDetected:true, addScrollDetector, generateSuggestions, addArkoseScript */
 
 function addPinNav(sortedNodes) {
   chrome.storage.local.get(['settings'], (res) => {
@@ -40,6 +40,9 @@ function updateModel(modelSlug, pluginIds = []) {
   }) => {
     const allModels = [...models, ...unofficialModels, ...customModels];
     const selectedModel = allModels.find((m) => m.slug === modelSlug);
+    if (selectedModel.slug.includes('gpt-4')) {
+      addArkoseScript();
+    }
     const pluginsDropdownWrapper = document.querySelector('#plugins-dropdown-wrapper-navbar');
     if (pluginsDropdownWrapper) {
       if (selectedModel.slug.includes('plugins')) {

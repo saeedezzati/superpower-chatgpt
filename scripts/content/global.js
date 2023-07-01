@@ -317,6 +317,30 @@ function handleQueryParams(query) {
     });
   }
 }
+function addArkoseCallback() {
+  const script = document.createElement('script');
+  script.setAttribute('type', 'text/javascript');
+  script.setAttribute('src', chrome.runtime.getURL('scripts/content/arkose.js'));
+  document.body.appendChild(script);
+}
+function addArkoseScript() {
+  // check if a script element with src including api.js and chrome-extension exists
+  const arkoseScript = document.querySelector('script[src*="chrome-extension"][src*="api.js"]');
+  if (arkoseScript) return;
+  const arkoseApiScript = document.createElement('script');
+  arkoseApiScript.async = !0;
+  arkoseApiScript.defer = !0;
+  arkoseApiScript.setAttribute('type', 'text/javascript');
+  arkoseApiScript.setAttribute('data-status', 'loading');
+  arkoseApiScript.setAttribute('data-callback', 'useArkoseSetupEnforcement');
+  arkoseApiScript.setAttribute('src', chrome.runtime.getURL('v2/35536E1E-65B4-4D96-9D97-6ADB7EFF8147/api.js'));
+  document.body.appendChild(arkoseApiScript);
+}
+function addEnforcementTriggerElement() {
+  const main = document.querySelector('main');
+  const inputForm = main.querySelector('form');
+  inputForm.firstChild.insertAdjacentHTML('beforeend', '<button type="button" class="hidden" id="enforcement-trigger"></button>');
+}
 function replaceTextAreaElemet(settings) {
   const main = document.querySelector('main');
   if (!main) { return false; }

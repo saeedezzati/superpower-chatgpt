@@ -126,7 +126,7 @@ function generalTabContent() {
   leftContent.appendChild(promptTemplateSwitch);
 
   // conversation width
-  const customConversationWidthSwitch = createSwitch('Custom Conversation Width', 'OFF: Use default / ON: Set Conversation Width (30%-90%)', 'customConversationWidth', false, toggleCustomWidthInput);
+  const customConversationWidthSwitch = createSwitch('Custom Conversation Width', 'OFF: Use default / ON: Set Conversation Width (30%-90%)', 'customConversationWidth', null, toggleCustomWidthInput);
   leftContent.appendChild(customConversationWidthSwitch);
 
   const conversationWidthInput = document.createElement('input');

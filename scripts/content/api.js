@@ -12,25 +12,6 @@ chrome.storage.local.get(['environment'], (result) => {
 const defaultHeaders = {
   'content-type': 'application/json',
 };
-function arkose() {
-  return chrome.storage.local.get(['arkose']).then((res) => fetch('https://tcr9i.chat.openai.com/fc/gt2/public_key/35536E1E-65B4-4D96-9D97-6ADB7EFF8147', {
-    headers: {
-      accept: '*/*',
-      'accept-language': 'en-US,en;q=0.9,fa;q=0.8',
-      'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
-      'sec-ch-ua': '"Google Chrome";v="114", "Chromium";v="114", "Not-A.Brand";v="24"',
-      'sec-ch-ua-mobile': '?0',
-      'sec-ch-ua-platform': '"macOS"',
-      'sec-fetch-dest': 'empty',
-      'sec-fetch-mode': 'cors',
-      'sec-fetch-site': 'same-origin',
-    },
-    referrer: 'https://tcr9i.chat.openai.com/v2/1.5.2/enforcement.64b3a4e29686f93d52816249ecbf9857.html',
-    referrerPolicy: 'strict-origin-when-cross-origin',
-    body: `${res.arkose}&rnd=${Math.random()}`,
-    method: 'POST',
-  }).then((response) => response.json()));
-}
 function generateChat(message, conversationId, messageId, parentMessageId, token, saveHistory = true, role = 'user', action = 'next') {
   return chrome.storage.local.get(['settings', 'enabledPluginIds']).then((res) => chrome.storage.sync.get(['auth_token']).then((result) => {
     const payload = {
@@ -656,17 +637,6 @@ function getSponsor(version) {
       ...defaultHeaders,
     },
   }).then((res) => res.json());
-}
-function getArkose(version) {
-  return fetch(`${API_URL}/gptx/arkose/`, {
-    method: 'GET',
-    headers: {
-      ...defaultHeaders,
-    },
-  }).then((res) => res.json())
-    .then((data) => {
-      chrome.storage.local.set({ arkose: data.token });
-    });
 }
 function getPrompts(pageNumber, searchTerm, sortBy = 'recent', language = 'all', category = 'all') {
   // get user id from sync storage
