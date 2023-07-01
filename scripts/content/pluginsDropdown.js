@@ -55,7 +55,7 @@ function createPluginsDropDown(installedPlugins, enabledPluginIds, idPrefix, for
       </svg>
       </div>`}
   </span>
-  </li>`).join('')} `;
+  </li>`).join('')}`;
 }
 
 function addPluginsDropdownEventListener(idPrefix, forceDark = false) {

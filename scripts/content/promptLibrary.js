@@ -200,7 +200,7 @@ function promptLibraryListComponent(libraryData, loading = false) {
     libraryItem.appendChild(libraryItemText);
 
     const libraryItemCategories = document.createElement('div');
-    libraryItemCategories.id = `library-item-categories-${libraryPrompt.id} `;
+    libraryItemCategories.id = `library-item-categories-${libraryPrompt.id}`;
     libraryItemCategories.style = 'display:flex; justify-content: flex-start; align-items:center; width: 100%; margin-top: 12px;';
     // categories
     libraryPrompt.categories.forEach((category) => {
@@ -223,18 +223,18 @@ function promptLibraryListComponent(libraryData, loading = false) {
     libraryItem.appendChild(libraryItemCategories);
 
     const libraryItemFooter = document.createElement('div');
-    libraryItemFooter.id = `library-item-footer-${libraryPrompt.id} `;
+    libraryItemFooter.id = `library-item-footer-${libraryPrompt.id}`;
     libraryItemFooter.style = 'display:flex; justify-content: space-between; align-items:flex-end; width: 100%; white-space: break-spaces; overflow-wrap: break-word;margin-top: 8px';
     // created by url
     const libraryItemInfoWrapper = document.createElement('span');
-    libraryItemInfoWrapper.id = `library-item-created-by-${libraryPrompt.id} `;
+    libraryItemInfoWrapper.id = `library-item-created-by-${libraryPrompt.id}`;
     libraryItemInfoWrapper.style = 'display: flex; align-items:flex-end; justify-content: start; color: lightslategray; font-size:0.8em; width: 100%; white-space: break-spaces; overflow-wrap: break-word;';
     const libraryItemCreatedBy = document.createElement('span');
-    libraryItemCreatedBy.id = `library-item-created-by-${libraryPrompt.id} `;
+    libraryItemCreatedBy.id = `library-item-created-by-${libraryPrompt.id}`;
     libraryItemCreatedBy.textContent = 'by ';
     libraryItemInfoWrapper.appendChild(libraryItemCreatedBy);
     const libraryItemCreatedByUrl = document.createElement('a');
-    libraryItemCreatedByUrl.id = `library-item-created-by-url-${libraryPrompt.id} `;
+    libraryItemCreatedByUrl.id = `library-item-created-by-url-${libraryPrompt.id}`;
     libraryItemCreatedByUrl.style = 'color: #919dd4; text-decoration:underline;max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;';
     libraryItemCreatedByUrl.innerHTML = highlight(libraryPrompt.created_by?.nickname, promptLibrarySearchTerm);
     libraryItemCreatedByUrl.href = libraryPrompt.created_by?.url;
@@ -253,7 +253,7 @@ function promptLibraryListComponent(libraryData, loading = false) {
     });
     libraryItemInfoWrapper.appendChild(libraryItemCreatedByUrl);
     const libraryItemUseCount = document.createElement('span');
-    libraryItemUseCount.id = `library-item-use-count-${libraryPrompt.id} `;
+    libraryItemUseCount.id = `library-item-use-count-${libraryPrompt.id}`;
     libraryItemUseCount.title = `used ${libraryPrompt.num_used} times`;
     libraryItemUseCount.style = 'display:flex;color: lightslategray; margin-left: 24px;';
     libraryItemUseCount.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="lightslategray" stroke="lightslategray" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-2" height="1em" width="1em" viewBox="0 0 448 512"><path d="M240 32C266.5 32 288 53.49 288 80V432C288 458.5 266.5 480 240 480H208C181.5 480 160 458.5 160 432V80C160 53.49 181.5 32 208 32H240zM240 80H208V432H240V80zM80 224C106.5 224 128 245.5 128 272V432C128 458.5 106.5 480 80 480H48C21.49 480 0 458.5 0 432V272C0 245.5 21.49 224 48 224H80zM80 272H48V432H80V272zM320 144C320 117.5 341.5 96 368 96H400C426.5 96 448 117.5 448 144V432C448 458.5 426.5 480 400 480H368C341.5 480 320 458.5 320 432V144zM368 432H400V144H368V432z"/></svg> ${libraryPrompt.num_used}`;
@@ -262,7 +262,7 @@ function promptLibraryListComponent(libraryData, loading = false) {
 
     // votes
     const libraryItemVoteCount = document.createElement('span');
-    libraryItemVoteCount.id = `library-item-vote-count-${libraryPrompt.id} `;
+    libraryItemVoteCount.id = `library-item-vote-count-${libraryPrompt.id}`;
     libraryItemVoteCount.title = `upvoted ${libraryPrompt.votes} times`;
     libraryItemVoteCount.style = 'display:flex;color: lightslategray; margin-left: 24px;';
     libraryItemVoteCount.innerHTML = `<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-2" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"> <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg> <span id="prompt-upvotes-count-${libraryPrompt.id}">${libraryPrompt.votes}</span>`;
@@ -271,7 +271,7 @@ function promptLibraryListComponent(libraryData, loading = false) {
 
     // Share
     const libraryItemShareButton = document.createElement('span');
-    libraryItemShareButton.id = `library-item-share-button-${libraryPrompt.id} `;
+    libraryItemShareButton.id = `library-item-share-button-${libraryPrompt.id}`;
     libraryItemShareButton.title = 'Share this prompt';
     libraryItemShareButton.style = 'display:flex;color: lightslategray; margin-left: 24px;position: relative;bottom:3px;cursor: pointer;';
     libraryItemShareButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" stroke="currentColor" fill="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-5" height="1em" width="1em"><path d="M173 131.5C229.2 75.27 320.3 75.27 376.5 131.5C430 185 432.9 270.9 383 327.9L377.7 334C368.9 344 353.8 345 343.8 336.3C333.8 327.6 332.8 312.4 341.5 302.4L346.9 296.3C380.1 258.3 378.2 201.1 342.5 165.4C305.1 127.1 244.4 127.1 206.1 165.4L93.63 278.7C56.19 316.2 56.19 376.9 93.63 414.3C129.3 449.1 186.6 451.9 224.5 418.7L230.7 413.3C240.6 404.6 255.8 405.6 264.5 415.6C273.3 425.5 272.2 440.7 262.3 449.4L256.1 454.8C199.1 504.6 113.2 501.8 59.69 448.2C3.505 392.1 3.505 300.1 59.69 244.8L173 131.5zM467 380.5C410.8 436.7 319.7 436.7 263.5 380.5C209.1 326.1 207.1 241.1 256.9 184.1L261.6 178.7C270.3 168.7 285.5 167.7 295.5 176.4C305.5 185.1 306.5 200.3 297.8 210.3L293.1 215.7C259.8 253.7 261.8 310.9 297.4 346.6C334.9 384 395.6 384 433.1 346.6L546.4 233.3C583.8 195.8 583.8 135.1 546.4 97.7C510.7 62.02 453.4 60.11 415.5 93.35L409.3 98.7C399.4 107.4 384.2 106.4 375.5 96.44C366.7 86.47 367.8 71.3 377.7 62.58L383.9 57.22C440.9 7.348 526.8 10.21 580.3 63.76C636.5 119.9 636.5 211 580.3 267.2L467 380.5z"/></svg>';
@@ -346,7 +346,7 @@ function promptLibraryListComponent(libraryData, loading = false) {
       if (e.target.textContent === 'Confirm') {
         deletePrompt(libraryPrompt.id);
         // remove the item from the list
-        const deletedLibraryItem = document.querySelector(`#library-item-${libraryPrompt.id} `);
+        const deletedLibraryItem = document.querySelector(`#library-item-${libraryPrompt.id}`);
         deletedLibraryItem.style.display = 'none';
       } else {
         e.target.textContent = 'Confirm';
@@ -531,7 +531,7 @@ function promptLibraryModalContent(libraryData) {
   const pageNumberElement = document.createElement('span');
   pageNumberElement.id = 'library-page-number';
   pageNumberElement.style = 'color: lightslategray; font-size:0.8em; width: 100%; text-align: center;';
-  pageNumberElement.textContent = `Page ${promptLibraryPageNumber} of ${promptLibraryMaxPageNumber} `;
+  pageNumberElement.textContent = `Page ${promptLibraryPageNumber} of ${promptLibraryMaxPageNumber}`;
   pageButtonsWrapper.appendChild(pageNumberElement);
 
   const previousPageButton = document.createElement('button');
@@ -557,7 +557,7 @@ function promptLibraryModalContent(libraryData) {
       previousPageButton.style.opacity = '1';
     }
     fetchPrompts(promptLibraryPageNumber);
-    pageNumberElement.textContent = `Page ${promptLibraryPageNumber} of ${promptLibraryMaxPageNumber} `;
+    pageNumberElement.textContent = `Page ${promptLibraryPageNumber} of ${promptLibraryMaxPageNumber}`;
   });
   pageButtonsWrapper.appendChild(previousPageButton);
   const nextPageButton = document.createElement('button');
@@ -576,7 +576,7 @@ function promptLibraryModalContent(libraryData) {
       nextPageButton.style.opacity = '0.5';
     }
     fetchPrompts(promptLibraryPageNumber);
-    pageNumberElement.textContent = `Page ${promptLibraryPageNumber} of ${promptLibraryMaxPageNumber} `;
+    pageNumberElement.textContent = `Page ${promptLibraryPageNumber} of ${promptLibraryMaxPageNumber}`;
   });
   pageButtonsWrapper.appendChild(nextPageButton);
 
@@ -607,7 +607,7 @@ function updatePageButtons() {
     nextPageButton.style.opacity = 1;
   }
   const pageNumberElement = document.querySelector('span[id="library-page-number"]');
-  pageNumberElement.textContent = `Page ${promptLibraryPageNumber} of ${promptLibraryMaxPageNumber} `;
+  pageNumberElement.textContent = `Page ${promptLibraryPageNumber} of ${promptLibraryMaxPageNumber}`;
 }
 function promptLibraryModalActions() {
   // add actionbar at the bottom of the content

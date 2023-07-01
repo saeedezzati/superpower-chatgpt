@@ -338,7 +338,10 @@ function addArkoseScript() {
 }
 function addEnforcementTriggerElement() {
   const main = document.querySelector('main');
+  if (!main) { return; }
   const inputForm = main.querySelector('form');
+  if (!inputForm) { return; }
+  if (inputForm.querySelector('#enforcement-trigger')) return;
   inputForm.firstChild.insertAdjacentHTML('beforeend', '<button type="button" class="hidden" id="enforcement-trigger"></button>');
 }
 function replaceTextAreaElemet(settings) {

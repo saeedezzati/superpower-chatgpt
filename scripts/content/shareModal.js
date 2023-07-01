@@ -257,7 +257,7 @@ function shareModal(conversation, shareData, name) {
     </div >
   </div >
 </div >
-  `;
+`;
 }
 function addShareModalEventListener(shareData, name) {
   const shareModalWrapper = document.getElementById('share-modal-wrapper');

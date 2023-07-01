@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global markdown, markdownitSup, initializeNavbar, generateInstructions, generateChat, SSE, formatDate, loadConversation, resetSelection, katex, texmath, rowUser, rowAssistant, updateOrCreateConversation, replaceTextAreaElemet, highlight, isGenerating:true, disableTextInput:true, generateTitle, debounce, initializeRegenerateResponseButton, initializeStopGeneratingResponseButton, toggleTextAreaElement, showNewChatPage, chatStreamIsClosed:true, addCopyCodeButtonsEventListeners, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams, addScrollButtons, updateTotalCounter, isWindows, loadSharedConversation, createTemplateWordsModal */
+/* global markdown, markdownitSup, initializeNavbar, generateInstructions, generateChat, SSE, formatDate, loadConversation, resetSelection, katex, texmath, rowUser, rowAssistant, updateOrCreateConversation, replaceTextAreaElemet, highlight, isGenerating:true, disableTextInput:true, generateTitle, debounce, initializeRegenerateResponseButton, initializeStopGeneratingResponseButton, toggleTextAreaElement, showNewChatPage, chatStreamIsClosed:true, addCopyCodeButtonsEventListeners, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams, addScrollButtons, updateTotalCounter, isWindows, loadSharedConversation, createTemplateWordsModal, addEnforcementTriggerElement */
 
 // Initial state
 let userChatIsActuallySaved = false;
@@ -813,6 +813,9 @@ function overrideSubmitForm() {
     // get all words wrapped in {{ and }}
     chrome.storage.local.get(['settings'], ({ settings }) => {
       if (settings.selectedModel.slug.includes('gpt-4')) {
+        if (!inputForm.querySelector('#enforcement-trigger')) {
+          addEnforcementTriggerElement();
+        }
         inputForm.querySelector('#enforcement-trigger').click();
       }
       const templateWords = textAreaElement.value.match(/{{(.*?)}}/g);
@@ -985,6 +988,9 @@ ${settings.autoSplitChunkPrompt}`;
     window.localStorage.removeItem('arkoseToken');
     chrome.storage.local.get(['settings'], ({ settings }) => {
       if (settings.selectedModel.slug.includes('gpt-4')) {
+        if (!inputForm.querySelector('#enforcement-trigger')) {
+          addEnforcementTriggerElement();
+        }
         inputForm.querySelector('#enforcement-trigger').click();
       }
       const textAreaElement = inputForm.querySelector('textarea');

@@ -9,7 +9,6 @@ function initialize() {
     setTimeout(() => {
       initializeStorage().then(() => {
         registerShortkeys();
-        addEnforcementTriggerElement();
         getAccount();
         getModels();
         getConversationLimit();
@@ -27,6 +26,7 @@ function initialize() {
         initializePromptHistory();
         addExpandButton();
         addDevIndicator();
+        addEnforcementTriggerElement();
         addArkoseCallback();
 
         setTimeout(() => {

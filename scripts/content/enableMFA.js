@@ -63,5 +63,5 @@ function showEnableMFA() {
     </div>
   </div>
   </div>
-  `;
+`;
 }
