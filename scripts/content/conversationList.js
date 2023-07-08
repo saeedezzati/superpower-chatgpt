@@ -1013,8 +1013,8 @@ ${settings.autoSplitChunkPrompt}`;
         inputForm.dispatchEvent(new Event('submit', { cancelable: true }));
       }
     });
-    submitButton.parentNode.replaceChild(submitButtonClone, submitButton);
   });
+  submitButton.parentNode.replaceChild(submitButtonClone, submitButton);
 }
 
 function setBackButtonDetection() {

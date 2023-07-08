@@ -87,6 +87,20 @@ function initializePluginStoreModal(plugins) {
                       Installed
                     </div>
                   </button>
+                  <div class="relative">
+                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                      <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 h-5 w-5 text-gray-500 dark:text-gray-400" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                      </svg>
+                    </div>
+                    <div class="rounded-md border border-gray-300 px-3 py-2 shadow-sm focus-within:border-indigo-600 focus-within:ring-1 focus-within:ring-indigo-600 dark:bg-gray-700 pl-10">
+                      <label for="search" class="block text-xs font-medium text-gray-900 dark:text-gray-100"></label>
+                      <div class="relative">
+                        <input type="search" name="search" id="plugin-store-search" class="block w-full border-0 p-0 text-gray-900 placeholder-gray-500 outline-none focus:ring-0 dark:bg-gray-700 dark:text-gray-100 sm:text-sm" placeholder="Search plugins" value="">
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 <div
                   id="plugin-list-wrapper"
@@ -246,7 +260,6 @@ function renderPageNumbers(plugins) {
       ${page}</button
     >
     `).join('')}
-
     <button
       id="plugin-pagination-next"
       role="button"
@@ -290,6 +303,12 @@ function addPluginStoreEventListener(plugins) {
     currentPluginStorePage = 1;
     pluginStoreWrapper.remove();
   });
+  const pluginSearchInput = document.getElementById('plugin-store-search');
+  pluginSearchInput.addEventListener('input', () => {
+    chrome.storage.local.get(['allPlugins'], (result) => {
+      document.querySelector('[id="plugin-filter-all"]').click();
+    });
+  });
 
   const pluginFilterButtons = document.querySelectorAll('[id^="plugin-filter-"]');
   pluginFilterButtons.forEach((button) => {
@@ -298,6 +317,7 @@ function addPluginStoreEventListener(plugins) {
         const { allPlugins } = result;
         const filterType = button.id.split('plugin-filter-')[1];
         currentPluginStorePage = 1;
+        const searchValue = pluginSearchInput.value;
         const previousActivePageButton = document.querySelector('[id^="plugin-page-"].text-blue-600');
         if (previousActivePageButton) {
           previousActivePageButton.classList = 'text-sm text-black/70 dark:text-white/70 whitespace-nowrap hover:text-black/50 dark:hover:text-white/50';
@@ -311,12 +331,18 @@ function addPluginStoreEventListener(plugins) {
         let filteredPlugins = allPlugins;
         if (filterType === 'popular') {
           filteredPlugins = allPlugins.filter((plugin) => plugin.categories.map((c) => c.id).includes('most_popular'));
+          if (searchValue.trim() !== '') {
+            filteredPlugins = filteredPlugins.filter((plugin) => `${plugin.manifest.name_for_human} ${plugin.manifest.description_for_human}`.toLowerCase().includes(searchValue.toLowerCase()));
+          }
           pluginListWrapper.innerHTML = renderPluginList(filteredPlugins);
           pluginStorePaginationWrapper.innerHTML = renderPageNumbers(filteredPlugins);
           addInstallButtonEventListener(filteredPlugins);
           addPaginationEventListener(filteredPlugins);
         } else if (filterType === 'new') {
           filteredPlugins = allPlugins.filter((plugin) => plugin.categories.map((c) => c.id).includes('newly_added'));
+          if (searchValue.trim() !== '') {
+            filteredPlugins = filteredPlugins.filter((plugin) => `${plugin.manifest.name_for_human} ${plugin.manifest.description_for_human}`.toLowerCase().includes(searchValue.toLowerCase()));
+          }
           pluginListWrapper.innerHTML = renderPluginList(filteredPlugins);
           pluginStorePaginationWrapper.innerHTML = renderPageNumbers(filteredPlugins);
           addInstallButtonEventListener(filteredPlugins);
@@ -325,12 +351,18 @@ function addPluginStoreEventListener(plugins) {
           chrome.storage.local.get(['installedPlugins'], (res) => {
             const { installedPlugins } = res;
             filteredPlugins = installedPlugins;
+            if (searchValue.trim() !== '') {
+              filteredPlugins = filteredPlugins.filter((plugin) => `${plugin.manifest.name_for_human} ${plugin.manifest.description_for_human}`.toLowerCase().includes(searchValue.toLowerCase()));
+            }
             pluginListWrapper.innerHTML = renderPluginList(filteredPlugins);
             pluginStorePaginationWrapper.innerHTML = renderPageNumbers(filteredPlugins);
             addInstallButtonEventListener(filteredPlugins);
             addPaginationEventListener(filteredPlugins);
           });
         } else {
+          if (searchValue.trim() !== '') {
+            filteredPlugins = filteredPlugins.filter((plugin) => `${plugin.manifest.name_for_human} ${plugin.manifest.description_for_human}`.toLowerCase().includes(searchValue.toLowerCase()));
+          }
           pluginListWrapper.innerHTML = renderPluginList(filteredPlugins);
           pluginStorePaginationWrapper.innerHTML = renderPageNumbers(filteredPlugins);
           addInstallButtonEventListener(filteredPlugins);
@@ -396,8 +428,6 @@ function addPaginationEventListener(plugins) {
       if (pluginListWrapper) {
         pluginListWrapper.innerHTML = renderPluginList(plugins);
         addInstallButtonEventListener(plugins);
-
-        // pluginStorePaginationWrapper.innerHTML = renderPageNumbers(allPlugins);
       }
     });
   });

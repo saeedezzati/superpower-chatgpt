@@ -189,7 +189,8 @@ function loadConversation(conversationId, searchValue = '', focusOnInput = true)
         if (message.recipient === 'all' && (message.role === 'assistant' || message.author?.role === 'assistant')) {
           let nextMessage = sortedNodes[i + 1]?.message;
           while (nextMessage && nextMessage.recipient === 'all' && (nextMessage.role === 'assistant' || nextMessage.author?.role === 'assistant')) {
-            message.content.parts = [`${message.content.parts.join('')}${nextMessage.content.parts.join('')}`];
+            message.content.parts.push(...nextMessage.content.parts);
+            // message.content.parts = [`${message.content.parts.join('')}${nextMessage.content.parts.join('')}`];
             i += 1;
             nextMessage = sortedNodes[i + 1]?.message;
           }
@@ -313,7 +314,7 @@ function addConversationsEventListeners(conversationId) {
         textArea.spellcheck = false;
         textArea.id = `message-text-${messageId}`;
         textArea.addEventListener('input', (e) => {
-          e.target.style.height = `${e.target.scrollHeight} px`;
+          e.target.style.height = `${e.target.scrollHeight}px`;
         });
         oldElement.parentElement.replaceChild(textArea, oldElement);
         textArea.focus();

@@ -227,7 +227,8 @@ input:checked + .slider:before {
  line-height:28px;
 }
 
-#modal-content-newsletter img,
+/* ezgif images have transparent background */
+#modal-content-newsletter img:not([src*="ezgif"]), 
 #modal-content-general img,
 [id^="modal-content-release-note"] img {
   border-radius: 8px;

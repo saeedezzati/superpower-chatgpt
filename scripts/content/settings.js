@@ -126,7 +126,7 @@ function generalTabContent() {
   leftContent.appendChild(promptTemplateSwitch);
 
   // conversation width
-  const customConversationWidthSwitch = createSwitch('Custom Conversation Width', 'OFF: Use default / ON: Set Conversation Width (30%-90%)', 'customConversationWidth', null, toggleCustomWidthInput);
+  const customConversationWidthSwitch = createSwitch('Custom Conversation Width', 'OFF: Use default / ON: Set Conversation Width (30%-90%)', 'customConversationWidth', false, toggleCustomWidthInput);
   leftContent.appendChild(customConversationWidthSwitch);
 
   const conversationWidthInput = document.createElement('input');
@@ -1055,7 +1055,7 @@ function createSwitch(title, subtitle, settingsKey, defaultValue, callback = nul
   if (settingsKey) {
     chrome.storage.local.get('settings', ({ settings }) => {
       const settingValue = settings[settingsKey];
-      if (settingValue === undefined) {
+      if (settingValue === undefined && defaultValue !== undefined) {
         settings[settingsKey] = defaultValue;
         chrome.storage.local.set(settings);
       } else {
