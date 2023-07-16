@@ -79,9 +79,9 @@ function updateTimestamp(conversationList) {
           timestamp.style = 'font-size: 10px; color: lightslategray; position: absolute; bottom: 0px; left: 40px;';
           const conversation = conversations[index];
           button.id = `conversation-button-${conversation.id}`;
-          const createTime = conversation.create_time;
+          const updateTime = conversation.update_time;
           // convert create time from GMT to local time
-          timestamp.innerHTML = formatDate(new Date(createTime));
+          timestamp.innerHTML = formatDate(new Date(updateTime));
           button.appendChild(timestamp);
           // add checkbox
           const checkboxWrapper = document.createElement('div');

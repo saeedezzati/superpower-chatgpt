@@ -98,7 +98,7 @@ function addExportAsButton(title) {
   exportAsButton.textContent = title;
   exportAsButton.type = 'button';
   exportAsButton.style = 'width:100px;border:none;';
-  exportAsButton.classList.add('btn', 'flex', 'justify-center', 'gap-2', 'btn-neutral', 'border-0', 'md:border');
+  exportAsButton.classList.add('btn', 'flex', 'justify-center', 'gap-2', 'btn-neutral', 'border');
 
   exportAsButton.addEventListener('click', () => {
     const { pathname } = new URL(window.location.toString());
@@ -123,11 +123,7 @@ function addExportAsButton(title) {
 }
 function addExportButton() {
   const assistantChats = allAsistantChats();
-  const main = document.querySelector('main');
-  if (!main) return;
-  const inputForm = main.querySelector('form');
-  if (!inputForm) return;
-  const textAreaElement = inputForm.querySelector('textarea');
+  const textAreaElement = document.querySelector('main form textarea');
   if (!textAreaElement) return;
   const canSubmit = canSubmitPrompt();
 
@@ -145,7 +141,7 @@ function addExportButton() {
   exportButton.id = 'export-conversation-button';
   exportButton.type = 'button';
   exportButton.textContent = 'Export';
-  exportButton.classList.add('btn', 'flex', 'justify-center', 'gap-2', 'btn-neutral', 'border-0', 'md:border');
+  exportButton.classList.add('btn', 'flex', 'justify-center', 'gap-2', 'btn-neutral', 'border');
   exportButton.style = 'position:absolute;right:0px;width:104px;';
   // add icon
   const exportButtonIcon = document.createElement('img');

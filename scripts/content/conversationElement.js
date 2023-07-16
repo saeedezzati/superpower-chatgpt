@@ -65,17 +65,18 @@ function createConversation(conversation, conversationTimestamp = false, searchV
   conversationElement.title = conversation.title;
   conversationElement.appendChild(conversationTitle);
   // add timestamp
-  const timestamp = document.createElement('div');
-  timestamp.id = 'timestamp';
-  timestamp.style = 'font-size: 10px; color: lightslategray; position: absolute; bottom: 0px; left: 40px;';
-  const createTime = conversationTimestamp
-    ? new Date(conversation.mapping[conversation.current_node].message.create_time * 1000)
+  const timestampElement = document.createElement('div');
+  timestampElement.id = 'timestamp';
+  timestampElement.style = 'font-size: 10px; color: lightslategray; position: absolute; bottom: 0px; left: 40px;';
+
+  const timestamp = conversationTimestamp
+    ? new Date(conversation.update_time * 1000)
     : new Date(conversation.create_time * 1000);
-  const conversationCreateTime = formatDate(new Date(createTime));
+  const conversationLastTimestamp = formatDate(new Date(timestamp));
 
-  timestamp.innerHTML = conversationCreateTime;
+  timestampElement.innerHTML = conversationLastTimestamp;
 
-  conversationElement.appendChild(timestamp);
+  conversationElement.appendChild(timestampElement);
   // action icons
   if (!conversation.archived) {
     conversationElement.appendChild(conversationActions(conversation.id));

@@ -105,59 +105,59 @@ function promptLibraryListComponent(libraryData, loading = false) {
     // libraryItemActionWrapper.classList = 'invisible group-hover:visible';
     libraryItemActionWrapper.style = 'position:absolute; top: 12px; right:4px; display: flex; justify-content: flex-end; align-items: center;';
     // thumbs up
-    const libraryItemThumbsUp = document.createElement('span');
-    libraryItemThumbsUp.id = `library-item-thumbs-up-${libraryPrompt.id}`;
-    libraryItemThumbsUp.title = 'Upvote this prompt';
-    libraryItemThumbsUp.style = 'color: lightslategray; font-size:1.2em; margin-right: 8px; cursor: pointer;';
-    libraryItemThumbsUp.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"> <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>';
-    libraryItemThumbsUp.addEventListener('mouseenter', () => {
-      libraryItemThumbsUp.style.color = '#eee';
-    });
-    libraryItemThumbsUp.addEventListener('mouseleave', () => {
-      libraryItemThumbsUp.style.color = 'lightslategray';
-    });
-    libraryItemThumbsUp.addEventListener('click', () => {
-      vote(libraryPrompt.id, 'up').then((data) => {
-        if (data.status === 'success') {
-          toast('Prompt upvoted');
-          const curUpvoteCount = document.getElementById(`prompt-upvotes-count-${libraryPrompt.id}`);
-          curUpvoteCount.textContent = parseInt(curUpvoteCount.textContent, 10) + 1;
-        }
-        if (data.status === 'same user') {
-          toast('You have already voted for this prompt');
-        }
-      });
-      const curLibraryItemActionWrapper = document.getElementById(`library-item-action-wrapper-${libraryPrompt.id}`);
-      curLibraryItemActionWrapper.style.opacity = '0.3';
-      curLibraryItemActionWrapper.style.pointerEvents = 'none';
-    });
-    // thumbs down
-    const libraryItemThumbsDown = document.createElement('span');
-    libraryItemThumbsDown.id = `library-item-thumbs-down-${libraryPrompt.id}`;
-    libraryItemThumbsDown.title = 'Downvote this prompt';
-    libraryItemThumbsDown.style = 'color: lightslategray; font-size:1.2em; margin-right: 12px; cursor: pointer;';
-    libraryItemThumbsDown.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"> <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path></svg>';
-    libraryItemThumbsDown.addEventListener('mouseenter', () => {
-      libraryItemThumbsDown.style.color = '#eee';
-    });
-    libraryItemThumbsDown.addEventListener('mouseleave', () => {
-      libraryItemThumbsDown.style.color = 'lightslategray';
-    });
-    libraryItemThumbsDown.addEventListener('click', () => {
-      vote(libraryPrompt.id, 'down').then((data) => {
-        if (data.status === 'success') {
-          toast('Prompt downvoted');
-          const curUpvoteCount = document.getElementById(`prompt-upvotes-count-${libraryPrompt.id}`);
-          curUpvoteCount.textContent = parseInt(curUpvoteCount.textContent, 10) - 1;
-        }
-        if (data.status === 'same user') {
-          toast('You have already voted for this prompt');
-        }
-      });
-      const curLibraryItemActionWrapper = document.getElementById(`library-item-action-wrapper-${libraryPrompt.id}`);
-      curLibraryItemActionWrapper.style.opacity = '0.3';
-      curLibraryItemActionWrapper.style.pointerEvents = 'none';
-    });
+    // const libraryItemThumbsUp = document.createElement('span');
+    // libraryItemThumbsUp.id = `library-item-thumbs-up-${libraryPrompt.id}`;
+    // libraryItemThumbsUp.title = 'Upvote this prompt';
+    // libraryItemThumbsUp.style = 'color: lightslategray; font-size:1.2em; margin-right: 8px; cursor: pointer;';
+    // libraryItemThumbsUp.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"> <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>';
+    // libraryItemThumbsUp.addEventListener('mouseenter', () => {
+    //   libraryItemThumbsUp.style.color = '#eee';
+    // });
+    // libraryItemThumbsUp.addEventListener('mouseleave', () => {
+    //   libraryItemThumbsUp.style.color = 'lightslategray';
+    // });
+    // libraryItemThumbsUp.addEventListener('click', () => {
+    //   vote(libraryPrompt.id, 'up').then((data) => {
+    //     if (data.status === 'success') {
+    //       toast('Prompt upvoted');
+    //       const curUpvoteCount = document.getElementById(`prompt-upvotes-count-${libraryPrompt.id}`);
+    //       curUpvoteCount.textContent = parseInt(curUpvoteCount.textContent, 10) + 1;
+    //     }
+    //     if (data.status === 'same user') {
+    //       toast('You have already voted for this prompt');
+    //     }
+    //   });
+    //   const curLibraryItemActionWrapper = document.getElementById(`library-item-action-wrapper-${libraryPrompt.id}`);
+    //   curLibraryItemActionWrapper.style.opacity = '0.3';
+    //   curLibraryItemActionWrapper.style.pointerEvents = 'none';
+    // });
+    // // thumbs down
+    // const libraryItemThumbsDown = document.createElement('span');
+    // libraryItemThumbsDown.id = `library-item-thumbs-down-${libraryPrompt.id}`;
+    // libraryItemThumbsDown.title = 'Downvote this prompt';
+    // libraryItemThumbsDown.style = 'color: lightslategray; font-size:1.2em; margin-right: 12px; cursor: pointer;';
+    // libraryItemThumbsDown.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"> <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path></svg>';
+    // libraryItemThumbsDown.addEventListener('mouseenter', () => {
+    //   libraryItemThumbsDown.style.color = '#eee';
+    // });
+    // libraryItemThumbsDown.addEventListener('mouseleave', () => {
+    //   libraryItemThumbsDown.style.color = 'lightslategray';
+    // });
+    // libraryItemThumbsDown.addEventListener('click', () => {
+    //   vote(libraryPrompt.id, 'down').then((data) => {
+    //     if (data.status === 'success') {
+    //       toast('Prompt downvoted');
+    //       const curUpvoteCount = document.getElementById(`prompt-upvotes-count-${libraryPrompt.id}`);
+    //       curUpvoteCount.textContent = parseInt(curUpvoteCount.textContent, 10) - 1;
+    //     }
+    //     if (data.status === 'same user') {
+    //       toast('You have already voted for this prompt');
+    //     }
+    //   });
+    //   const curLibraryItemActionWrapper = document.getElementById(`library-item-action-wrapper-${libraryPrompt.id}`);
+    //   curLibraryItemActionWrapper.style.opacity = '0.3';
+    //   curLibraryItemActionWrapper.style.pointerEvents = 'none';
+    // });
     // flag
     const libraryItemFlag = document.createElement('span');
     libraryItemFlag.id = `library-item-flag-${libraryPrompt.id}`;
@@ -175,8 +175,8 @@ function promptLibraryListComponent(libraryData, loading = false) {
       openReportPromptModal(libraryPrompt);
     });
 
-    libraryItemActionWrapper.appendChild(libraryItemThumbsUp);
-    libraryItemActionWrapper.appendChild(libraryItemThumbsDown);
+    // libraryItemActionWrapper.appendChild(libraryItemThumbsUp);
+    // libraryItemActionWrapper.appendChild(libraryItemThumbsDown);
     libraryItemActionWrapper.appendChild(libraryItemFlag);
 
     libraryItem.appendChild(libraryItemActionWrapper);
@@ -227,7 +227,7 @@ function promptLibraryListComponent(libraryData, loading = false) {
     libraryItemFooter.style = 'display:flex; justify-content: space-between; align-items:flex-end; width: 100%; white-space: break-spaces; overflow-wrap: break-word;margin-top: 8px';
     // created by url
     const libraryItemInfoWrapper = document.createElement('span');
-    libraryItemInfoWrapper.id = `library-item-created-by-${libraryPrompt.id}`;
+    libraryItemInfoWrapper.id = `library-item-info-wrapper-${libraryPrompt.id}`;
     libraryItemInfoWrapper.style = 'display: flex; align-items:flex-end; justify-content: start; color: lightslategray; font-size:0.8em; width: 100%; white-space: break-spaces; overflow-wrap: break-word;';
     const libraryItemCreatedBy = document.createElement('span');
     libraryItemCreatedBy.id = `library-item-created-by-${libraryPrompt.id}`;
@@ -258,17 +258,72 @@ function promptLibraryListComponent(libraryData, loading = false) {
     libraryItemUseCount.style = 'display:flex;color: lightslategray; margin-left: 24px;';
     libraryItemUseCount.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="lightslategray" stroke="lightslategray" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-2" height="1em" width="1em" viewBox="0 0 448 512"><path d="M240 32C266.5 32 288 53.49 288 80V432C288 458.5 266.5 480 240 480H208C181.5 480 160 458.5 160 432V80C160 53.49 181.5 32 208 32H240zM240 80H208V432H240V80zM80 224C106.5 224 128 245.5 128 272V432C128 458.5 106.5 480 80 480H48C21.49 480 0 458.5 0 432V272C0 245.5 21.49 224 48 224H80zM80 272H48V432H80V272zM320 144C320 117.5 341.5 96 368 96H400C426.5 96 448 117.5 448 144V432C448 458.5 426.5 480 400 480H368C341.5 480 320 458.5 320 432V144zM368 432H400V144H368V432z"/></svg> ${libraryPrompt.num_used}`;
     libraryItemInfoWrapper.appendChild(libraryItemUseCount);
-    libraryItemFooter.appendChild(libraryItemInfoWrapper);
+
+    // thumbs up
+    const libraryItemThumbsUp = document.createElement('span');
+    libraryItemThumbsUp.id = `library-item-thumbs-up-${libraryPrompt.id}`;
+    libraryItemThumbsUp.title = 'Upvote this prompt';
+    libraryItemThumbsUp.style = 'color: lightslategray; font-size:1.2em; margin-left: 24px; position:relative; bottom:4px; cursor: pointer;';
+    libraryItemThumbsUp.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"> <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>';
+    libraryItemThumbsUp.addEventListener('mouseenter', () => {
+      libraryItemThumbsUp.style.color = '#eee';
+    });
+    libraryItemThumbsUp.addEventListener('mouseleave', () => {
+      libraryItemThumbsUp.style.color = 'lightslategray';
+    });
+    libraryItemThumbsUp.addEventListener('click', () => {
+      vote(libraryPrompt.id, 'up').then((data) => {
+        if (data.status === 'success') {
+          toast('Prompt upvoted');
+          const curUpvoteCount = document.getElementById(`prompt-upvotes-count-${libraryPrompt.id}`);
+          curUpvoteCount.textContent = parseInt(curUpvoteCount.textContent, 10) + 1;
+        }
+        if (data.status === 'same user') {
+          toast('You have already voted for this prompt');
+        }
+      });
+      const curLibraryItemActionWrapper = document.getElementById(`library-item-action-wrapper-${libraryPrompt.id}`);
+      curLibraryItemActionWrapper.style.opacity = '0.3';
+      curLibraryItemActionWrapper.style.pointerEvents = 'none';
+    });
+    libraryItemInfoWrapper.appendChild(libraryItemThumbsUp);
 
     // votes
     const libraryItemVoteCount = document.createElement('span');
     libraryItemVoteCount.id = `library-item-vote-count-${libraryPrompt.id}`;
     libraryItemVoteCount.title = `upvoted ${libraryPrompt.votes} times`;
-    libraryItemVoteCount.style = 'display:flex;color: lightslategray; margin-left: 24px;';
-    libraryItemVoteCount.innerHTML = `<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-2" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"> <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg> <span id="prompt-upvotes-count-${libraryPrompt.id}">${libraryPrompt.votes}</span>`;
+    libraryItemVoteCount.style = 'display:flex;color: lightslategray; margin: 0 8px;';
+    libraryItemVoteCount.innerHTML = `<span id="prompt-upvotes-count-${libraryPrompt.id}">${libraryPrompt.votes}</span>`;
     libraryItemInfoWrapper.appendChild(libraryItemVoteCount);
-    libraryItemFooter.appendChild(libraryItemInfoWrapper);
 
+    // thumbs down
+    const libraryItemThumbsDown = document.createElement('span');
+    libraryItemThumbsDown.id = `library-item-thumbs-down-${libraryPrompt.id}`;
+    libraryItemThumbsDown.title = 'Downvote this prompt';
+    libraryItemThumbsDown.style = 'color: lightslategray; font-size:1.2em; cursor: pointer;';
+    libraryItemThumbsDown.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"> <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path></svg>';
+    libraryItemThumbsDown.addEventListener('mouseenter', () => {
+      libraryItemThumbsDown.style.color = '#eee';
+    });
+    libraryItemThumbsDown.addEventListener('mouseleave', () => {
+      libraryItemThumbsDown.style.color = 'lightslategray';
+    });
+    libraryItemThumbsDown.addEventListener('click', () => {
+      vote(libraryPrompt.id, 'down').then((data) => {
+        if (data.status === 'success') {
+          toast('Prompt downvoted');
+          const curUpvoteCount = document.getElementById(`prompt-upvotes-count-${libraryPrompt.id}`);
+          curUpvoteCount.textContent = parseInt(curUpvoteCount.textContent, 10) - 1;
+        }
+        if (data.status === 'same user') {
+          toast('You have already voted for this prompt');
+        }
+      });
+      const curLibraryItemActionWrapper = document.getElementById(`library-item-action-wrapper-${libraryPrompt.id}`);
+      curLibraryItemActionWrapper.style.opacity = '0.3';
+      curLibraryItemActionWrapper.style.pointerEvents = 'none';
+    });
+    libraryItemInfoWrapper.appendChild(libraryItemThumbsDown);
     // Share
     const libraryItemShareButton = document.createElement('span');
     libraryItemShareButton.id = `library-item-share-button-${libraryPrompt.id}`;
@@ -292,6 +347,7 @@ function promptLibraryListComponent(libraryData, loading = false) {
       libraryItemShareButton.style.color = 'lightslategray';
     });
     libraryItemInfoWrapper.appendChild(libraryItemShareButton);
+
     libraryItemFooter.appendChild(libraryItemInfoWrapper);
 
     // library item action buttons wrapper
@@ -324,7 +380,9 @@ function promptLibraryListComponent(libraryData, loading = false) {
       textAreaElement.dispatchEvent(new Event('input', { bubbles: true }));
       textAreaElement.dispatchEvent(new Event('change', { bubbles: true }));
       if (event.shiftKey || libraryPrompt.hide_full_prompt) {
-        submitButton.click();
+        setTimeout(() => {
+          submitButton.click();
+        }, 300);
       }
       document.querySelector('button[id="modal-close-button-community-prompts"]').click();
       incrementUseCount(libraryPrompt.id);

@@ -74,6 +74,7 @@ function addNewsletterButton() {
   const newsletterButton = document.createElement('a');
   newsletterButton.classList = 'flex py-3 px-3 items-center gap-3 rounded-md hover:bg-gray-500/10 transition-colors duration-200 text-white cursor-pointer text-sm';
   newsletterButton.textContent = 'Newsletter Archive';
+  newsletterButton.title = 'CMD/CTRL + SHIFT + L';
 
   const newsletterButtonIcon = document.createElement('img');
   newsletterButtonIcon.style = 'width: 16px; height: 16px;';

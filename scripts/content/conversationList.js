@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global markdown, markdownitSup, initializeNavbar, generateInstructions, generateChat, SSE, formatDate, loadConversation, resetSelection, katex, texmath, rowUser, rowAssistant, updateOrCreateConversation, replaceTextAreaElemet, highlight, isGenerating:true, disableTextInput:true, generateTitle, debounce, initializeRegenerateResponseButton, initializeStopGeneratingResponseButton, toggleTextAreaElement, showNewChatPage, chatStreamIsClosed:true, addCopyCodeButtonsEventListeners, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams, addScrollButtons, updateTotalCounter, isWindows, loadSharedConversation, createTemplateWordsModal, addEnforcementTriggerElement */
+/* global markdown, markdownitSup, initializeNavbar, generateInstructions, generateChat, SSE, formatDate, loadConversation, resetSelection, katex, texmath, rowUser, rowAssistant, updateOrCreateConversation, replaceTextAreaElemet, highlight, isGenerating:true, disableTextInput:true, generateTitle, debounce, initializeRegenerateResponseButton, initializeStopGeneratingResponseButton, toggleTextAreaElement, showNewChatPage, chatStreamIsClosed:true, addCopyCodeButtonsEventListeners, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams, addScrollButtons, updateTotalCounter, isWindows, loadSharedConversation, createTemplateWordsModal, addEnforcementTriggerElement, initializePromptChain, insertNextChain, runningPromptChainSteps:true, runningPromptChainIndex:true */
 
 // Initial state
 let userChatIsActuallySaved = false;
@@ -23,7 +23,10 @@ function removeOriginalConversationList() {
     existingConversationList.remove();
     navGap.prepend(newConversationList);
     // eslint-disable-next-line no-unused-vars
-    const sortable = new Sortable(newConversationList, {
+    const sortable = Sortable.create(newConversationList, {
+      // multiDrag: true,
+      // selectedClass: 'multi-drag-selected',
+      // handle: '[id^="checkbox-wrapper-"], [id^="conversation-button-"], [id^="wrapper-folder-"]',
       group: {
         name: 'conversation-list',
         pull: true,
@@ -147,7 +150,7 @@ function createSearchBox() {
           }
 
           const allConversations = Object.values(conversations).filter((c) => !c.skipped);
-          let filteredConversations = allConversations.sort((a, b) => b.create_time - a.create_time);
+          let filteredConversations = allConversations.sort((a, b) => b.update_time - a.update_time);
 
           resetSelection();
           if (searchValue) {
@@ -274,19 +277,19 @@ function prependConversation(conversation) {
   conversationElement.title = conversation.title;
   conversationElement.appendChild(conversationTitle);
   // add timestamp
-  const timestamp = document.createElement('div');
-  timestamp.id = 'timestamp';
-  timestamp.style = 'font-size: 10px; color: lightslategray; position: absolute; bottom: 0px; left: 40px;';
+  const timestampElement = document.createElement('div');
+  timestampElement.id = 'timestamp';
+  timestampElement.style = 'font-size: 10px; color: lightslategray; position: absolute; bottom: 0px; left: 40px;';
   chrome.storage.local.get(['settings'], (result) => {
     const { settings } = result;
-    const createTime = settings.conversationTimestamp
-      ? new Date(conversation.mapping[conversation.current_node].message.create_time * 1000)
+    const timestamp = settings.conversationTimestamp
+      ? new Date(conversation.update_time * 1000)
       : new Date(conversation.create_time * 1000);
-    const conversationCreateTime = formatDate(new Date(createTime));
+    const conversationLastTimestamp = formatDate(new Date(timestamp));
 
-    timestamp.innerHTML = conversationCreateTime;
+    timestampElement.innerHTML = conversationLastTimestamp;
   });
-  conversationElement.appendChild(timestamp);
+  conversationElement.appendChild(timestampElement);
   // action icons
   conversationElement.appendChild(conversationActions(conversation.id));
 
@@ -383,10 +386,7 @@ function loadStorageConversations(conversations, conversationsOrder = [], search
 function updateNewChatButtonSynced() {
   chrome.storage.local.get(['selectedConversations', 'conversationsAreSynced'], (result) => {
     const { selectedConversations, conversationsAreSynced } = result;
-    const main = document.querySelector('main');
-    if (!main) return;
-    const inputForm = main.querySelector('form');
-    const textAreaElement = inputForm.querySelector('textarea');
+    const textAreaElement = document.querySelector('main form textarea');
     const nav = document.querySelector('nav');
     const newChatButton = nav?.querySelector('a');
     newChatButton.classList = 'flex py-3 px-3 w-full items-center gap-3 transition-colors duration-200 text-white cursor-pointer text-sm rounded-md border border-white/20 hover:bg-gray-500/10 mb-1 flex-shrink-0';
@@ -444,6 +444,7 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
       scrolUpDetected = false;
       const curSubmitButton = document.querySelector('main').querySelector('form').querySelector('textarea ~ button');
       curSubmitButton.disabled = true;
+      curSubmitButton.style.backgroundColor = 'transparent';
       curSubmitButton.innerHTML = '<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"> <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"></circle> <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path> </svg>';
       const syncDiv = document.getElementById('sync-div');
       if (syncDiv) syncDiv.style.opacity = '0.3';
@@ -494,10 +495,25 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
               if (userChatIsActuallySaved) {
                 clearInterval(tempId);
                 updateOrCreateConversation(finalConversationId, finalMessage, messageId, settings, true, chatStreamIsClosed).then(() => {
-                  if (!chatStreamIsClosed) {
-                    setTimeout(() => {
-                      insertNextChunk(settings, finalMessage);
-                    }, 700);
+                  if (!chatStreamIsClosed) { // if not clicked on stop generating button
+                    chrome.storage.local.get(['account'], (result) => {
+                      const { account } = result;
+                      const isPaid = account?.account_plan?.is_paid_subscription_active || account?.accounts?.default?.entitlement?.has_active_subscription || false;
+                      if (runningPromptChainSteps && runningPromptChainSteps.length > 1 && runningPromptChainIndex < runningPromptChainSteps.length - 1) {
+                        setTimeout(() => {
+                          insertNextChain(runningPromptChainSteps, runningPromptChainIndex + 1);
+                        }, isPaid ? 700 : 2000);
+                      } else {
+                        runningPromptChainSteps = undefined;
+                        runningPromptChainIndex = 0;
+                        setTimeout(() => {
+                          insertNextChunk(settings, finalMessage);
+                        }, isPaid ? 700 : 2000);
+                      }
+                    });
+                  } else {
+                    runningPromptChainSteps = undefined;
+                    runningPromptChainIndex = 0;
                   }
                 });
               }
@@ -746,7 +762,9 @@ Reply with OK: [Summary is received!]. Don't reply with anything else!`;
   textAreaElement.focus();
   textAreaElement.dispatchEvent(new Event('input', { bubbles: true }));
   textAreaElement.dispatchEvent(new Event('change', { bubbles: true }));
-  submitButton.click();
+  setTimeout(() => {
+    submitButton.click();
+  }, 300);
 }
 function insertNextChunk(settings, previousMessage) {
   if (settings.autoSummarize) {
@@ -765,12 +783,10 @@ function insertNextChunk(settings, previousMessage) {
     }
     return;
   }
-  const inputForm = document.querySelector('form');
-  if (!inputForm) return;
-  const submitButton = inputForm.querySelector('textarea ~ button');
-  if (!submitButton) return;
-  const textAreaElement = inputForm.querySelector('textarea');
+  const textAreaElement = document.querySelector('main form textarea');
   if (!textAreaElement) return;
+  const submitButton = document.querySelector('main form textarea ~ button');
+  if (!submitButton) return;
   const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > remainingText.length ? settings.autoSplitLimit : getLastIndexOf(remainingText, settings.autoSplitLimit);
 
   textAreaElement.value = `[START CHUNK ${chunkNumber}/${totalChunks}]
@@ -780,7 +796,9 @@ ${settings.autoSplitChunkPrompt}`;
   textAreaElement.focus();
   textAreaElement.dispatchEvent(new Event('input', { bubbles: true }));
   textAreaElement.dispatchEvent(new Event('change', { bubbles: true }));
-  submitButton.click();
+  setTimeout(() => {
+    submitButton.click();
+  }, 300);
 }
 
 function getLastIndexOf(text, position) {
@@ -937,7 +955,7 @@ ${settings.autoSplitChunkPrompt}`;
               conversationDiv.classList = 'flex flex-col items-center text-sm h-full dark:bg-gray-800';
               const userRow = rowUser({}, node, 1, 1, result.name, result.avatar, settings.customConversationWidth, settings.conversationWidth);
               conversationDiv.innerHTML = userRow;
-              const topDiv = '<div id="conversation-top" class="w-full flex items-center justify-center border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group bg-gray-50 dark:bg-[#444654]" style="min-height:56px;z-index:1;">New chat</div>';
+              const topDiv = '<div id="conversation-top" class="w-full flex items-center justify-center border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group bg-gray-50 dark:bg-[#444654]" style="min-height:56px;z-index:0;">New chat</div>';
               conversationDiv.insertAdjacentHTML('afterbegin', topDiv);
               const bottomDiv = document.createElement('div');
               bottomDiv.id = 'conversation-bottom';
@@ -1094,6 +1112,7 @@ function loadConversationList(skipInputFormReload = false) {
         }
         // }
         if (!skipInputFormReload) addScrollButtons();
+        if (!skipInputFormReload) initializePromptChain();
         if (!skipInputFormReload) overrideSubmitForm();
         if (!skipInputFormReload) setBackButtonDetection();
       }

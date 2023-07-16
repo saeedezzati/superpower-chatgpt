@@ -121,6 +121,14 @@ function addModelSwitcherEventListener(idPrefix, forceDark = false) {
           } else {
             pluginsDropdownWrapper.style.display = 'none';
           }
+          const submitButton = document.querySelector('main form textarea ~ button');
+          if (submitButton && !submitButton.disabled) {
+            if (selectedModel.slug.startsWith('gpt-4')) {
+              submitButton.style.backgroundColor = '#AB68FF';
+            } else {
+              submitButton.style.backgroundColor = '#19C37D';
+            }
+          }
         }
         chrome.storage.local.set({ settings: { ...settings, selectedModel } }, () => {
           addArkoseScript();

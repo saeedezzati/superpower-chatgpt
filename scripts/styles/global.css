@@ -33,6 +33,17 @@ input[type="checkbox"]:checked:focus {
 /* sortable */
 .sortable-ghost {
   background-color: #ffd70050 !important;
+  opacity: 0.5 !important;
+}
+.sortable-drag{
+  border: solid 1px #ffd700 !important;
+  border-radius: 4px !important;
+}
+.multi-drag-selected #prompt-chain-drag-handle{
+  background-color: #ffd70050 !important;
+}
+.multi-drag-selected [id^="conversation-button-"]{
+  background-color: #ffd70050 !important;
 }
 /* tailwind custom*/
 .hover\:pr-20:hover {
@@ -66,7 +77,12 @@ input[type="checkbox"]:checked:focus {
   border-bottom-left-radius: .375rem;
   border-bottom-right-radius: .375rem
 }
-
+ul.hidden {
+  display: none !important;
+}
+#fabCon{
+  display: none !important;
+}
 /* toggle switch */
 .switch {
   position: relative;

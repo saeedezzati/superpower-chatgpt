@@ -201,47 +201,51 @@ function updateOrCreateConversation(conversationId, message, parentId, settings,
   });
 }
 function addProgressBar() {
-  const existingSyncDiv = document.getElementById('sync-div');
-  if (existingSyncDiv) existingSyncDiv.remove();
+  chrome.storage.local.get(['settings'], (result) => {
+    const { settings } = result;
+    const existingSyncDiv = document.getElementById('sync-div');
+    if (existingSyncDiv) existingSyncDiv.remove();
 
-  const nav = document.querySelector('nav');
-  if (!nav) return;
-  nav.style.position = 'relative';
-  nav.style.overflow = 'hidden';
-  const progressBar = document.createElement('div');
-  progressBar.classList = 'absolute bottom-0 left-0 z-50 animate-pulse';
-  progressBar.style = 'height:1px;width: 100%; background-color: #00aaff;margin:0;';
-  progressBar.id = 'sync-progressbar';
-  const progressLabel = document.createElement('div');
-  progressLabel.classList = 'absolute bottom-1 right-1 z-50 text-xs text-gray-500';
-  progressLabel.id = 'sync-progresslabel';
-  progressLabel.innerText = 'Syncing...';
-  const tooltip = document.createElement('div');
-  tooltip.classList = 'flex z-50 text-xs rounded p-2';
-  tooltip.style = 'position: absolute; width: 250px; border: solid 1px #8e8ea0; bottom: 20px; right: 4px; background-color: #343541; display:none; margin:0;';
-  tooltip.id = 'sync-tooltip';
-  tooltip.innerText = 'You conversations are being backed up in your computer for a faster experience! This can take a while.';
-  progressLabel.addEventListener('mouseover', () => {
-    tooltip.style.display = 'block';
+    const nav = document.querySelector('nav');
+    if (!nav) return;
+    nav.style.position = 'relative';
+    nav.style.overflow = 'hidden';
+    const progressBar = document.createElement('div');
+    progressBar.classList = 'absolute bottom-0 left-0 z-50 animate-pulse';
+    progressBar.style = 'height:1px;width: 100%; background-color: #00aaff;margin:0;';
+    progressBar.id = 'sync-progressbar';
+    const progressLabel = document.createElement('div');
+    progressLabel.classList = 'absolute bottom-1 right-1 z-50 text-xs text-gray-500';
+    progressLabel.id = 'sync-progresslabel';
+    progressLabel.innerText = `Syncing... (${settings.quickSync ? 'Quick' : 'Full'})`;
+
+    const tooltip = document.createElement('div');
+    tooltip.classList = 'flex z-50 text-xs rounded p-2';
+    tooltip.style = 'position: absolute; width: 250px; border: solid 1px #8e8ea0; bottom: 20px; right: 4px; background-color: #343541; display:none; margin:0;';
+    tooltip.id = 'sync-tooltip';
+    tooltip.innerText = 'You conversations are being backed up in your computer for a faster experience! This can take a while.';
+    progressLabel.addEventListener('mouseover', () => {
+      tooltip.style.display = 'block';
+    });
+    progressLabel.addEventListener('mouseout', () => {
+      tooltip.style.display = 'none';
+    });
+    const refreshButton = document.createElement('div');
+    refreshButton.id = 'sync-refresh-button';
+    refreshButton.classList = 'z-50 text-xs text-gray-500 w-3 h-3 m-0';
+    refreshButton.style = 'position: absolute; bottom: 6px; left: 8px; cursor: pointer;';
+    refreshButton.title = 'Syncing Conversations';
+    refreshButton.innerHTML = '<svg class="animate-spin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="#00aaff" d="M468.9 32.11c13.87 0 27.18 10.77 27.18 27.04v145.9c0 10.59-8.584 19.17-19.17 19.17h-145.7c-16.28 0-27.06-13.32-27.06-27.2c0-6.634 2.461-13.4 7.96-18.9l45.12-45.14c-28.22-23.14-63.85-36.64-101.3-36.64c-88.09 0-159.8 71.69-159.8 159.8S167.8 415.9 255.9 415.9c73.14 0 89.44-38.31 115.1-38.31c18.48 0 31.97 15.04 31.97 31.96c0 35.04-81.59 70.41-147 70.41c-123.4 0-223.9-100.5-223.9-223.9S132.6 32.44 256 32.44c54.6 0 106.2 20.39 146.4 55.26l47.6-47.63C455.5 34.57 462.3 32.11 468.9 32.11z"/></svg>';
+    const syncDiv = document.createElement('div');
+    syncDiv.classList = 'flex flex-1 flex-col';
+    syncDiv.id = 'sync-div';
+    syncDiv.style = 'max-height: 10px; opacity:1';
+    syncDiv.appendChild(tooltip);
+    syncDiv.appendChild(refreshButton);
+    syncDiv.appendChild(progressLabel);
+    syncDiv.appendChild(progressBar);
+    nav.appendChild(syncDiv);
   });
-  progressLabel.addEventListener('mouseout', () => {
-    tooltip.style.display = 'none';
-  });
-  const refreshButton = document.createElement('div');
-  refreshButton.id = 'sync-refresh-button';
-  refreshButton.classList = 'z-50 text-xs text-gray-500 w-3 h-3 m-0';
-  refreshButton.style = 'position: absolute; bottom: 6px; left: 8px; cursor: pointer;';
-  refreshButton.title = 'Syncing Conversations';
-  refreshButton.innerHTML = '<svg class="animate-spin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="#00aaff" d="M468.9 32.11c13.87 0 27.18 10.77 27.18 27.04v145.9c0 10.59-8.584 19.17-19.17 19.17h-145.7c-16.28 0-27.06-13.32-27.06-27.2c0-6.634 2.461-13.4 7.96-18.9l45.12-45.14c-28.22-23.14-63.85-36.64-101.3-36.64c-88.09 0-159.8 71.69-159.8 159.8S167.8 415.9 255.9 415.9c73.14 0 89.44-38.31 115.1-38.31c18.48 0 31.97 15.04 31.97 31.96c0 35.04-81.59 70.41-147 70.41c-123.4 0-223.9-100.5-223.9-223.9S132.6 32.44 256 32.44c54.6 0 106.2 20.39 146.4 55.26l47.6-47.63C455.5 34.57 462.3 32.11 468.9 32.11z"/></svg>';
-  const syncDiv = document.createElement('div');
-  syncDiv.classList = 'flex flex-1 flex-col';
-  syncDiv.id = 'sync-div';
-  syncDiv.style = 'max-height: 10px; opacity:1';
-  syncDiv.appendChild(tooltip);
-  syncDiv.appendChild(refreshButton);
-  syncDiv.appendChild(progressLabel);
-  syncDiv.appendChild(progressBar);
-  nav.appendChild(syncDiv);
 }
 function checkConversationAreSynced(localConvs, remoteConvs) {
   return Object.values(localConvs).filter((conv) => !conv.archived && (typeof conv.saveHistory === 'undefined' || conv.saveHistory)).length === remoteConvs.length;
@@ -279,8 +283,8 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
   getAllConversations(forceRefresh).then((remoteConversations) => {
     chrome.storage.sync.get(['conversationsOrder'], (res) => {
       const { conversationsOrder } = res;
-      chrome.storage.local.get(['conversations', 'account'], (result) => {
-        const { account } = result;
+      chrome.storage.local.get(['conversations', 'account', 'settings'], (result) => {
+        const { account, settings } = result;
         const isPaid = account?.account_plan?.is_paid_subscription_active || account?.accounts?.default?.entitlement?.has_active_subscription || false;
         if (result.conversations && Object.keys(result.conversations).length > 0) {
           localConversations = result.conversations;
@@ -370,7 +374,7 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
                 // remove duplicate conversation from trash folder(to be safe)
                 trashFolder.conversationIds = [...new Set(trashFolder.conversationIds)];
                 // add conversation to the begining of trash folder
-                if (!trashFolder?.conversationIds.includes(localConversations[localConvIds[i]].id?.slice(0, 5))) {
+                if (!settings.quickSync && !trashFolder?.conversationIds.includes(localConversations[localConvIds[i]].id?.slice(0, 5))) {
                   newConversationsOrder.find((folder) => folder?.id === 'trash')?.conversationIds.unshift(localConversations[localConvIds[i]].id?.slice(0, 5));
                 }
               }
@@ -464,7 +468,7 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
                   if (progressBar && progressLabel && tooltip) {
                     progressBar.style.backgroundColor = 'gold';
                     progressBar.classList.remove('animate-pulse');
-                    progressLabel.innerText = 'Synced';
+                    progressLabel.innerText = `Synced (${settings.quickSync ? 'Quick' : 'Full'})`;
                     tooltip.innerText = 'Your conversations are synced!';
                   }
                   const refreshButton = document.getElementById('sync-refresh-button');
@@ -521,54 +525,58 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
     });
   }, () => {
     // if the conversation history endpoint failed, set conversationsAreSynced to true
-    chrome.storage.local.set({
-      conversationsAreSynced: true,
-    }, () => {
-      clearTimeout(initializeTimoutId);
-      const progressBar = document.getElementById('sync-progressbar');
-      const progressLabel = document.getElementById('sync-progresslabel');
-      const tooltip = document.getElementById('sync-tooltip');
-      if (progressBar && progressLabel && tooltip) {
-        progressBar.style.backgroundColor = 'gold';
-        progressBar.classList.remove('animate-pulse');
-        progressLabel.innerText = 'Synced';
-        tooltip.innerText = 'Your conversations are synced!';
-      }
-      const refreshButton = document.getElementById('sync-refresh-button');
-      if (refreshButton) {
-        refreshButton.title = 'Sync Conversations';
-        refreshButton.classList.add('cursor-pointer');
-        refreshButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="gold" d="M468.9 32.11c13.87 0 27.18 10.77 27.18 27.04v145.9c0 10.59-8.584 19.17-19.17 19.17h-145.7c-16.28 0-27.06-13.32-27.06-27.2c0-6.634 2.461-13.4 7.96-18.9l45.12-45.14c-28.22-23.14-63.85-36.64-101.3-36.64c-88.09 0-159.8 71.69-159.8 159.8S167.8 415.9 255.9 415.9c73.14 0 89.44-38.31 115.1-38.31c18.48 0 31.97 15.04 31.97 31.96c0 35.04-81.59 70.41-147 70.41c-123.4 0-223.9-100.5-223.9-223.9S132.6 32.44 256 32.44c54.6 0 106.2 20.39 146.4 55.26l47.6-47.63C455.5 34.57 462.3 32.11 468.9 32.11z"/></svg>';
-        refreshButton.onclick = (e) => {
-          // remove progress bar and refresh button and progress label
-          const canSubmit = canSubmitPrompt();
-          if (isGenerating || !canSubmit) return;
-          const syncDiv = document.getElementById('sync-div');
-          syncDiv.remove();
-          const { pathname } = new URL(window.location.toString());
-          const conversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
-          const refreshIds = [];
-          if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) {
-            refreshIds.push(conversationId);
-          }
-          // if shift + cmnd/ctrl
-          if (e.shiftKey && (e.metaKey || (isWindows() && e.ctrlKey))) {
-            chrome.storage.sync.set({
-              conversationsOrder: [],
-            }, () => {
-              chrome.storage.local.set({
-                conversations: {},
-                conversationsAreSynced: false,
+    chrome.storage.local.get(['settings'], (result) => {
+      const { settings } = result;
+      chrome.storage.local.set({
+        conversationsAreSynced: true,
+      }, () => {
+        clearTimeout(initializeTimoutId);
+        const progressBar = document.getElementById('sync-progressbar');
+        const progressLabel = document.getElementById('sync-progresslabel');
+        const tooltip = document.getElementById('sync-tooltip');
+        if (progressBar && progressLabel && tooltip) {
+          progressBar.style.backgroundColor = 'gold';
+          progressBar.classList.remove('animate-pulse');
+          progressLabel.innerText = `Synced (${settings.quickSync ? 'Quick' : 'Full'})`;
+
+          tooltip.innerText = 'Your conversations are synced!';
+        }
+        const refreshButton = document.getElementById('sync-refresh-button');
+        if (refreshButton) {
+          refreshButton.title = 'Sync Conversations';
+          refreshButton.classList.add('cursor-pointer');
+          refreshButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="gold" d="M468.9 32.11c13.87 0 27.18 10.77 27.18 27.04v145.9c0 10.59-8.584 19.17-19.17 19.17h-145.7c-16.28 0-27.06-13.32-27.06-27.2c0-6.634 2.461-13.4 7.96-18.9l45.12-45.14c-28.22-23.14-63.85-36.64-101.3-36.64c-88.09 0-159.8 71.69-159.8 159.8S167.8 415.9 255.9 415.9c73.14 0 89.44-38.31 115.1-38.31c18.48 0 31.97 15.04 31.97 31.96c0 35.04-81.59 70.41-147 70.41c-123.4 0-223.9-100.5-223.9-223.9S132.6 32.44 256 32.44c54.6 0 106.2 20.39 146.4 55.26l47.6-47.63C455.5 34.57 462.3 32.11 468.9 32.11z"/></svg>';
+          refreshButton.onclick = (e) => {
+            // remove progress bar and refresh button and progress label
+            const canSubmit = canSubmitPrompt();
+            if (isGenerating || !canSubmit) return;
+            const syncDiv = document.getElementById('sync-div');
+            syncDiv.remove();
+            const { pathname } = new URL(window.location.toString());
+            const conversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
+            const refreshIds = [];
+            if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) {
+              refreshIds.push(conversationId);
+            }
+            // if shift + cmnd/ctrl
+            if (e.shiftKey && (e.metaKey || (isWindows() && e.ctrlKey))) {
+              chrome.storage.sync.set({
+                conversationsOrder: [],
               }, () => {
-                window.location.reload();
+                chrome.storage.local.set({
+                  conversations: {},
+                  conversationsAreSynced: false,
+                }, () => {
+                  window.location.reload();
+                });
               });
-            });
-          } else {
-            initializeAutoSave(true, refreshIds);
-          }
-        };
-      }
-      loadConversationList(skipInputFormReload);
+            } else {
+              initializeAutoSave(true, refreshIds);
+            }
+          };
+        }
+        loadConversationList(skipInputFormReload);
+      });
     });
     //----------------------------------------------
     // initializeCopyAndCounter();

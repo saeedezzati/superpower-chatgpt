@@ -122,7 +122,7 @@ function generalTabContent() {
   leftContent.appendChild(copyModeSwitch);
 
   // prompt template
-  const promptTemplateSwitch = createSwitch('Prompt Template', 'Enable/disable the doube {{curly}} brackets replacement', 'promptTemplate', true);
+  const promptTemplateSwitch = createSwitch('Prompt Template', 'Enable/disable the doube {{curly}} brackets replacement (<a style="text-decoration:underline; color:gold;" href="https://www.notion.so/ezi/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24?pvs=4#d744b8220a374af394b0bcf82274e290" target="blank">Learn More</a>)', 'promptTemplate', true);
   leftContent.appendChild(promptTemplateSwitch);
 
   // conversation width
@@ -168,8 +168,8 @@ function generalTabContent() {
   const importExportWrapper = document.createElement('div');
   importExportWrapper.style = 'display: flex; flex-direction: row; flex-wrap: wrap; justify-content: start; align-items: center; width: 100%; margin: 8px 0; color:white;';
   const importExportLabel = document.createElement('div');
-  importExportLabel.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start; width: 100%; margin: 8px 0;';
-  importExportLabel.textContent = 'Import / Export Settings, Custom Prompts, and Folders';
+  importExportLabel.style = 'width: 100%; margin: 8px 0;';
+  importExportLabel.innerHTML = 'Import / Export Settings, Custom Prompts, and Folders (<a style="text-decoration:underline; color:gold;" href="https://www.notion.so/ezi/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24?pvs=4#efc8c6a6004142b189412e8e6785956d" target="blank">Learn More</a>)';
   importExportWrapper.appendChild(importExportLabel);
 
   const importExportButtonWrapper = document.createElement('div');
@@ -447,6 +447,9 @@ function autoSyncTabContent() {
   chrome.storage.local.get(['settings'], (result) => {
     const { autoSync } = result.settings;
 
+    const quickSyncSwitch = createSwitch('Quick Sync', 'OFF: Sync All Conversations, ON: Sync only the last 100 conversations (Best performance)', 'quickSync', false, resetSync, 'Experimental - Requires Auto-Sync', !autoSync);
+    content.appendChild(quickSyncSwitch);
+
     const conversationTimestampSwitch = createSwitch('Conversation Timestamp', 'OFF: Created time, ON: Last updated time', 'conversationTimestamp', false, reloadConversationList, 'Requires Auto-Sync', !autoSync);
     content.appendChild(conversationTimestampSwitch);
 
@@ -460,6 +463,18 @@ function autoSyncTabContent() {
     content.appendChild(autoHideTopNav);
   });
   return content;
+}
+function resetSync() {
+  chrome.storage.sync.set({
+    conversationsOrder: [],
+  }, () => {
+    chrome.storage.local.set({
+      conversations: {},
+      conversationsAreSynced: false,
+    }, () => {
+      refreshPage();
+    });
+  });
 }
 function reloadConversationList() {
   loadConversationList(true);
@@ -495,7 +510,7 @@ function modelsTabContent() {
   modelSwitcherRow.appendChild(modelSwitcherWrapper);
   content.appendChild(modelSwitcherRow);
   const betaTag = document.createElement('span');
-  betaTag.style = 'background-color: #ff9800; color: white; padding: 2px 4px; border-radius: 8px; font-size: 0.6em;margin-top:8px;';
+  betaTag.style = 'background-color: #ff9800; color: black; padding: 2px 4px; border-radius: 8px; font-size: 0.7em;margin-top:8px;';
   betaTag.textContent = 'Requires Auto-Sync';
   content.appendChild(betaTag);
   chrome.storage.local.get(['settings', 'models', 'unofficialModels', 'customModels'], (result) => {
@@ -523,7 +538,7 @@ function modelsTabContent() {
   newCustomModelInputWrapper.style = 'display: flex; flex-direction: row; justify-content: start; align-items: start; width: 100%; margin: 8px 0;';
   const newCustomModelWrapperTitle = document.createElement('div');
   newCustomModelWrapperTitle.style = 'width: 100%; margin: 8px 0;color: #eee;';
-  newCustomModelWrapperTitle.innerHTML = 'Add a Custom Model<span style="background-color: rgb(255, 152, 0); color: white; padding: 2px 4px; border-radius: 8px; font-size: 0.6em; margin-left: 8px;position:relative; bottom:2px;">Experimental</span>';
+  newCustomModelWrapperTitle.innerHTML = 'Add a Custom Model<span style="background-color: rgb(255, 152, 0); color: black; padding: 2px 4px; border-radius: 8px; font-size: 0.7em; margin-left: 8px;position:relative; bottom:2px;">Experimental</span>';
 
   const newCustomModelSlug = document.createElement('input');
   newCustomModelSlug.style = 'width: 160px; height: 34px; border-radius: 4px; border: 1px solid #565869; background-color: #0b0d0e;margin-right:8px; color: #eee; padding: 0 8px; font-size: 14px;';
@@ -662,7 +677,7 @@ function customPromptTabContent() {
 
       const helperText = document.createElement('div');
       helperText.style = 'color: #999; font-size: 12px; margin: 8px 0;';
-      helperText.textContent = 'Tip: You can use @promptTitle anywhere in your prompt input to replace it with the prompt text. For this feature to work make sure you don\'t have any space in the prompt title. Smart replace is not case sensitive.';
+      helperText.textContent = 'Tip: You can use @promptTitle anywhere in your prompt input to automatically replace it with the prompt text. For this feature to work make sure you don\'t have any space in the prompt title. Smart replace is not case sensitive.';
 
       const repeatedNameError = document.createElement('div');
       repeatedNameError.id = 'repeated-name-error';
@@ -903,7 +918,7 @@ function exportTabContent() {
   exportNamingFormatLabel.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0; color:white; opacity: 0.5;';
   exportNamingFormatLabel.textContent = 'Export naming format';
   const betaTag = document.createElement('span');
-  betaTag.style = 'background-color: #ff9800; color: white; padding: 2px 4px; border-radius: 8px; margin-left: 8px; font-size: 0.6em;';
+  betaTag.style = 'background-color: #ff9800; color: black; padding: 2px 4px; border-radius: 8px; margin-left: 8px; font-size: 0.7em;';
   betaTag.textContent = 'Coming soon';
   content.appendChild(exportModeSwitchWrapper);
   content.appendChild(exportNamingFormatLabel);
@@ -920,8 +935,8 @@ function splitterTabContent() {
     const { autoSync } = result.settings;
     const splitterSwitchWrapper = document.createElement('div');
     splitterSwitchWrapper.style = 'display: flex; gap:16px; justify-content: start; align-items: start; width: 100%; margin: 8px 0;';
-    const autoSplitSwitch = createSwitch('Auto Split', 'Automatically split long prompts into smaller chunks', 'autoSplit', true, null, 'Requires Auto-Sync', !autoSync);
-    const autoSummarizeSwitch = createSwitch('Auto Summarize', 'Automatically summarize each chunk after auto split', 'autoSummarize', false, updateAutoSplitPrompt, 'Requires Auto-Sync', !autoSync);
+    const autoSplitSwitch = createSwitch('Auto Split', 'Automatically split long prompts into smaller chunks (<a style="text-decoration:underline; color:gold;" href="https://www.notion.so/ezi/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24?pvs=4#4fe6dfb33eea451d92ed4d8c240bac1e" target="blank">Learn More</a>)', 'autoSplit', true, null, 'Requires Auto-Sync', !autoSync);
+    const autoSummarizeSwitch = createSwitch('Auto Summarize', 'Automatically summarize each chunk after auto split (<a style="text-decoration:underline; color:gold;" href="https://www.notion.so/ezi/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24?pvs=4#edb708ffea3647509d4957765ab0529c" target="blank">Learn More</a>)', 'autoSummarize', false, updateAutoSplitPrompt, 'Requires Auto-Sync', !autoSync);
 
     const autoSplitChunkSizeLabel = document.createElement('div');
     autoSplitChunkSizeLabel.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0; color:white;';
@@ -1047,7 +1062,7 @@ function createSwitch(title, subtitle, settingsKey, defaultValue, callback = nul
   input.type = 'checkbox';
   input.disabled = disabled;
   const betaTag = document.createElement('span');
-  betaTag.style = 'background-color: #ff9800; color: white; padding: 2px 4px; border-radius: 8px; margin-left: 8px; font-size: 0.6em;';
+  betaTag.style = 'background-color: #ff9800; color: black; padding: 2px 4px; border-radius: 8px; font-size: 0.7em;border:';
   betaTag.textContent = tag;
   const helper = document.createElement('div');
   helper.style = 'font-size: 12px; color: #999;';
@@ -1211,6 +1226,7 @@ function addSettingsButton() {
   const settingsButton = document.createElement('a');
   settingsButton.classList = 'flex py-3 px-3 items-center gap-3 rounded-md hover:bg-gray-500/10 transition-colors duration-200 text-white cursor-pointer text-sm';
   settingsButton.textContent = 'Settings';
+  settingsButton.title = 'CMD/CTRL + SHIFT + S';
 
   const settingsButtonIcon = document.createElement('img');
   settingsButtonIcon.style = 'width: 16px; height: 16px;';
@@ -1248,6 +1264,8 @@ function initializeSettings() {
       settings: {
         ...result.settings,
         autoSync: result.settings?.autoSync !== undefined ? result.settings.autoSync : true,
+        quickSync: result.settings?.quickSync !== undefined ? result.settings.quickSync : false,
+        quickSyncCount: result.settings?.quickSyncCount !== undefined ? result.settings.quickSyncCount : 100,
         safeMode: result.settings?.safeMode !== undefined ? result.settings.safeMode : true,
         promptHistory: result.settings?.promptHistory !== undefined ? result.settings.promptHistory : true,
         copyMode: result.settings?.copyMode !== undefined ? result.settings.copyMode : false,
@@ -1274,7 +1292,7 @@ Let's begin:
 `,
         autoSplitChunkPrompt: result.settings?.autoSplitChunkPrompt !== undefined ? result.settings?.autoSplitChunkPrompt : `Reply with OK: [CHUNK x/TOTAL]
 Don't reply with anything else!`,
-        conversationTimestamp: result.settings?.conversationTimestamp !== undefined ? result.settings.conversationTimestamp : false,
+        conversationTimestamp: result.settings?.conversationTimestamp !== undefined ? result.settings.conversationTimestamp : true,
         autoHideTopNav: result.settings?.autoHideTopNav !== undefined ? result.settings.autoHideTopNav : false,
         navOpen: result.settings?.navOpen !== undefined ? result.settings.navOpen : true,
         showPinNav: result.settings?.showPinNav !== undefined ? result.settings.showPinNav : true,

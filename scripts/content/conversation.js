@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global getConversation, submitChat, openSubmitPromptModal, initializeRegenerateResponseButton, toggleTextAreaElement, rowAssistant, rowUser, copyRichText, messageFeedback, openFeedbackModal, refreshConversations, initializeStopGeneratingResponseButton, chatStreamIsClosed:true, generateInstructions, isGenerating:true, scrolUpDetected:true, addScrollDetector, generateSuggestions, addArkoseScript, addEnforcementTriggerElement */
+/* global getConversation, submitChat, openSubmitPromptModal, initializeRegenerateResponseButton, toggleTextAreaElement, rowAssistant, rowUser, copyRichText, messageFeedback, openFeedbackModal, refreshConversations, initializeStopGeneratingResponseButton, chatStreamIsClosed:true, generateInstructions, isGenerating:true, scrolUpDetected:true, addScrollDetector, generateSuggestions, addArkoseScript, addEnforcementTriggerElement, languageList, writingStyleList, toneList */
 
 function addPinNav(sortedNodes) {
   chrome.storage.local.get(['settings'], (res) => {
@@ -33,7 +33,10 @@ function addPinNav(sortedNodes) {
     main.appendChild(pinNav);
   });
 }
-function updateModel(modelSlug, pluginIds = []) {
+function updateModel(modelSlug, fullConversation) {
+  const pluginIds = fullConversation.pluginIds || [];
+  const { languageCode, toneCode, writingStyleCode } = fullConversation;
+
   if (!modelSlug) return;
   chrome.storage.local.get(['settings', 'models', 'unofficialModels', 'customModels', 'enabledPluginIds'], ({
     settings, models, unofficialModels, customModels, enabledPluginIds,
@@ -57,7 +60,21 @@ function updateModel(modelSlug, pluginIds = []) {
       pluginDropdownButton.style.opacity = 0.75;
       pluginDropdownButton.title = 'Changing plugins in the middle of the conversation is not allowed';
     }
-    chrome.storage.local.set({ settings: { ...settings, selectedModel }, enabledPluginIds: pluginIds || enabledPluginIds });
+    chrome.storage.local.set({
+      settings: {
+        ...settings,
+        selectedModel,
+        selectedLanguage: languageList.find((language) => language.code === languageCode || language.code === 'default'),
+        selectedTone: toneList.find((tone) => tone.code === toneCode || tone.code === 'default'),
+        selectedWritingStyle: writingStyleList.find((writingStyle) => writingStyle.code === writingStyleCode || writingStyle.code === 'default'),
+      },
+      enabledPluginIds: pluginIds || enabledPluginIds,
+    }, () => {
+      // get the li with id of the language code and click it
+      document.querySelector('#language-list-dropdown').querySelector(`li#language-selector-option-${languageCode}`).click();
+      document.querySelector('#tone-list-dropdown').querySelector(`li#tone-selector-option-${toneCode}`).click();
+      document.querySelector('#writing-style-list-dropdown').querySelector(`li#writing-style-selector-option-${writingStyleCode}`).click();
+    });
   });
 }
 function loadConversationFromNode(conversationId, newMessageId, oldMessageId, searchValue = '') {
@@ -115,7 +132,7 @@ function loadConversationFromNode(conversationId, newMessageId, oldMessageId, se
       initializeRegenerateResponseButton();
       initializeStopGeneratingResponseButton();
       addPinNav(sortedNodes);
-      updateModel(sortedNodes[sortedNodes.length - 1].message?.metadata?.model_slug, fullConversation.plugin_ids || []);
+      updateModel(sortedNodes[sortedNodes.length - 1].message?.metadata?.model_slug, fullConversation);
       updateTotalCounter();
     });
   });
@@ -174,9 +191,9 @@ function loadConversation(conversationId, searchValue = '', focusOnInput = true)
       }
       sortedNodes.reverse();
       //--------
-      let messageDiv = `<div id="conversation-top" class="w-full flex items-center justify-center border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group bg-gray-50 dark:bg-[#444654]" style="min-height:56px;z-index:1;"><strong>${folderName ? `${folderName}  &nbsp;&nbsp;&nbsp;› &nbsp;&nbsp;&nbsp;` : ''}</strong>${fullConversation.title}</div>`;
+      let messageDiv = `<div id="conversation-top" class="w-full flex items-center justify-center border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group bg-gray-50 dark:bg-[#444654]" style="min-height:56px;z-index:0;"><strong>${folderName ? `${folderName}  &nbsp;&nbsp;&nbsp;› &nbsp;&nbsp;&nbsp;` : ''}</strong>${fullConversation.title}</div>`;
       if (fullConversation.archived) {
-        messageDiv = '<div id="conversation-top"></div><div style="display: flex; align-items: center; justify-content: center; min-height: 56px; width: 100%; color:white; background-color: #ff0000; position: sticky; top: 0;z-index:1;">This is an archived chat. You can read archived chats, but you cannot continue them.</div>';
+        messageDiv = '<div id="conversation-top"></div><div style="display: flex; align-items: center; justify-content: center; min-height: 56px; width: 100%; color:white; background-color: #ff0000; position: sticky; top: 0;z-index:0;">This is an archived chat. You can read archived chats, but you cannot continue them.</div>';
       }
       messageDiv.id = 'conversation-wrapper';
       for (let i = 0; i < sortedNodes.length; i += 1) {
@@ -242,8 +259,11 @@ function loadConversation(conversationId, searchValue = '', focusOnInput = true)
         refreshConversations(res.conversations);
       }
       addPinNav(sortedNodes);
-      updateModel(sortedNodes[sortedNodes.length - 1].message?.metadata?.model_slug, fullConversation.plugin_ids || []);
+      updateModel(sortedNodes[sortedNodes.length - 1].message?.metadata?.model_slug, fullConversation);
       updateTotalCounter();
+      if (settings.autoClick) {
+        document.querySelector('#auto-click-button').click();
+      }
     });
   });
 }
@@ -327,9 +347,7 @@ function addConversationsEventListeners(conversationId) {
         saveButton.addEventListener('click', () => {
           window.localStorage.removeItem('arkoseToken');
           if (result.settings.selectedModel.slug.includes('gpt-4')) {
-            const main = document.querySelector('main');
-            if (!main) return;
-            const inputForm = main.querySelector('form');
+            const inputForm = document.querySelector('main form');
             if (!inputForm) return;
             if (!inputForm.querySelector('#enforcement-trigger')) {
               addEnforcementTriggerElement();

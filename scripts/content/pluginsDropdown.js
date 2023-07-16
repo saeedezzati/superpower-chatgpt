@@ -3,12 +3,18 @@
 // eslint-disable-next-line no-unused-vars
 function pluginsDropdown(installedPlugins, enabledPluginIds, idPrefix, forceDark = false) {
   const enabledPlugins = installedPlugins?.filter((plugin) => enabledPluginIds?.includes(plugin.id));
+  const sortedPlugins = enabledPlugins?.sort((a, b) => {
+    const textA = a.manifest.name_for_human.toUpperCase();
+    const textB = b.manifest.name_for_human.toUpperCase();
+    // eslint-disable-next-line no-nested-ternary
+    return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
+  });
   return `<button id="${idPrefix}-plugins-dropdown-button" class="relative w-full cursor-pointer rounded-md border ${forceDark ? 'border-white/20 bg-gray-800' : 'border-gray-300 bg-white'} pt-1 pl-3 pr-10 text-left focus:border-green-600 focus:outline-none focus:ring-1 focus:ring-green-600 dark:border-white/20 dark:bg-gray-800 sm:text-sm" type="button">
   <label class="block text-xs ${forceDark ? 'text-gray-500' : 'text-gray-700'} dark:text-gray-500">Plugins</label>
   <span class="inline-flex w-full truncate font-semibold ${forceDark ? 'text-gray-100' : 'text-gray-800'} dark:text-gray-100">
     <span id="${idPrefix}-enabled-plugins-list" class="flex h-6 items-center gap-1 truncate">
-    ${enabledPlugins?.length > 0 ? `<div class="flex gap-1">
-      ${enabledPlugins?.map((enabledPlugin) => `<div class="relative" style="width: 16px; height: 16px;"><img src="${enabledPlugin?.manifest.logo_url}" alt="${enabledPlugin.manifest.name_for_human} logo" class="h-full w-full bg-white rounded-sm"><div class="absolute inset-0 ring-1 ring-inset ring-black/10 rounded-sm"></div></div>`).join('')}
+    ${sortedPlugins?.length > 0 ? `<div class="flex gap-1">
+      ${sortedPlugins?.map((enabledPlugin) => `<div class="relative" style="width: 16px; height: 16px;"><img src="${enabledPlugin?.manifest.logo_url}" alt="${enabledPlugin.manifest.name_for_human} logo" class="h-full w-full bg-white rounded-sm"><div class="absolute inset-0 ring-1 ring-inset ring-black/10 rounded-sm"></div></div>`).join('')}
       </div>` : '<span class="flex h-6 items-center gap-1 truncate">No plugins enabled</span>'}
     </span>
   </span>
@@ -36,7 +42,13 @@ asd
 </div>`;
 }
 function createPluginsDropDown(installedPlugins, enabledPluginIds, idPrefix, forceDark = false) {
-  return `${installedPlugins?.map((installedPlugin) => `<li class="text-gray-900 group relative cursor-pointer select-none border-b py-1 pl-3 pr-9 last:border-0 ${forceDark ? 'border-white/20' : 'border-gray-100'} dark:border-white/20" id="${idPrefix}-plugins-dropdown-option-${installedPlugin.id}" role="option" tabindex="-1">
+  const sortedPlugins = installedPlugins?.sort((a, b) => {
+    const textA = a.manifest.name_for_human.toUpperCase();
+    const textB = b.manifest.name_for_human.toUpperCase();
+    // eslint-disable-next-line no-nested-ternary
+    return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
+  });
+  return `${sortedPlugins?.map((installedPlugin) => `<li class="text-gray-900 group relative cursor-pointer select-none border-b py-1 pl-3 pr-9 last:border-0 ${forceDark ? 'border-white/20' : 'border-gray-100'} dark:border-white/20" id="${idPrefix}-plugins-dropdown-option-${installedPlugin.id}" role="option" tabindex="-1">
   <span id="${idPrefix}-plugin-dropdown-option-${installedPlugin.id}" class="flex items-center gap-1.5 truncate">
     <span class="h-6 w-6 shrink-0">
       <div class="relative" style="width: 100%; height: 100%;">

@@ -1,8 +1,9 @@
 /* global createModal */
 // eslint-disable-next-line no-unused-vars
 function createTemplateWordsModal(templateWords) {
-  const bodyContent = templateWordsModalContent(templateWords);
-  const actionsBarContent = templateWordsModalActions(templateWords);
+  const uniqueTemplateWords = [...new Set(templateWords)];
+  const bodyContent = templateWordsModalContent(uniqueTemplateWords);
+  const actionsBarContent = templateWordsModalActions(uniqueTemplateWords);
   createModal('Template words', 'Please replace the template words', bodyContent, actionsBarContent, true);
 }
 
@@ -39,10 +40,8 @@ function templateWordsModalActions(templateWords) {
   submitButton.innerHTML = 'Submit';
   submitButton.id = 'modal-submit-button';
 
-  submitButton.addEventListener('click', () => {
-    const main = document.querySelector('main');
-    const inputForm = main.querySelector('form');
-    const textAreaElement = inputForm.querySelector('textarea');
+  submitButton.addEventListener('click', (e) => {
+    const textAreaElement = document.querySelector('main form textarea');
     // replace template words in text area value with the input values associated with them
     let newValue = textAreaElement.value;
     templateWords.forEach((templateWord) => {
@@ -53,6 +52,10 @@ function templateWordsModalActions(templateWords) {
     textAreaElement.value = newValue;
     if (document.querySelector('[id*=close-button]')) {
       document.querySelector('[id*=close-button]').click();
+    }
+    if (!e.shiftKey) {
+      const chatSubmitButton = document.querySelector('main form textarea ~ button');
+      chatSubmitButton.click();
     }
   });
   actionBar.appendChild(submitButton);

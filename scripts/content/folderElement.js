@@ -78,8 +78,11 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
 
   // add checkbox
   // addCheckboxToConversationElement(conversationElement, conversation);
-  const sortable = new Sortable(folderContent, {
+  const sortable = Sortable.create(folderContent, {
     draggable: '[id^="conversation-button-"]',
+    // multiDrag: true,
+    // selectedClass: 'multi-drag-selected',
+    // handle: '[id^="checkbox-wrapper-"], [id^="conversation-button-"]',
     group: {
       name: folderId,
       // eslint-disable-next-line func-names, object-shorthand

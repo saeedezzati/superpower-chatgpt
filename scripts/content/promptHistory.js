@@ -1,4 +1,4 @@
-/* global highlight,openSubmitPromptModal, updateInputCounter, addButtonToNavFooter,createModal, disableTextInput:true, isGenerating, addInputCounter, toast */
+/* global highlight,openSubmitPromptModal, updateInputCounter, addButtonToNavFooter,createModal, disableTextInput:true, isGenerating, addInputCounter, toast, quickAccessMenu , updateQuickAccessMenuItems */
 function createPromptHistoryModal() {
   chrome.storage.local.get(['userInputValueHistory', 'settings'], (result) => {
     const { userInputValueHistory, settings } = result;
@@ -142,7 +142,9 @@ function promptHistoryList(userInputValueHistory, historyFilter) {
         textAreaElement.dispatchEvent(new Event('change', { bubbles: true }));
         // if alt key is pressed, submit the form
         if (event.shiftKey) {
-          submitButton.click();
+          setTimeout(() => {
+            submitButton.click();
+          }, 300);
         }
         // click on modal close button
         document.querySelector('button[id="modal-close-button-my-prompt-history"]').click();
@@ -500,9 +502,19 @@ function textAreaElementInputEventListener(event) {
   const submitButton = inputForm.querySelector('textarea ~ button');
   if (submitButton) {
     if (event.target.value.trim().length > 0) {
-      submitButton.disabled = false;
+      chrome.storage.local.get(['settings'], (result) => {
+        const { settings } = result;
+        const { selectedModel } = settings;
+        submitButton.disabled = false;
+        if (selectedModel.slug.startsWith('gpt-4')) {
+          submitButton.style.backgroundColor = '#AB68FF';
+        } else {
+          submitButton.style.backgroundColor = '#19C37D';
+        }
+      });
     } else {
       submitButton.disabled = true;
+      submitButton.style.backgroundColor = 'transparent';
     }
   }
   updateInputCounter(event.target.value);
@@ -535,10 +547,12 @@ function textAreaElementInputEventListener(event) {
   });
 }
 // Add keyboard event listener to text area
-function textAreaElementKeydownEventListener(event) {
+function textAreaElementKeydownEventListenerSync(event) {
   const textAreaElement = event.target;
 
   if (event.key === 'Enter' && event.which === 13 && !event.shiftKey) {
+    event.preventDefault();
+    event.stopPropagation();
     updateInputCounter('');
     chrome.storage.local.get(['textInputValue'], (result) => {
       const textInputValue = result.textInputValue || '';
@@ -620,6 +634,144 @@ function textAreaElementKeydownEventListener(event) {
   }
 }
 // eslint-disable-next-line no-unused-vars
+function textAreaElementKeydownEventListenerASync(event) {
+  const textAreaElement = event.target;
+
+  if (event.key === 'Enter' && event.which === 13 && !event.shiftKey) {
+    event.preventDefault();
+    event.stopPropagation();
+    updateInputCounter('');
+    chrome.storage.local.get(['textInputValue'], (result) => {
+      const textInputValue = result.textInputValue || '';
+      if (textInputValue === '') return;
+      const templateWords = textAreaElement.value.match(/{{(.*?)}}/g);
+      if (!templateWords) {
+        textAreaElement.style.height = '24px';
+      }
+      addUserPromptToHistory(textInputValue);
+    });
+  }
+  // if press up arrow key, get last input value from local storage history
+  if (event.key === 'ArrowUp') {
+    const quickAccessMenu = document.querySelector('#quick-access-menu');
+    if (quickAccessMenu && quickAccessMenu.style.display !== 'none') {
+      event.preventDefault();
+      return;
+    }
+    // check if cursor is at position 0
+    if (textAreaElement.selectionStart !== 0) return;
+    // if there is text in the field save that first
+    chrome.storage.local.get(['userInputValueHistoryIndex', 'settings', 'userInputValueHistory'], (result) => {
+      const { settings } = result;
+      if (settings && !settings.promptHistory) return;
+      const userInputValueHistory = result.userInputValueHistory || [];
+      if (userInputValueHistory.length === 0) return;
+      let userInputValueHistoryIndex = result.userInputValueHistoryIndex || 0;
+      userInputValueHistoryIndex = Math.max(userInputValueHistoryIndex - 1, 0);
+      const lastInputValue = userInputValueHistory[userInputValueHistoryIndex];
+
+      chrome.storage.local.set({ userInputValueHistoryIndex }, () => {
+        if (lastInputValue) {
+          // textAreaElement.style.height = `${lastInputValue.inputValue.split('\\n').length * 24}px`;
+          textAreaElement.value = lastInputValue.inputValue;
+          textAreaElement.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      });
+    });
+  }
+  // if press down arrow key, get next input value from local storage history
+  if (event.key === 'ArrowDown') {
+    const quickAccessMenu = document.querySelector('#quick-access-menu');
+    if (quickAccessMenu && quickAccessMenu.style.display !== 'none') {
+      event.preventDefault();
+      return;
+    }
+    // check if cursor is at position end
+    if (textAreaElement.selectionStart !== textAreaElement.value.length) return;
+    // if there is text in the field save that first
+    chrome.storage.local.get(['userInputValueHistoryIndex', 'settings', 'userInputValueHistory', 'unsavedUserInput'], (result) => {
+      const { settings } = result;
+      if (settings && !settings.promptHistory) return;
+      let userInputValueHistoryIndex = result.userInputValueHistoryIndex || 0;
+      const userInputValueHistory = result.userInputValueHistory || [];
+      if (userInputValueHistory.length === 0) return;
+      userInputValueHistoryIndex = Math.min(userInputValueHistoryIndex + 1, userInputValueHistory.length);
+      chrome.storage.local.set({ userInputValueHistoryIndex }, () => {
+        const nextInputValue = userInputValueHistory[userInputValueHistoryIndex];
+        if (nextInputValue) {
+          textAreaElement.style.height = `${nextInputValue.inputValue.split('\\n').length * 24}px`;
+          textAreaElement.value = nextInputValue.inputValue;
+        } else if (userInputValueHistory[userInputValueHistory.length - 1].inputValue !== '') {
+          const unsavedUserInput = result.unsavedUserInput || '';
+          if (textAreaElement.value !== unsavedUserInput) {
+            textAreaElement.value = unsavedUserInput;
+          }
+        }
+        textAreaElement.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+    });
+  }
+  // space key
+  if (event.keyCode === 32) {
+    const quickAccessMenuElement = document.querySelector('#quick-access-menu');
+    if (quickAccessMenuElement) {
+      quickAccessMenuElement.remove();
+    }
+    chrome.storage.local.get(['customPrompts'], (res) => {
+      // find any word that starts with @ and ends with space
+      // if the word is in customPrompts titles, replace it with the prompt.text
+      const customPrompts = res.customPrompts || [];
+      const textAreaValue = textAreaElement.value;
+      const words = textAreaValue.split(/[\s\n]+/);
+      const lastWord = words[words.length - 2];
+      if (lastWord.startsWith('@')) {
+        const prompt = customPrompts.find((p) => p.title.toLowerCase() === lastWord.substring(1).toLowerCase());
+        if (prompt) {
+          textAreaElement.value = textAreaValue.substring(0, textAreaValue.length - (lastWord.length + 1)) + prompt.text;
+          textAreaElement.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
+    });
+  }
+  // timeout to capture last entered/removed character
+  setTimeout(() => {
+    updateQuickAccessMenuItems();
+  }, 100);
+  // @
+  if (event.keyCode === 50) {
+    // open the dropdown with custom prompts
+    quickAccessMenu('@');
+  }
+  // #
+  if (event.keyCode === 51) {
+    // open the dropdown with prompt chains
+    quickAccessMenu('#');
+  }
+
+  if (event.key === 'Backspace') {
+    const cursorPosition = textAreaElement.selectionStart;
+    // @
+    const previousAtPosition = textAreaElement.value.lastIndexOf('@', cursorPosition);
+    const previousHashtagPosition = textAreaElement.value.lastIndexOf('#', cursorPosition);
+    const previousTrigger = previousAtPosition > previousHashtagPosition ? '@' : '#';
+    const previousTriggerPosition = Math.max(previousAtPosition, previousHashtagPosition);
+
+    if (previousTriggerPosition > -1 && cursorPosition - 1 > previousTriggerPosition && textAreaElement.value.lastIndexOf(' ', cursorPosition) < previousTriggerPosition) {
+      const quickAccessMenuElement = document.querySelector('#quick-access-menu');
+      if (!quickAccessMenuElement) {
+        // get the word between the previous trigger and the cursor
+        quickAccessMenu(previousTrigger);
+      }
+    } else {
+      const quickAccessMenuElement = document.querySelector('#quick-access-menu');
+      if (quickAccessMenuElement) {
+        quickAccessMenuElement.remove();
+      }
+    }
+  }
+}
+
+// eslint-disable-next-line no-unused-vars
 function initializePromptHistory() {
   addButtonToNavFooter('My Prompt History', () => createPromptHistoryModal());
 }
@@ -654,6 +806,6 @@ function addAsyncInputEvents() {
 
   if (textAreaElement) {
     textAreaElement.addEventListener('input', textAreaElementInputEventListener);
-    textAreaElement.addEventListener('keydown', textAreaElementKeydownEventListener);
+    textAreaElement.addEventListener('keydown', textAreaElementKeydownEventListenerSync);
   }
 }

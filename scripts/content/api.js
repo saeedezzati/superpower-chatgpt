@@ -379,54 +379,68 @@ function getSelectedConversations(forceRefresh = false) {
 
 function getAllConversations(forceRefresh = false) {
   return new Promise((resolve) => {
-    chrome.storage.local.get(['conversations', 'conversationsAreSynced', 'settings']).then((res) => {
-      const { conversations, conversationsAreSynced, settings } = res;
-      const { autoSync } = settings;
-      if (!forceRefresh && conversationsAreSynced && (typeof autoSync === 'undefined' || autoSync)) {
-        const visibleConversation = Object.values(conversations);
-        resolve(visibleConversation);
-      } else {
-        const allConversations = [];
-        getConversations().then((convs) => {
-          const {
-            limit, offset, items,
-          } = convs;
-          const total = convs.total ? Math.min(convs.total, 10000) : 10000; // sync last 10000 conversations
-          if (items.length === 0 || total === 0) {
-            resolve([]);
-            return;
-          }
-          allConversations.push(...items);
-          if (offset + limit < total) {
-            const promises = [];
-            for (let i = 1; i < Math.ceil(total / limit); i += 1) {
-              promises.push(getConversations(i * limit, limit));
+    chrome.storage.sync.get('conversationsOrder', ({ conversationsOrder }) => {
+      chrome.storage.local.get(['conversations', 'conversationsAreSynced', 'settings']).then((res) => {
+        const {
+          conversations, conversationsAreSynced, settings,
+        } = res;
+        const { autoSync, quickSync, quickSyncCount } = settings;
+
+        // const allVisibleConversationsOrderIds = conversationsOrder.filter((conv) => conv.id !== 'trash').map((conv) => (typeof conv === 'object' ? conv.conversationIds : conv)).flat();
+
+        // const quickSyncCount = Math.max(settings.quickSyncCount || 0, allVisibleConversationsOrderIds.length);
+
+        if (!forceRefresh && conversationsAreSynced && (typeof autoSync === 'undefined' || autoSync)) {
+          const visibleConversation = Object.values(conversations);
+          resolve(visibleConversation);
+        } else {
+          const allConversations = [];
+          const initialOffset = 0;
+          const initialLimit = (autoSync && quickSync && quickSyncCount > 0) ? Math.min(100, quickSyncCount) : 100;
+          getConversations(initialOffset, initialLimit).then((convs) => {
+            const {
+              limit, offset, items,
+            } = convs;
+            // eslint-disable-next-line no-nested-ternary
+            const total = (autoSync && quickSync && quickSyncCount > 0)
+              ? quickSyncCount
+              : convs.total ? Math.min(convs.total, 10000) : 10000; // sync last 10000 conversations
+            if (items.length === 0 || total === 0) {
+              resolve([]);
+              return;
             }
-            Promise.all(promises).then((results) => {
-              results.forEach((result) => {
-                if (result.items) {
-                  allConversations.push(...result.items);
-                }
-              });
-              resolve(allConversations);
-            }, (err) => {
-              if (conversationsAreSynced) {
-                const visibleConversation = Object.values(conversations).filter((conversation) => !conversation.archived && !conversation.skipped);
-                resolve(visibleConversation);
+            allConversations.push(...items);
+            if (offset + limit < total) {
+              const promises = [];
+              for (let i = 1; i < Math.ceil(total / limit); i += 1) {
+                promises.push(getConversations(i * limit, limit));
               }
-              resolve(Promise.reject(err));
-            });
-          } else {
-            resolve(allConversations);
-          }
-        }, (err) => {
-          if (conversationsAreSynced) {
-            const visibleConversation = Object.values(conversations).filter((conversation) => !conversation.archived && !conversation.skipped);
-            resolve(visibleConversation);
-          }
-          resolve(Promise.reject(err));
-        });
-      }
+              Promise.all(promises).then((results) => {
+                results.forEach((result) => {
+                  if (result.items) {
+                    allConversations.push(...result.items);
+                  }
+                });
+                resolve(allConversations);
+              }, (err) => {
+                if (conversationsAreSynced) {
+                  const visibleConversation = Object.values(conversations).filter((conversation) => !conversation.archived && !conversation.skipped);
+                  resolve(visibleConversation);
+                }
+                resolve(Promise.reject(err));
+              });
+            } else {
+              resolve(allConversations);
+            }
+          }, (err) => {
+            if (conversationsAreSynced) {
+              const visibleConversation = Object.values(conversations).filter((conversation) => !conversation.archived && !conversation.skipped);
+              resolve(visibleConversation);
+            }
+            resolve(Promise.reject(err));
+          });
+        }
+      });
     });
   });
 }

@@ -35,6 +35,8 @@ https://user-images.githubusercontent.com/574142/232172841-50f1b114-ef47-4533-a6
 
 🔁 Auto Sync: Never lose your chats. Automatically sync a copy of all your chats on ChatGPT to your computer
 
+🏎️ Quick Sync: Select the option to only sync the last 100 chats in your history for best performance
+
 📥 Export: Select and Export any number of your chats into multiple formats(.txt, .json, .md). You can also export your prompt history, your settings, your shortcuts and your folders.
 
 🔎 Search and Highlight: Search through all your previous chats on ChatGPT and highlight results for quick review
@@ -52,6 +54,10 @@ https://user-images.githubusercontent.com/574142/232172841-50f1b114-ef47-4533-a6
 🕵️‍♀️ Incognito Mode: Chat with History Off and continue it later
 
 ## Prompt Management for ChatGPT
+
+⛓️ Prompt Chains: Save a series of prompts as a prompt chain. Then run each prompt in the prompt chain one by one with a single click
+
+⚡️ Auto Complete Menu: Simply type @ or # to open a menu of all your custom prompts or prompt chains right above the input box
 
 🔙 Input History: Every prompt you have ever used is saved privately on your computer. Click on My Prompt History to scroll through all your ChatGPT prompt history, mark them as favorites, or share them with the community
 

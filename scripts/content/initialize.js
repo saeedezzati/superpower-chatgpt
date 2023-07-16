@@ -1,4 +1,4 @@
-/* global getAccount, getModels, getConversationLimit, initializeStorage, cleanNav, initializeContinue, initializeExport, initializeSettings, initializePromptHistory, initializePromptLibrary, initializeNewsletter, initializeAutoSave, addNavToggleButton, initializeAnnouncement, initializeReleaseNote, initializeReplaceDeleteConversationButton, initializeCopyAndCounter, initializeAddToPromptLibrary, initializeTimestamp, updateNewChatButtonNotSynced, addAsyncInputEvents, initializeContentMessageListeners, registerShortkeys, addDevIndicator, addExpandButton, openLinksInNewTab, addEnforcementTriggerElement, addArkoseCallback */
+/* global getAccount, getModels, getConversationLimit, initializeStorage, cleanNav, initializeContinue, initializeExport, initializeSettings, initializePromptHistory, initializePromptLibrary, initializeNewsletter, initializeAutoSave, addNavToggleButton, initializeAnnouncement, initializeReleaseNote, initializeReplaceDeleteConversationButton, initializeCopyAndCounter, initializeAddToPromptLibrary, initializeTimestamp, updateNewChatButtonNotSynced, addAsyncInputEvents, initializeContentMessageListeners, addDevIndicator, addExpandButton, openLinksInNewTab, addEnforcementTriggerElement, initializeKeyboardShortcuts, addArkoseCallback, addQuickAccessMenuEventListener, watchError, showAutoSyncToast */
 
 // eslint-disable-next-line no-unused-vars
 function initialize() {
@@ -8,13 +8,14 @@ function initialize() {
   if (!historyButton) {
     setTimeout(() => {
       initializeStorage().then(() => {
-        registerShortkeys();
+        // watchError();
         getAccount();
         getModels();
         getConversationLimit();
         openLinksInNewTab();
         addNavToggleButton();
         initializeContentMessageListeners();
+        addQuickAccessMenuEventListener();
         cleanNav();
         initializeContinue();
         initializeNewsletter();
@@ -26,9 +27,10 @@ function initialize() {
         initializePromptHistory();
         addExpandButton();
         addDevIndicator();
+        initializeKeyboardShortcuts();
         addEnforcementTriggerElement();
         addArkoseCallback();
-
+        // showAutoSyncToast();
         setTimeout(() => {
           chrome.storage.local.get(['settings'], (result) => {
             const { settings } = result;
