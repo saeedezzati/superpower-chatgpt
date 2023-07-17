@@ -465,15 +465,11 @@ function autoSyncTabContent() {
   return content;
 }
 function resetSync() {
-  chrome.storage.sync.set({
-    conversationsOrder: [],
+  chrome.storage.local.set({
+    conversations: {},
+    conversationsAreSynced: false,
   }, () => {
-    chrome.storage.local.set({
-      conversations: {},
-      conversationsAreSynced: false,
-    }, () => {
-      refreshPage();
-    });
+    refreshPage();
   });
 }
 function reloadConversationList() {
