@@ -1111,7 +1111,7 @@ function refreshPage() {
 function settingsModalActions() {
   // add actionbar at the bottom of the content
   const actionBar = document.createElement('div');
-  actionBar.style = 'display: flex; flex-direction: row; justify-content: start; align-items: end; margin-top: 8px;';
+  actionBar.style = 'display: flex; flex-direction: row; justify-content: start; align-items: end; margin-top: 8px;width:100%;';
   const logo = document.createElement('img');
   logo.src = chrome.runtime.getURL('icons/logo.png');
   logo.style = 'width: 40px; height: 40px;';
@@ -1210,6 +1210,22 @@ function settingsModalActions() {
 
   textWrapper.appendChild(madeBy);
   actionBar.appendChild(textWrapper);
+
+  const buyMeAPizza = document.createElement('a');
+  buyMeAPizza.classList = 'flex py-3 px-3 items-center gap-3 rounded-md bg-gold hover:bg-gold-dark transition-colors duration-200 text-black cursor-pointer text-sm ml-auto font-bold';
+  buyMeAPizza.textContent = '🍕 Buy me a pizza';
+  // make the button shake every 5 seconds
+  setInterval(() => {
+    buyMeAPizza.classList.add('animate-shake');
+    setTimeout(() => {
+      buyMeAPizza.classList.remove('animate-shake');
+    }, 1000);
+  }, 7000);
+
+  buyMeAPizza.href = 'https://www.buymeacoffee.com/ezii';
+  buyMeAPizza.target = '_blank';
+
+  actionBar.appendChild(buyMeAPizza);
   return actionBar;
 }
 function addSettingsButton() {

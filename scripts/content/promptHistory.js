@@ -401,9 +401,10 @@ function historyModalActions() {
         reader.onload = (e) => {
           const importedHistory = JSON.parse(e.target.result);
           const existingHistory = result.userInputValueHistory;
+
           // only add new items
           importedHistory.forEach((importedItem) => {
-            const existingItem = existingHistory.find((item) => item.text === importedItem.text);
+            const existingItem = existingHistory.find((item) => item.inputValue === importedItem.inputValue);
             if (!existingItem) {
               existingHistory.push(importedItem);
             }
