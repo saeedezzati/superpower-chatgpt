@@ -507,8 +507,8 @@ function addGpt4Counter() {
     if (!result.models.find((model) => model.slug === 'gpt-4')) return;
     gpt4CounterElement.style.display = result.settings.showGpt4Counter ? 'block' : 'none';
     const gpt4Timestamps = result.gpt4Timestamps || [];
-    const messageCap = result?.conversationLimit?.message_cap || 24;
-    const messageCapWindow = result?.conversationLimit?.message_cap_window || 181;
+    const messageCap = result?.conversationLimit?.message_cap || 50;
+    const messageCapWindow = result?.conversationLimit?.message_cap_window || 180;
     const now = new Date().getTime();
     const gpt4counter = gpt4Timestamps.filter((timestamp) => now - timestamp < (messageCapWindow / 60) * 60 * 60 * 1000).length;
     const capExpiresAtTimeString = result.capExpiresAt ? `(Cap Expires At: ${result.capExpiresAt})` : '';

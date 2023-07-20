@@ -141,10 +141,11 @@ function getModels() {
     });
 }
 function getConversationLimit() {
-  return fetch('https://chat.openai.com/public-api/conversation_limit', {
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch('https://chat.openai.com/public-api/conversation_limit', {
     method: 'GET',
     headers: {
       ...defaultHeaders,
+      Authorization: result.auth_token,
     },
   }).then((response) => response.json())
     .then((data) => {
@@ -153,7 +154,7 @@ function getConversationLimit() {
           conversationLimit: data,
         });
       }
-    });
+    }));
 }
 function messageFeedback(conversationId, messageId, rating, text = '') {
   const data = {

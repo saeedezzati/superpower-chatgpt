@@ -546,7 +546,7 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
                     const now = new Date().getTime();
                     const gpt4CounterElement = document.querySelector('#gpt4-counter');
                     gpt4CounterElement.style.display = result.settings.showGpt4Counter ? 'block' : 'none';
-                    const messageCap = result?.conversationLimit?.message_cap || 25;
+                    const messageCap = result?.conversationLimit?.message_cap || 50;
                     const messageCapWindow = result?.conversationLimit?.message_cap_window || 180;
                     if (gpt4Timestamps) {
                       gpt4Timestamps.push(now);
