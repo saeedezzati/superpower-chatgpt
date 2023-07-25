@@ -20,7 +20,7 @@ function promptDropdown() {
       const dropdownItem = document.createElement('li');
       dropdownItem.id = `continue-conversation-dropdown-item-${promptTitle}`;
       dropdownItem.dir = 'auto';
-      dropdownItem.classList = 'text-gray-900 relative cursor-pointer select-none border-b p-2 last:border-0 border-gray-100 dark:border-white/20 hover:bg-gray-600';
+      dropdownItem.classList = 'text-gray-900 relative cursor-pointer select-none border-b p-2 last:border-0 border-gray-100 dark:border-white/20 hover:bg-gray-500/10';
       const dropdownOption = document.createElement('span');
       dropdownOption.classList = 'font-semibold flex h-6 items-center gap-1 truncate text-gray-800 dark:text-gray-100';
       dropdownOption.style = 'text-transform: capitalize;';

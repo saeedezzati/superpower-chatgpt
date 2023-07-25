@@ -32,12 +32,14 @@ function selectedTabContent(selectedTab) {
       return splitterTabContent();
     case 6:
       return newsletterTabContent();
+    case 7:
+      return supportersTabContent();
     default:
       return generalTabContent();
   }
 }
 function settingsModalContent(initialTab = 0) {
-  const settingsTabs = ['General', 'Auto Sync', 'models', 'Custom Prompts', 'Export', 'Splitter', 'Newsletter'];
+  const settingsTabs = ['General', 'Auto Sync', 'models', 'Custom Prompts', 'Export', 'Splitter', 'Newsletter', 'Supporters'];
   let activeTab = initialTab;
   // create history modal content
   const content = document.createElement('div');
@@ -192,10 +194,10 @@ function generalTabContent() {
         }
         const importedData = JSON.parse(e.target.result);
         const {
-          settings, customModels, customPrompts, conversationsOrder,
+          settings, customModels, customPrompts, conversationsOrder, customInstructionProfiles,
         } = importedData;
         chrome.storage.local.set({
-          settings, customModels, customPrompts,
+          settings, customModels, customPrompts, customInstructionProfiles,
         }, () => {
           chrome.storage.sync.set({
             conversationsOrder,
@@ -218,11 +220,11 @@ function generalTabContent() {
     chrome.storage.sync.get(['conversationsOrder'], (res) => {
       chrome.storage.local.get(['settings', 'customModels', 'customPrompts'], (result) => {
         const {
-          settings, customModels, customPrompts,
+          settings, customModels, customPrompts, customInstructionProfiles,
         } = result;
         const { conversationsOrder } = res;
         const data = {
-          settings, customModels, customPrompts, conversationsOrder,
+          settings, customModels, customPrompts, conversationsOrder, customInstructionProfiles,
         };
         const element = document.createElement('a');
         element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(JSON.stringify(data))}`);
@@ -1045,6 +1047,68 @@ function newsletterTabContent() {
   // content.appendChild(sendNewsletterToEmailSwitch);
   return content;
 }
+function supportersTabContent() {
+  const content = document.createElement('div');
+  content.id = 'settings-modal-tab-content';
+  content.style = 'display: flex; flex-direction:column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;gap:16px;';
+
+  const goldSupporter = document.createElement('a');
+  goldSupporter.href = 'https://buy.stripe.com/dR6g2A7subOigE09AF';
+  goldSupporter.target = '_blank';
+  goldSupporter.classList = 'h-64 w-full rounded bg-gray-700 text-gray-300 p-2 flex justify-center items-center text-4xl';
+  goldSupporter.textContent = 'Gold';
+
+  const silverSupporterwrapper = document.createElement('div');
+  silverSupporterwrapper.style = 'display: flex; flex-direction: row; justify-content: start; align-items: start; width: 100%; margin: 8px 0;gap:16px;';
+
+  const silverSupporter1 = document.createElement('a');
+  silverSupporter1.href = 'https://buy.stripe.com/dR6bMk5km5pU87u5ko';
+  silverSupporter1.target = '_blank';
+  silverSupporter1.classList = 'h-32 rounded bg-gray-700 text-gray-300 p-2 flex justify-center items-center text-2xl';
+  silverSupporter1.style = 'width: 50%;';
+  silverSupporter1.textContent = 'Silver';
+  silverSupporterwrapper.appendChild(silverSupporter1);
+
+  const silverSupporter2 = document.createElement('a');
+  silverSupporter2.href = 'https://buy.stripe.com/dR6bMk5km5pU87u5ko';
+  silverSupporter2.target = '_blank';
+  silverSupporter2.classList = 'h-32 rounded bg-gray-700 text-gray-300 p-2 flex justify-center items-center text-2xl';
+  silverSupporter2.style = 'width: 50%;';
+  silverSupporter2.textContent = 'Silver';
+  silverSupporterwrapper.appendChild(silverSupporter2);
+
+  const bronzeSupporterwrapper = document.createElement('div');
+  bronzeSupporterwrapper.style = 'display: flex; flex-direction: row; justify-content: start; align-items: start; width: 100%; margin: 8px 0;gap:16px;';
+
+  const bronzeSupporter1 = document.createElement('a');
+  bronzeSupporter1.href = 'https://buy.stripe.com/6oE17G4gibOifzW5kn';
+  bronzeSupporter1.target = '_blank';
+  bronzeSupporter1.classList = 'h-16 rounded bg-gray-700 text-gray-300 p-2 flex justify-center items-center text-xl';
+  bronzeSupporter1.style = 'width: 33.33%;';
+  bronzeSupporter1.textContent = 'Bronze';
+  bronzeSupporterwrapper.appendChild(bronzeSupporter1);
+
+  const bronzeSupporter2 = document.createElement('a');
+  bronzeSupporter2.href = 'https://buy.stripe.com/6oE17G4gibOifzW5kn';
+  bronzeSupporter2.target = '_blank';
+  bronzeSupporter2.classList = 'h-16 rounded bg-gray-700 text-gray-300 p-2 flex justify-center items-center text-xl';
+  bronzeSupporter2.style = 'width: 33.33%;';
+  bronzeSupporter2.textContent = 'Bronze';
+  bronzeSupporterwrapper.appendChild(bronzeSupporter2);
+
+  const bronzeSupporter3 = document.createElement('a');
+  bronzeSupporter3.href = 'https://buy.stripe.com/6oE17G4gibOifzW5kn';
+  bronzeSupporter3.target = '_blank';
+  bronzeSupporter3.classList = 'h-16 rounded bg-gray-700 text-gray-300 p-2 flex justify-center items-center text-xl';
+  bronzeSupporter3.style = 'width: 33.33%;';
+  bronzeSupporter3.textContent = 'Bronze';
+  bronzeSupporterwrapper.appendChild(bronzeSupporter3);
+
+  content.appendChild(goldSupporter);
+  content.appendChild(silverSupporterwrapper);
+  content.appendChild(bronzeSupporterwrapper);
+  return content;
+}
 function createSwitch(title, subtitle, settingsKey, defaultValue, callback = null, tag = '', disabled = false) {
   const switchWrapper = document.createElement('div');
   switchWrapper.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start; width: 100%; margin: 8px 0;';
@@ -1258,7 +1322,7 @@ function addSettingsButton() {
 function initializeSettings() {
   // get dark mode from html tag class="dark"
   // create setting storage
-  chrome.storage.local.get(['settings', 'presetPrompts', 'selectedConversations', 'customPrompts'], (result) => {
+  chrome.storage.local.get(['settings', 'presetPrompts', 'selectedConversations', 'customPrompts', 'customInstructionProfiles'], (result) => {
     let newCustomPrompts = Array.isArray(result.customPrompts)
       ? result.customPrompts
       : [
@@ -1319,6 +1383,7 @@ Don't reply with anything else!`,
         selectedPromptLanguage: result.settings?.selectedPromptLanguage || { name: 'Select', code: 'select' },
       },
       presetPrompts: {},
+      customInstructionProfiles: result.customInstructionProfiles !== undefined ? result.customInstructionProfiles : [],
       customPrompts: newCustomPrompts,
     }, () => addSettingsButton());
   });

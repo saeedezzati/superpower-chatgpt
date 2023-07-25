@@ -113,6 +113,47 @@ function getAccount() {
 //     "system_message"
 //   ]
 // }
+function setUserSystemMessage(aboutUser, aboutModel, enabled) {
+  const data = {
+    about_user_message: aboutUser,
+    about_model_message: aboutModel,
+    enabled,
+  };
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch('https://chat.openai.com/backend-api/user_system_messages', {
+    method: 'POST',
+    headers: {
+      ...defaultHeaders,
+      Authorization: result.auth_token,
+    },
+    body: JSON.stringify(data),
+  }).then((res) => res.json()));
+}
+function getUserSystemMessage() {
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch('https://chat.openai.com/backend-api/user_system_messages', {
+    method: 'GET',
+    headers: {
+      ...defaultHeaders,
+      Authorization: result.auth_token,
+    },
+  }).then((res) => res.json()))
+    .then((data) => {
+      chrome.storage.local.get(['customInstructionProfiles'], (result) => {
+        const { customInstructionProfiles } = result;
+
+        const newCustomInstructionProfiles = customInstructionProfiles.map((p) => {
+          if (p.isSelected) {
+            return { ...p, isSelected: false };
+          }
+          if (p.aboutModel === data.about_model_message && p.aboutUser === data.about_user_message) {
+            return { ...p, isSelected: true };
+          }
+          return p;
+        });
+        chrome.storage.local.set({ customInstructionProfiles: newCustomInstructionProfiles });
+      });
+      return data;
+    });
+}
 function getModels() {
   return chrome.storage.sync.get(['auth_token']).then((result) => fetch('https://chat.openai.com/backend-api/models', {
     method: 'GET',

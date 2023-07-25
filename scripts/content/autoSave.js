@@ -138,7 +138,8 @@ function updateOrCreateConversation(conversationId, message, parentId, settings,
           const mapping = Object.values(existingConversation.mapping);
           if (generateTitle && existingConversation.title === 'New chat' && mapping.length < 5 && mapping.filter((m) => m.message?.author.role === 'assistant').length === 1) { // only one assistant message
             if (settings.saveHistory) {
-              generateTitleForConversation(existingConversation.id, message.id);
+              const systemMessage = mapping.find((m) => m.message?.author.role === 'system');
+              generateTitleForConversation(existingConversation.id, message.id, systemMessage?.message?.metadata?.user_context_message_data);
             }
           } else if (settings.conversationTimestamp) { // === updated
             // move cnversationelemnt after searchbox

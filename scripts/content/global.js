@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-/* global markdownit, hljs, resetSelection, getPrompt, newChatPage, initializeRegenerateResponseButton, notSelectedClassList, textAreaElementInputEventListener, textAreaElementKeydownEventListenerASync,  languageList, writingStyleList, toneList, refreshPage, runningPromptChainSteps:true, runningPromptChainIndex:true */
+/* global markdownit, hljs, resetSelection, getPrompt, newChatPage, initializeRegenerateResponseButton, notSelectedClassList, textAreaElementInputEventListener, textAreaElementKeydownEventListenerSync,  languageList, writingStyleList, toneList, refreshPage, runningPromptChainSteps:true, runningPromptChainIndex:true, dropdown */
 /* eslint-disable no-unused-vars */
 // Gloab variables
 // const { version } = chrome.runtime.getManifest();
@@ -322,9 +322,9 @@ function showNewChatPage() {
         selectedWritingStyle: writingStyleList.find((writingStyle) => writingStyle.code === 'default'),
       },
     }, () => {
-      document.querySelector('#language-list-dropdown').querySelectorAll('li')[0].click();
-      document.querySelector('#tone-list-dropdown').querySelectorAll('li')[0].click();
-      document.querySelector('#writing-style-list-dropdown').querySelectorAll('li')[0].click();
+      document.querySelectorAll('#language-list-dropdown li')?.[0]?.click();
+      document.querySelectorAll('#tone-list-dropdown li')?.[0]?.click();
+      document.querySelectorAll('#writing-style-list-dropdown li')?.[0]?.click();
       document.querySelector('#auto-click-button').classList.replace('btn-primary', 'btn-neutral');
     });
     runningPromptChainSteps = undefined;
@@ -399,6 +399,7 @@ function addEnforcementTriggerElement() {
   if (inputForm.querySelector('#enforcement-trigger')) return;
   inputForm.firstChild.insertAdjacentHTML('beforeend', '<button type="button" class="hidden" id="enforcement-trigger"></button>');
 }
+
 function replaceTextAreaElemet(settings) {
   const inputForm = document.querySelector('main form');
   if (!inputForm) { return false; }
@@ -432,7 +433,7 @@ function replaceTextAreaElemet(settings) {
   newTextAreaElement.style.paddingRight = '40px';
   newTextAreaElement.style.overflowY = 'hidden';
 
-  newTextAreaElement.addEventListener('keydown', textAreaElementKeydownEventListenerASync);
+  newTextAreaElement.addEventListener('keydown', textAreaElementKeydownEventListenerSync);
   // also async
   newTextAreaElement.addEventListener('keydown', (event) => {
     if (event.key === 'Enter' && event.which === 13 && !event.shiftKey) {
@@ -513,9 +514,9 @@ function addGpt4Counter() {
     const gpt4counter = gpt4Timestamps.filter((timestamp) => now - timestamp < (messageCapWindow / 60) * 60 * 60 * 1000).length;
     const capExpiresAtTimeString = result.capExpiresAt ? `(Cap Expires At: ${result.capExpiresAt})` : '';
     if (gpt4counter) {
-      gpt4CounterElement.innerText = `GPT4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): ${gpt4counter}/${messageCap} ${capExpiresAtTimeString}`;
+      gpt4CounterElement.innerText = `GPT-4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): ${gpt4counter}/${messageCap} ${capExpiresAtTimeString}`;
     } else {
-      gpt4CounterElement.innerText = `GPT4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): 0/${messageCap}`;
+      gpt4CounterElement.innerText = `GPT-4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): 0/${messageCap}`;
     }
   });
 
@@ -854,7 +855,10 @@ function highlightHTML(text, elementId) {
 
 function toast(html, type = 'info', duration = 4000) {
   // show toast that text is copied to clipboard
+  const existingToast = document.querySelector('#gptx-toast');
+  if (existingToast) existingToast.remove();
   const element = document.createElement('div');
+  element.id = 'gptx-toast';
   element.style = 'position:fixed;right:24px;top:24px;border-radius:4px;background-color:#19c37d;padding:8px 16px;z-index:100001;';
   if (type === 'error') {
     element.style.backgroundColor = '#ef4146';

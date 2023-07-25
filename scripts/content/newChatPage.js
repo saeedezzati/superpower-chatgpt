@@ -1,4 +1,4 @@
-/* global createSwitch */
+/* global createSwitch, getUserSystemMessage, setUserSystemMessage, profileDropdown, profileDropdownButton */
 // eslint-disable-next-line no-unused-vars
 function newChatPage(planName) {
   const outerDiv = document.createElement('div');
@@ -22,28 +22,22 @@ function newChatPage(planName) {
   content.classList = 'flex items-center justify-center text-center gap-3.5';
   body.appendChild(content);
 
-  // const systemMessageWrapper = document.createElement('div');
-  // systemMessageWrapper.classList = 'w-full flex flex-col items-start justify-center border border-gray-500 rounded-md p-4';
-  // content.appendChild(systemMessageWrapper);
-
-  // const systemMessageLabel = document.createElement('div');
-  // systemMessageLabel.classList = 'text-gray-500 text-sm font-semibold';
-  // systemMessageLabel.textContent = 'System Message';
-  // systemMessageWrapper.appendChild(systemMessageLabel);
-
-  // const systemMessageInput = document.createElement('textarea');
-  // systemMessageInput.classList = 'w-full h-32 border-0 rounded-md p-2 mt-2 bg-gray-700 focus:ring-0 focus-visible:ring-0 resize-none';
-  // systemMessageInput.placeholder = 'Enter your system message here';
-  // systemMessageWrapper.appendChild(systemMessageInput);
-
   const settings = document.createElement('div');
-  settings.classList = 'flex flex-col items-start justify-center border border-gray-500 rounded-md p-4';
-  settings.style = 'width: 400px;';
+  settings.id = 'new-page-settings';
+  settings.classList = 'flex flex-col items-start justify-end border border-gray-500 rounded-md p-4';
+  settings.style = 'width: 600px;min-height:260px;';
   content.appendChild(settings);
 
-  const saveHistorySwitch = createSwitch('Chat History & Training', `<div class="text-left">Save new chats to your history and allow them to be used to
-  improve ChatGPT via model training. Unsaved chats will be
-  deleted from our systems within 30 days. <a href="https://help.openai.com/en/articles/7730893 " target="_blank" class="underline" rel="noreferrer">Learn more</a></div>`, 'saveHistory', true);
+  const customInstructionSettings = customInstructionSettingsElement();
+  settings.appendChild(customInstructionSettings);
+
+  // divider
+  const divider = document.createElement('div');
+  divider.classList = 'border border-gray-500';
+  divider.style = 'width: 70%; height: 1px; background-color: #e5e7eb; margin: 16px auto;';
+  settings.appendChild(divider);
+
+  const saveHistorySwitch = createSwitch('<span style="color:#8e8ea0 !important;">Chat History & Training</span>', '<div class="text-left">Save new chats to your history and allow them to be used to improve ChatGPT via model training. Unsaved chats will be deleted from our systems within 30 days. <a href="https://help.openai.com/en/articles/7730893" target="_blank" class="underline" rel="noreferrer">Learn more</a></div>', 'saveHistory', true);
   settings.appendChild(saveHistorySwitch);
 
   const bottom = document.createElement('div');
@@ -51,4 +45,61 @@ function newChatPage(planName) {
   innerDiv.appendChild(bottom);
 
   return outerDiv;
+}
+function customInstructionSettingsElement() {
+  const customInstructionSettings = document.createElement('div');
+  customInstructionSettings.id = 'custom-instruction-settings';
+  customInstructionSettings.classList = 'flex items-start justify-between w-full';
+  const customInstructionSettingsLeft = document.createElement('div');
+  customInstructionSettingsLeft.style = 'width: 60%;';
+  const customInstructionSettingsRight = document.createElement('div');
+  customInstructionSettingsRight.style = 'width: 40%;display:flex;justify-content:flex-end;';
+  customInstructionSettings.appendChild(customInstructionSettingsLeft);
+  customInstructionSettings.appendChild(customInstructionSettingsRight);
+  getUserSystemMessage().then((systemMessage) => {
+    const customInstructionSwitch = createSwitch('<span style="color:#8e8ea0 !important;">Custom Instruction</span>', '<div class="text-left"><a href="https://help.openai.com/en/articles/8096356-custom-instructions-for-chatgpt" target="_blank" class="underline" rel="noreferrer">Learn more</a> about Custom instructions and how they’re used to help ChatGPT provide better responses.</div>', null, systemMessage.enabled, (checked) => setUserSystemMessageCallback(checked, systemMessage));
+    customInstructionSettingsLeft.appendChild(customInstructionSwitch);
+    chrome.storage.local.get(['customInstructionProfiles'], (result) => {
+      const { customInstructionProfiles } = result;
+      let newCustomInstructionProfiles = customInstructionProfiles;
+      const selectedProfile = customInstructionProfiles.find((p) => p.isSelected);
+
+      if (!selectedProfile || (selectedProfile.aboutUser !== systemMessage.about_user_message || selectedProfile.aboutModel !== systemMessage.about_model_message)) {
+        newCustomInstructionProfiles = customInstructionProfiles.map((p) => {
+          if (p.aboutModel === systemMessage.about_model_message && p.aboutUser === systemMessage.about_user_message) {
+            return { ...p, isSelected: true };
+          }
+          if (p.isSelected) {
+            return { ...p, isSelected: false };
+          }
+          return p;
+        });
+
+        chrome.storage.local.set({ customInstructionProfiles: newCustomInstructionProfiles });
+      }
+
+      const profileButtonWrapper = document.createElement('div');
+      profileButtonWrapper.style = 'position:relative;width: 200px;margin-top:8px;';
+      profileButtonWrapper.id = 'custom-instructions-profile-button-wrapper-new-page';
+      if (!systemMessage.enabled) {
+        profileButtonWrapper.style.pointerEvents = 'none';
+        profileButtonWrapper.style.opacity = '0.5';
+      }
+      profileButtonWrapper.appendChild(profileDropdown(newCustomInstructionProfiles, 'new-page'));
+      profileButtonWrapper.appendChild(profileDropdownButton(newCustomInstructionProfiles, 'new-page'));
+      customInstructionSettingsRight.appendChild(profileButtonWrapper);
+    });
+  });
+  return customInstructionSettings;
+}
+function setUserSystemMessageCallback(checked, systemMessage) {
+  const profileButtonWrapper = document.getElementById('custom-instructions-profile-button-wrapper-new-page');
+  if (checked) {
+    profileButtonWrapper.style.pointerEvents = 'unset';
+    profileButtonWrapper.style.opacity = '1';
+  } else {
+    profileButtonWrapper.style.pointerEvents = 'none';
+    profileButtonWrapper.style.opacity = '0.5';
+  }
+  setUserSystemMessage(systemMessage.about_user_message, systemMessage.about_model_message, checked);
 }

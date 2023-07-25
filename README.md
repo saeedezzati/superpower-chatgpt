@@ -83,6 +83,8 @@ https://user-images.githubusercontent.com/574142/232172841-50f1b114-ef47-4533-a6
 
 ## Utilities for ChatGPT
 
+👥 Custom Instruction Profiles: Easily create and save multiple custom instruction profiles and quickly access them with a click of a button
+
 ✂️ Auto Splitter: Automatically split your long input into smaller chunks and send them to ChatGPT one by one.
 
 🗒 Auto summarize: Using the power of auto-splitter, your long text will be summarized into a shorter version so you can ask question

@@ -548,12 +548,10 @@ function textAreaElementInputEventListener(event) {
   });
 }
 // Add keyboard event listener to text area
-function textAreaElementKeydownEventListenerSync(event) {
+function textAreaElementKeydownEventListenerASync(event) {
   const textAreaElement = event.target;
 
   if (event.key === 'Enter' && event.which === 13 && !event.shiftKey) {
-    event.preventDefault();
-    event.stopPropagation();
     updateInputCounter('');
     chrome.storage.local.get(['textInputValue'], (result) => {
       const textInputValue = result.textInputValue || '';
@@ -635,7 +633,7 @@ function textAreaElementKeydownEventListenerSync(event) {
   }
 }
 // eslint-disable-next-line no-unused-vars
-function textAreaElementKeydownEventListenerASync(event) {
+function textAreaElementKeydownEventListenerSync(event) {
   const textAreaElement = event.target;
 
   if (event.key === 'Enter' && event.which === 13 && !event.shiftKey) {
@@ -807,6 +805,6 @@ function addAsyncInputEvents() {
 
   if (textAreaElement) {
     textAreaElement.addEventListener('input', textAreaElementInputEventListener);
-    textAreaElement.addEventListener('keydown', textAreaElementKeydownEventListenerSync);
+    textAreaElement.addEventListener('keydown', textAreaElementKeydownEventListenerASync);
   }
 }

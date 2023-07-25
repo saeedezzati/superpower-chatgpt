@@ -311,7 +311,7 @@ function prependConversation(conversation) {
   conversationList.scrollTop = 0;
 }
 // eslint-disable-next-line no-unused-vars
-function generateTitleForConversation(conversationId, messageId) {
+function generateTitleForConversation(conversationId, messageId, profile) {
   setTimeout(() => {
     generateTitle(conversationId, messageId).then((data) => {
       const { title } = data;
@@ -330,6 +330,10 @@ function generateTitleForConversation(conversationId, messageId) {
           if (topDiv) topDiv.innerHTML += c;
         }, i * 50);
       });
+      // at the end, add sss
+      setTimeout(() => {
+        if (topDiv) topDiv.innerHTML += `<span style="display:flex;" title="What would you like ChatGPT to know about you to provide better responses?\n${profile?.about_user_message} \n\nHow would you like ChatGPT to respond?\n${profile?.about_model_message}">&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;Custom instructions: On&nbsp;&nbsp;<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" fill="none" class="ml-0.5 mt-0.5 h-4 w-4 flex-shrink-0 text-gray-600 dark:text-gray-200 sm:mb-0.5 sm:mt-0 sm:h-5 sm:w-5"><path d="M8.4375 8.4375L8.46825 8.4225C8.56442 8.37445 8.67235 8.35497 8.77925 8.36637C8.88615 8.37776 8.98755 8.41955 9.07143 8.48678C9.15532 8.55402 9.21818 8.64388 9.25257 8.74574C9.28697 8.8476 9.29145 8.95717 9.2655 9.0615L8.7345 11.1885C8.70836 11.2929 8.7127 11.4026 8.74702 11.5045C8.78133 11.6065 8.84418 11.6965 8.9281 11.7639C9.01202 11.8312 9.1135 11.8731 9.2205 11.8845C9.32749 11.8959 9.43551 11.8764 9.53175 11.8282L9.5625 11.8125M15.75 9C15.75 9.88642 15.5754 10.7642 15.2362 11.5831C14.897 12.4021 14.3998 13.1462 13.773 13.773C13.1462 14.3998 12.4021 14.897 11.5831 15.2362C10.7642 15.5754 9.88642 15.75 9 15.75C8.11358 15.75 7.23583 15.5754 6.41689 15.2362C5.59794 14.897 4.85382 14.3998 4.22703 13.773C3.60023 13.1462 3.10303 12.4021 2.76381 11.5831C2.42459 10.7642 2.25 9.88642 2.25 9C2.25 7.20979 2.96116 5.4929 4.22703 4.22703C5.4929 2.96116 7.20979 2.25 9 2.25C10.7902 2.25 12.5071 2.96116 13.773 4.22703C15.0388 5.4929 15.75 7.20979 15.75 9ZM9 6.1875H9.006V6.1935H9V6.1875Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>`;
+      }, title.length * 50);
 
       chrome.storage.local.get('conversations', (result) => {
         const { conversations } = result;
@@ -554,12 +558,12 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
                       const gpt4TimestampsFiltered = gpt4Timestamps.filter((timestamp) => timestamp > hoursAgo);
                       chrome.storage.local.set({ gpt4Timestamps: gpt4TimestampsFiltered, capExpiresAt: '' });
                       if (gpt4CounterElement) {
-                        gpt4CounterElement.innerText = `GPT4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): ${gpt4TimestampsFiltered.length}/${messageCap}`;
+                        gpt4CounterElement.innerText = `GPT-4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): ${gpt4TimestampsFiltered.length}/${messageCap}`;
                       }
                     } else {
                       chrome.storage.local.set({ gpt4Timestamps: [now] });
                       if (gpt4CounterElement) {
-                        gpt4CounterElement.innerText = `GPT4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): 1/${messageCap}`;
+                        gpt4CounterElement.innerText = `GPT-4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): 1/${messageCap}`;
                       }
                     }
                   });
@@ -829,7 +833,9 @@ function overrideSubmitForm() {
     e.stopPropagation();
     if (isGenerating) return;
     // get all words wrapped in {{ and }}
-    chrome.storage.local.get(['settings'], ({ settings }) => {
+    chrome.storage.local.get(['settings', 'conversations', 'models'], ({
+      settings, conversations, models,
+    }) => {
       if (settings.selectedModel.slug.includes('gpt-4')) {
         if (!inputForm.querySelector('#enforcement-trigger')) {
           addEnforcementTriggerElement();
@@ -853,135 +859,132 @@ function overrideSubmitForm() {
         const conversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
         const anyUserMessageWrappers = document.querySelectorAll('[id^="message-wrapper-"][data-role="user"]').length > 0;
         if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId) && anyUserMessageWrappers) {
-          chrome.storage.local.get(['conversations', 'models']).then((res) => {
-            const { conversations, models } = res;
-            const conversation = conversations[conversationId];
-            chrome.storage.sync.get(['name', 'avatar'], (result) => {
-              let text = textAreaElement.value.trim();
-              if (chunkNumber === 1) {
-                finalSummary = '';
-                if (settings.autoSplit && text.length > settings.autoSplitLimit) {
-                  totalChunks = Math.ceil(text.length / settings.autoSplitLimit);
-                  const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > text.length ? settings.autoSplitLimit : getLastIndexOf(text, settings.autoSplitLimit);
-                  remainingText = text.substring(lastNewLineIndexBeforeLimit);
-                  text = `${settings.autoSplitInitialPrompt}[START CHUNK ${chunkNumber}/${totalChunks}]
+          const conversation = conversations[conversationId];
+          chrome.storage.sync.get(['name', 'avatar'], (result) => {
+            let text = textAreaElement.value.trim();
+            if (chunkNumber === 1) {
+              finalSummary = '';
+              if (settings.autoSplit && text.length > settings.autoSplitLimit) {
+                totalChunks = Math.ceil(text.length / settings.autoSplitLimit);
+                const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > text.length ? settings.autoSplitLimit : getLastIndexOf(text, settings.autoSplitLimit);
+                remainingText = text.substring(lastNewLineIndexBeforeLimit);
+                text = `${settings.autoSplitInitialPrompt}[START CHUNK ${chunkNumber}/${totalChunks}]
 ${text.substring(0, lastNewLineIndexBeforeLimit)}
 [END CHUNK ${chunkNumber}/${totalChunks}]
 ${settings.autoSplitChunkPrompt}`;
-                  chunkNumber += 1;
-                } else {
-                  text = generateInstructions(conversation, settings, textAreaElement.value.trim());
-                }
-              } else if (chunkNumber === totalChunks) {
-                if (totalChunks > 1 && settings.autoSummarize) shouldSubmitFinalSummary = true;
-                chunkNumber = 1;
-                totalChunks = 1;
-                remainingText = '';
-              } else {
                 chunkNumber += 1;
-                const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > remainingText.length ? settings.autoSplitLimit : getLastIndexOf(remainingText, settings.autoSplitLimit);
-                remainingText = remainingText.slice(lastNewLineIndexBeforeLimit);
+              } else {
+                text = generateInstructions(conversation, settings, textAreaElement.value.trim());
               }
-              const messageId = self.crypto.randomUUID();
-              const allMessages = document.querySelectorAll('[id^="message-wrapper-"]');
-              const lastMessage = allMessages[allMessages.length - 1];
-              const parentId = lastMessage?.id?.split('message-wrapper-')[1] || self.crypto.randomUUID();
-              const conversationBottom = document.querySelector('#conversation-bottom');
-              if (text && settings.useCustomInstruction) {
-                text += settings.customInstruction;
-              }
-              const node = { message: { id: messageId, content: { parts: [text] } } };
-              const userRow = rowUser(conversation, node, 1, 1, result.name, result.avatar, settings.customConversationWidth, settings.conversationWidth);
+            } else if (chunkNumber === totalChunks) {
+              if (totalChunks > 1 && settings.autoSummarize) shouldSubmitFinalSummary = true;
+              chunkNumber = 1;
+              totalChunks = 1;
+              remainingText = '';
+            } else {
+              chunkNumber += 1;
+              const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > remainingText.length ? settings.autoSplitLimit : getLastIndexOf(remainingText, settings.autoSplitLimit);
+              remainingText = remainingText.slice(lastNewLineIndexBeforeLimit);
+            }
+            const messageId = self.crypto.randomUUID();
+            const allMessages = document.querySelectorAll('[id^="message-wrapper-"]');
+            const lastMessage = allMessages[allMessages.length - 1];
+            const parentId = lastMessage?.id?.split('message-wrapper-')[1] || self.crypto.randomUUID();
+            const conversationBottom = document.querySelector('#conversation-bottom');
+            if (text && settings.useCustomInstruction) {
+              text += settings.customInstruction;
+            }
+            const node = { message: { id: messageId, content: { parts: [text] } } };
+            const userRow = rowUser(conversation, node, 1, 1, result.name, result.avatar, settings.customConversationWidth, settings.conversationWidth);
+            // if last message data-role !== user, insert user row before conversation bottom
+            if (lastMessage?.dataset?.role !== 'user') {
               conversationBottom.insertAdjacentHTML('beforebegin', userRow);
-              conversationBottom.scrollIntoView({ behavior: 'smooth' });
-              if (text) {
-                isGenerating = true;
-                submitChat(text, conversation, messageId, parentId, settings, models);
-                textAreaElement.value = '';
-                updateInputCounter('');
-              }
-            });
+            }
+            conversationBottom.scrollIntoView({ behavior: 'smooth' });
+            if (text) {
+              isGenerating = true;
+              submitChat(text, conversation, messageId, parentId, settings, models);
+              textAreaElement.value = '';
+              updateInputCounter('');
+            }
           });
         } else {
-          chrome.storage.local.get(['models']).then((res) => {
-            const { models } = res;
-            chrome.storage.sync.get(['name', 'avatar'], (result) => {
-              let text = textAreaElement.value.trim();
-              if (chunkNumber === 1) {
-                finalSummary = '';
-                if (settings.autoSplit && text.length > settings.autoSplitLimit) {
-                  totalChunks = Math.ceil(text.length / settings.autoSplitLimit);
-                  const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > text.length ? settings.autoSplitLimit : getLastIndexOf(text, settings.autoSplitLimit);
-                  remainingText = text.substring(lastNewLineIndexBeforeLimit);
-                  text = `${settings.autoSplitInitialPrompt}[START CHUNK ${chunkNumber}/${totalChunks}]
+          chrome.storage.sync.get(['name', 'avatar'], (result) => {
+            let text = textAreaElement.value.trim();
+            if (chunkNumber === 1) {
+              finalSummary = '';
+              if (settings.autoSplit && text.length > settings.autoSplitLimit) {
+                totalChunks = Math.ceil(text.length / settings.autoSplitLimit);
+                const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > text.length ? settings.autoSplitLimit : getLastIndexOf(text, settings.autoSplitLimit);
+                remainingText = text.substring(lastNewLineIndexBeforeLimit);
+                text = `${settings.autoSplitInitialPrompt}[START CHUNK ${chunkNumber}/${totalChunks}]
 ${text.substring(0, lastNewLineIndexBeforeLimit)}
 [END CHUNK ${chunkNumber}/${totalChunks}]
 ${settings.autoSplitChunkPrompt}`;
-                  chunkNumber += 1;
-                } else {
-                  text = generateInstructions({}, settings, textAreaElement.value.trim());
-                }
-              } else if (chunkNumber === totalChunks) {
-                if (totalChunks > 1 && settings.autoSummarize) shouldSubmitFinalSummary = true;
-                chunkNumber = 1;
-                totalChunks = 1;
-                remainingText = '';
-              } else {
                 chunkNumber += 1;
-                const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > remainingText.length ? settings.autoSplitLimit : getLastIndexOf(remainingText, settings.autoSplitLimit);
-                remainingText = remainingText.slice(lastNewLineIndexBeforeLimit);
+              } else {
+                text = generateInstructions({}, settings, textAreaElement.value.trim());
               }
+            } else if (chunkNumber === totalChunks) {
+              if (totalChunks > 1 && settings.autoSummarize) shouldSubmitFinalSummary = true;
+              chunkNumber = 1;
+              totalChunks = 1;
+              remainingText = '';
+            } else {
+              chunkNumber += 1;
+              const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > remainingText.length ? settings.autoSplitLimit : getLastIndexOf(remainingText, settings.autoSplitLimit);
+              remainingText = remainingText.slice(lastNewLineIndexBeforeLimit);
+            }
 
-              const messageId = self.crypto.randomUUID();
-              if (text && settings.useCustomInstruction) {
-                text += settings.customInstruction;
-              }
-              const node = { message: { id: messageId, content: { parts: [text] } } };
-              const allMessages = document.querySelectorAll('[id^="message-wrapper-"]');
-              const lastMessage = allMessages[allMessages.length - 1];
-              const parentId = lastMessage?.id?.split('message-wrapper-')[1] || self.crypto.randomUUID();
-              // remove main first child
-              const contentWrapper = main.querySelector('.flex-1.overflow-hidden');
-              main.removeChild(contentWrapper);
+            const messageId = self.crypto.randomUUID();
+            if (text && settings.useCustomInstruction) {
+              text += settings.customInstruction;
+            }
+            const node = { message: { id: messageId, content: { parts: [text] } } };
+            const allMessages = document.querySelectorAll('[id^="message-wrapper-"]');
+            const lastMessage = allMessages[allMessages.length - 1];
+            const parentId = lastMessage?.id?.split('message-wrapper-')[1] || self.crypto.randomUUID();
+            // remove main first child
+            const contentWrapper = main.querySelector('.flex-1.overflow-hidden');
+            main.removeChild(contentWrapper);
 
-              const outerDiv = document.createElement('div');
-              outerDiv.classList = 'flex-1 overflow-hidden';
-              const innerDiv = document.createElement('div');
-              innerDiv.classList = 'h-full overflow-y-auto';
-              innerDiv.style = 'scroll-behavior: smooth;';
-              innerDiv.id = 'conversation-inner-div';
-              addScrollDetector(innerDiv);
-              const conversationDiv = document.createElement('div');
-              conversationDiv.classList = 'flex flex-col items-center text-sm h-full dark:bg-gray-800';
-              const userRow = rowUser({}, node, 1, 1, result.name, result.avatar, settings.customConversationWidth, settings.conversationWidth);
-              conversationDiv.innerHTML = userRow;
-              const topDiv = '<div id="conversation-top" class="w-full flex items-center justify-center border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group bg-gray-50 dark:bg-[#444654]" style="min-height:56px;z-index:0;">New chat</div>';
-              conversationDiv.insertAdjacentHTML('afterbegin', topDiv);
-              const bottomDiv = document.createElement('div');
-              bottomDiv.id = 'conversation-bottom';
-              bottomDiv.classList = 'w-full h-32 md:h-48 flex-shrink-0';
-              conversationDiv.appendChild(bottomDiv);
-              const bottomDivContent = document.createElement('div');
-              bottomDivContent.classList = 'relative text-base gap-4 md:gap-6 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl flex lg:px-0';
-              if (settings.customConversationWidth) {
-                bottomDivContent.style = `max-width: ${settings.conversationWidth}%`;
-              }
-              bottomDiv.appendChild(bottomDivContent);
-              const totalCounter = document.createElement('div');
-              totalCounter.id = 'total-counter';
-              totalCounter.style = 'position: absolute; top: 0px; right: 0px; font-size: 10px; color: rgb(153, 153, 153); opacity: 0.8;';
-              bottomDivContent.appendChild(totalCounter);
+            const outerDiv = document.createElement('div');
+            outerDiv.classList = 'flex-1 overflow-hidden';
+            const innerDiv = document.createElement('div');
+            innerDiv.classList = 'h-full overflow-y-auto';
+            innerDiv.style = 'scroll-behavior: smooth;';
+            innerDiv.id = 'conversation-inner-div';
+            addScrollDetector(innerDiv);
+            const conversationDiv = document.createElement('div');
+            conversationDiv.classList = 'flex flex-col items-center text-sm h-full dark:bg-gray-800';
+            const userRow = rowUser({}, node, 1, 1, result.name, result.avatar, settings.customConversationWidth, settings.conversationWidth);
+            conversationDiv.innerHTML = userRow;
+            const topDiv = '<div id="conversation-top" class="w-full flex items-center justify-center border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group bg-gray-50 dark:bg-[#444654]" style="min-height:56px;z-index:0;">New chat</div>';
+            conversationDiv.insertAdjacentHTML('afterbegin', topDiv);
+            const bottomDiv = document.createElement('div');
+            bottomDiv.id = 'conversation-bottom';
+            bottomDiv.classList = 'w-full h-32 md:h-48 flex-shrink-0';
+            conversationDiv.appendChild(bottomDiv);
+            const bottomDivContent = document.createElement('div');
+            bottomDivContent.classList = 'relative text-base gap-4 md:gap-6 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl flex lg:px-0';
+            if (settings.customConversationWidth) {
+              bottomDivContent.style = `max-width: ${settings.conversationWidth}%`;
+            }
+            bottomDiv.appendChild(bottomDivContent);
+            const totalCounter = document.createElement('div');
+            totalCounter.id = 'total-counter';
+            totalCounter.style = 'position: absolute; top: 0px; right: 0px; font-size: 10px; color: rgb(153, 153, 153); opacity: 0.8;';
+            bottomDivContent.appendChild(totalCounter);
 
-              innerDiv.appendChild(conversationDiv);
-              outerDiv.appendChild(innerDiv);
-              main.prepend(outerDiv);
-              if (text) {
-                isGenerating = true;
-                submitChat(text, {}, messageId, parentId, settings, models);
-                textAreaElement.value = '';
-                updateInputCounter('');
-              }
-            });
+            innerDiv.appendChild(conversationDiv);
+            outerDiv.appendChild(innerDiv);
+            main.prepend(outerDiv);
+            if (text) {
+              isGenerating = true;
+              submitChat(text, {}, messageId, parentId, settings, models);
+              textAreaElement.value = '';
+              updateInputCounter('');
+            }
           });
         }
       }

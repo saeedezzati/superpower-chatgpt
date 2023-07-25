@@ -21,7 +21,7 @@ function dropdown(title, options, selectedOption, side = 'right', forceDark = fa
       <span class="font-semibold flex h-6 items-center gap-1 truncate ${forceDark ? 'text-gray-100' : 'text-gray-800'} dark:text-gray-100">${option.name}</span>
     </div>
     ${option.code === selectedOption.code ? `<span id="${title.toLowerCase()}-selector-checkmark" class="absolute inset-y-0 right-0 flex items-center pr-4 ${forceDark ? 'text-gray-100' : 'text-gray-800'} dark:text-gray-100">
-    <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 h-5 w-5" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+    <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
       <polyline points="20 6 9 17 4 12"></polyline>
     </svg>
     </span>` : ''}

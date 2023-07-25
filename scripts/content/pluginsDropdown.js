@@ -30,7 +30,7 @@ function pluginsDropdown(installedPlugins, enabledPluginIds, idPrefix, forceDark
   <li id="plugin-store-button" class="group relative flex h-[42px] cursor-pointer select-none items-center overflow-hidden border-b border-black/10 pl-3 pr-9 last:border-0 ${forceDark ? 'border-white/20' : 'border-b border-black/10'} dark:border-white/20 text-gray-900" role="option" tabindex="-1" aria-selected="false">
   <div class="${forceDark ? 'text-gray-100' : 'text-gray-800'} dark:text-gray-100">Plugin store (CMD/CTRL + SHIFT + P)</div>
   <span class="absolute inset-y-0 right-0 flex items-center pr-3 ${forceDark ? 'text-gray-100' : 'text-gray-800'} dark:text-gray-100">
-    <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 h-5 w-5" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+    <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
       <line x1="5" y1="12" x2="19" y2="12"></line>
       <polyline points="12 5 19 12 12 19"></polyline>
     </svg>
