@@ -197,84 +197,116 @@ function profileDropdownButton(customInstructionProfiles, placement) {
 function upgradeCustomInstructions() {
   // observe the body and wait for the custom instructions dialog to be added
   // there should be a div with role="dialog" and a h2 with text "Custom instructions"
-  const targetNode = document.body;
-  const config = { childList: true, subtree: true };
-  const callback = (mutationsList) => {
-    mutationsList.forEach((mutation) => {
-      if (mutation.type === 'childList') {
-        setTimeout(() => {
-          chrome.storage.local.get(['customInstructionProfiles'], (result) => {
-            const customInstructionsDialog = document.querySelector('[role="dialog"][data-state="open"][tabindex="-1"]');
-            if (!customInstructionsDialog) return;
-            const customInstructionsDialogHeader = customInstructionsDialog.querySelector('h2');
-            const existingProfileButtonWrapper = customInstructionsDialog.querySelector('#custom-instructions-profile-button-wrapper-settings');
-            const textAreaFields = customInstructionsDialog.querySelectorAll('textarea');
-            if (textAreaFields.length > 0 && !existingProfileButtonWrapper && customInstructionsDialog && customInstructionsDialogHeader.textContent === 'Custom instructions') {
-              const aboutUser = textAreaFields[0]?.value;
-              const aboutModel = textAreaFields[1]?.value;
-              const { customInstructionProfiles } = result;
-              let newCustomInstructionProfiles = customInstructionProfiles;
-              let selectedProfile = customInstructionProfiles.find((p) => p.isSelected);
+  chrome.storage.local.get(['account'], (r) => {
+    const { account } = r;
+    const isPaid = account?.account_plan?.is_paid_subscription_active || account?.accounts?.default?.entitlement?.has_active_subscription || false;
+    if (!isPaid) return;
+    const targetNode = document.body;
+    const config = { childList: true, subtree: true };
+    const callback = (mutationsList) => {
+      mutationsList.forEach((mutation) => {
+        if (mutation.type === 'childList') {
+          setTimeout(() => {
+            chrome.storage.local.get(['customInstructionProfiles'], (result) => {
+              const customInstructionsDialog = document.querySelector('[role="dialog"][data-state="open"][tabindex="-1"]');
+              if (!customInstructionsDialog) return;
+              const customInstructionsDialogHeader = customInstructionsDialog.querySelector('h2');
+              const existingProfileButtonWrapper = customInstructionsDialog.querySelector('#custom-instructions-profile-button-wrapper-settings');
+              const textAreaFields = customInstructionsDialog.querySelectorAll('textarea');
+              if (textAreaFields.length > 0 && !existingProfileButtonWrapper && customInstructionsDialog && customInstructionsDialogHeader.textContent === 'Custom instructions') {
+                const aboutUser = textAreaFields[0]?.value;
+                const aboutModel = textAreaFields[1]?.value;
+                const { customInstructionProfiles } = result;
+                let newCustomInstructionProfiles = customInstructionProfiles;
+                let selectedProfile = customInstructionProfiles.find((p) => p.isSelected);
 
-              if (!selectedProfile || (selectedProfile.aboutUser !== aboutUser || selectedProfile.aboutModel !== aboutModel)) {
-                newCustomInstructionProfiles = customInstructionProfiles.map((p) => {
-                  if (p.aboutModel === aboutModel && p.aboutUser === aboutUser) {
-                    selectedProfile = { ...p, isSelected: true };
-                    return { ...p, isSelected: true };
-                  }
-                  if (p.isSelected) {
-                    selectedProfile = undefined;
-                    return { ...p, isSelected: false };
-                  }
-                  return p;
-                });
-                chrome.storage.local.set({ customInstructionProfiles: newCustomInstructionProfiles });
-              }
-              // header = first child
-              const header = customInstructionsDialog.firstChild;
-              const profileButtonWrapper = document.createElement('div');
-              profileButtonWrapper.style = 'position:relative;width: 200px;';
-              profileButtonWrapper.id = 'custom-instructions-profile-button-wrapper-settings';
-              profileButtonWrapper.appendChild(profileDropdown(newCustomInstructionProfiles, 'settings'));
-              profileButtonWrapper.appendChild(profileDropdownButton(newCustomInstructionProfiles, 'settings'));
-              header.appendChild(profileButtonWrapper);
-              // body  = second child
-              const body = customInstructionsDialog.children[1];
-              const nameLabel = document.createElement('label');
-              nameLabel.className = 'block text-xs text-gray-700 dark:text-gray-500 mb-2 text-gray-600';
-              nameLabel.textContent = 'Name';
-              const nameInput = document.createElement('input');
-              nameInput.id = 'custom-instructions-name-input';
-              nameInput.placeholder = 'Profile Name';
-              nameInput.value = selectedProfile?.name || '';
-              nameInput.classList = 'w-full rounded p-2 mb-6 border dark:bg-gray-800 bg-white border-gray-100 focus:border-brand-green focus:ring-0 focus-visible:ring-0 bg-gray-50 outline-none focus-visible:outline-none';
-              if (textAreaFields[0].disabled) {
-                nameInput.disabled = true;
-                nameInput.classList.add('text-gray-300');
-              }
-              nameInput.addEventListener('input', () => {
-                const curSelectedProfileName = selectedProfile?.name || '';
-                const allButtons = body.querySelectorAll('button');
-                const saveButton = [...allButtons].find((b) => b.textContent === 'Save');
-                const curTextAreaFields = document.querySelectorAll('[role="dialog"][data-state="open"][tabindex="-1"] textarea');
-                const curAboutUserInput = curTextAreaFields[0];
-                const curAboutModelInput = curTextAreaFields[1];
-                if (nameInput.value === '' || (nameInput.value === curSelectedProfileName && curAboutUserInput.value === selectedProfile?.aboutUser && curAboutModelInput.value === selectedProfile?.aboutModel)) {
-                  saveButton.disabled = true;
-                  saveButton.classList.add('opacity-50', 'cursor-not-allowed');
-                } else if (saveButton.disabled) {
-                  saveButton.disabled = false;
-                  saveButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                if (!selectedProfile || (selectedProfile.aboutUser !== aboutUser || selectedProfile.aboutModel !== aboutModel)) {
+                  newCustomInstructionProfiles = customInstructionProfiles.map((p) => {
+                    if (p.aboutModel === aboutModel && p.aboutUser === aboutUser) {
+                      selectedProfile = { ...p, isSelected: true };
+                      return { ...p, isSelected: true };
+                    }
+                    if (p.isSelected) {
+                      selectedProfile = undefined;
+                      return { ...p, isSelected: false };
+                    }
+                    return p;
+                  });
+                  chrome.storage.local.set({ customInstructionProfiles: newCustomInstructionProfiles });
                 }
-              });
-              // add the input field to the beginning of the body
-              body.insertBefore(nameInput, body.firstChild);
-              body.insertBefore(nameLabel, body.firstChild);
-              // add a change listener to the text area fields
-              textAreaFields.forEach((t) => {
-                t.addEventListener('input', () => {
+                // header = first child
+                const header = customInstructionsDialog.firstChild;
+                const profileButtonWrapper = document.createElement('div');
+                profileButtonWrapper.style = 'position:relative;width: 200px;';
+                profileButtonWrapper.id = 'custom-instructions-profile-button-wrapper-settings';
+                profileButtonWrapper.appendChild(profileDropdown(newCustomInstructionProfiles, 'settings'));
+                profileButtonWrapper.appendChild(profileDropdownButton(newCustomInstructionProfiles, 'settings'));
+                header.appendChild(profileButtonWrapper);
+                // body  = second child
+                const body = customInstructionsDialog.children[1];
+                const nameLabel = document.createElement('label');
+                nameLabel.className = 'block text-xs text-gray-700 dark:text-gray-500 mb-2 text-gray-600';
+                nameLabel.textContent = 'Name';
+                const nameInput = document.createElement('input');
+                nameInput.id = 'custom-instructions-name-input';
+                nameInput.placeholder = 'Profile Name';
+                nameInput.value = selectedProfile?.name || '';
+                nameInput.classList = 'w-full rounded p-2 mb-6 border dark:bg-gray-800 bg-white border-gray-100 focus:border-brand-green focus:ring-0 focus-visible:ring-0 bg-gray-50 outline-none focus-visible:outline-none';
+                if (textAreaFields[0].disabled) {
+                  nameInput.disabled = true;
+                  nameInput.classList.add('text-gray-300');
+                }
+                nameInput.addEventListener('input', () => {
+                  const curSelectedProfileName = selectedProfile?.name || '';
+                  const allButtons = body.querySelectorAll('button');
+                  const saveButton = [...allButtons].find((b) => b.textContent === 'Save');
+                  const curTextAreaFields = document.querySelectorAll('[role="dialog"][data-state="open"][tabindex="-1"] textarea');
+                  const curAboutUserInput = curTextAreaFields[0];
+                  const curAboutModelInput = curTextAreaFields[1];
+                  if (nameInput.value === '' || (nameInput.value === curSelectedProfileName && curAboutUserInput.value === selectedProfile?.aboutUser && curAboutModelInput.value === selectedProfile?.aboutModel)) {
+                    saveButton.disabled = true;
+                    saveButton.classList.add('opacity-50', 'cursor-not-allowed');
+                  } else if (saveButton.disabled) {
+                    saveButton.disabled = false;
+                    saveButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                  }
+                });
+                // add the input field to the beginning of the body
+                body.insertBefore(nameInput, body.firstChild);
+                body.insertBefore(nameLabel, body.firstChild);
+                // add a change listener to the text area fields
+                textAreaFields.forEach((t) => {
+                  t.addEventListener('input', () => {
+                    setTimeout(() => {
+                      const curNameInput = document.querySelector('#custom-instructions-name-input');
+                      if (curNameInput.value === '') {
+                        saveButton.disabled = true;
+                        saveButton.classList.add('opacity-50', 'cursor-not-allowed');
+                      } else if (curNameInput.value !== selectedProfile?.name) {
+                        saveButton.disabled = false;
+                        saveButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                      }
+                    }, 10);
+                  });
+                });
+                // find a button inside body that has text "Save"
+                const allButtons = body.querySelectorAll('button');
+                const toggleButton = [...allButtons].find((b) => b.role === 'switch');
+                const saveButton = [...allButtons].find((b) => b.textContent === 'Save');
+                // add a chane listener to the toggle button
+                toggleButton.addEventListener('click', () => {
+                  const currState = toggleButton.getAttribute('aria-checked');
+
+                  // when toggle off nameinput shoud be disabled
+                  const curNameInput = document.querySelector('#custom-instructions-name-input');
+                  if (currState === 'true') {
+                    curNameInput.disabled = true;
+                    curNameInput.classList.add('text-gray-300');
+                  } else {
+                    curNameInput.disabled = false;
+                    curNameInput.classList.remove('text-gray-300');
+                  }
                   setTimeout(() => {
-                    const curNameInput = document.querySelector('#custom-instructions-name-input');
                     if (curNameInput.value === '') {
                       saveButton.disabled = true;
                       saveButton.classList.add('opacity-50', 'cursor-not-allowed');
@@ -284,76 +316,49 @@ function upgradeCustomInstructions() {
                     }
                   }, 10);
                 });
-              });
-              // find a button inside body that has text "Save"
-              const allButtons = body.querySelectorAll('button');
-              const toggleButton = [...allButtons].find((b) => b.role === 'switch');
-              const saveButton = [...allButtons].find((b) => b.textContent === 'Save');
-              // add a chane listener to the toggle button
-              toggleButton.addEventListener('click', () => {
-                const currState = toggleButton.getAttribute('aria-checked');
+                // add a click listener to the save button
+                saveButton.addEventListener('click', () => {
+                  chrome.storage.local.get(['customInstructionProfiles'], (res) => {
+                    const { customInstructionProfiles: cip } = res;
+                    const curNameInput = document.querySelector('#custom-instructions-name-input');
+                    const curTextAreaFields = document.querySelectorAll('[role="dialog"][data-state="open"][tabindex="-1"] textarea');
+                    const curAboutUserInput = curTextAreaFields[0];
+                    const curAboutModelInput = curTextAreaFields[1];
+                    const curSelectedProfile = cip.find((p) => p.isSelected);
 
-                // when toggle off nameinput shoud be disabled
-                const curNameInput = document.querySelector('#custom-instructions-name-input');
-                if (currState === 'true') {
-                  curNameInput.disabled = true;
-                  curNameInput.classList.add('text-gray-300');
-                } else {
-                  curNameInput.disabled = false;
-                  curNameInput.classList.remove('text-gray-300');
-                }
-                setTimeout(() => {
-                  if (curNameInput.value === '') {
-                    saveButton.disabled = true;
-                    saveButton.classList.add('opacity-50', 'cursor-not-allowed');
-                  } else if (curNameInput.value !== selectedProfile?.name) {
-                    saveButton.disabled = false;
-                    saveButton.classList.remove('opacity-50', 'cursor-not-allowed');
-                  }
-                }, 10);
-              });
-              // add a click listener to the save button
-              saveButton.addEventListener('click', () => {
-                chrome.storage.local.get(['customInstructionProfiles'], (res) => {
-                  const { customInstructionProfiles: cip } = res;
-                  const curNameInput = document.querySelector('#custom-instructions-name-input');
-                  const curTextAreaFields = document.querySelectorAll('[role="dialog"][data-state="open"][tabindex="-1"] textarea');
-                  const curAboutUserInput = curTextAreaFields[0];
-                  const curAboutModelInput = curTextAreaFields[1];
-                  const curSelectedProfile = cip.find((p) => p.isSelected);
-
-                  if (!curSelectedProfile) {
-                    const newCip = [...cip, {
-                      name: curNameInput.value, aboutUser: curAboutUserInput.value, aboutModel: curAboutModelInput.value, isSelected: true, id: self.crypto.randomUUID(),
-                    }];
-                    chrome.storage.local.set({ customInstructionProfiles: newCip }, () => {
-                      toast('Profile saved');
-                      reloadCustomInstructionSettings();
-                    });
-                  } else {
-                    const newCip = cip.map((p) => {
-                      if (p.isSelected) {
-                        return {
-                          ...p, name: curNameInput.value, aboutUser: curAboutUserInput.value, aboutModel: curAboutModelInput.value,
-                        };
-                      }
-                      return p;
-                    });
-                    chrome.storage.local.set({ customInstructionProfiles: newCip }, () => {
-                      toast('Profile updated');
-                      reloadCustomInstructionSettings();
-                    });
-                  }
+                    if (!curSelectedProfile) {
+                      const newCip = [...cip, {
+                        name: curNameInput.value, aboutUser: curAboutUserInput.value, aboutModel: curAboutModelInput.value, isSelected: true, id: self.crypto.randomUUID(),
+                      }];
+                      chrome.storage.local.set({ customInstructionProfiles: newCip }, () => {
+                        toast('Profile saved');
+                        reloadCustomInstructionSettings();
+                      });
+                    } else {
+                      const newCip = cip.map((p) => {
+                        if (p.isSelected) {
+                          return {
+                            ...p, name: curNameInput.value, aboutUser: curAboutUserInput.value, aboutModel: curAboutModelInput.value,
+                          };
+                        }
+                        return p;
+                      });
+                      chrome.storage.local.set({ customInstructionProfiles: newCip }, () => {
+                        toast('Profile updated');
+                        reloadCustomInstructionSettings();
+                      });
+                    }
+                  });
                 });
-              });
-            }
-          });
-        }, 200);
-      }
-    });
-  };
-  const observer = new MutationObserver(callback);
-  observer.observe(targetNode, config);
+              }
+            });
+          }, 200);
+        }
+      });
+    };
+    const observer = new MutationObserver(callback);
+    observer.observe(targetNode, config);
+  });
 }
 function reloadCustomInstructionSettings() {
   const existingCustomInstructionSettings = document.querySelector('#custom-instruction-settings');

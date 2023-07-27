@@ -25,21 +25,26 @@ function newChatPage(planName) {
   const settings = document.createElement('div');
   settings.id = 'new-page-settings';
   settings.classList = 'flex flex-col items-start justify-end border border-gray-500 rounded-md p-4';
-  settings.style = 'width: 600px;min-height:260px;';
+  settings.style = 'width: 600px;';
   content.appendChild(settings);
+  chrome.storage.local.get(['account'], (r) => {
+    const { account } = r;
+    const isPaid = account?.account_plan?.is_paid_subscription_active || account?.accounts?.default?.entitlement?.has_active_subscription || false;
+    if (isPaid) {
+      settings.style.minHeight = '260px';
+      const customInstructionSettings = customInstructionSettingsElement();
+      settings.appendChild(customInstructionSettings);
 
-  const customInstructionSettings = customInstructionSettingsElement();
-  settings.appendChild(customInstructionSettings);
+      // divider
+      const divider = document.createElement('div');
+      divider.classList = 'border border-gray-500';
+      divider.style = 'width: 70%; height: 1px; background-color: #e5e7eb; margin: 16px auto;';
+      settings.appendChild(divider);
+    }
 
-  // divider
-  const divider = document.createElement('div');
-  divider.classList = 'border border-gray-500';
-  divider.style = 'width: 70%; height: 1px; background-color: #e5e7eb; margin: 16px auto;';
-  settings.appendChild(divider);
-
-  const saveHistorySwitch = createSwitch('<span style="color:#8e8ea0 !important;">Chat History & Training</span>', '<div class="text-left">Save new chats to your history and allow them to be used to improve ChatGPT via model training. Unsaved chats will be deleted from our systems within 30 days. <a href="https://help.openai.com/en/articles/7730893" target="_blank" class="underline" rel="noreferrer">Learn more</a></div>', 'saveHistory', true);
-  settings.appendChild(saveHistorySwitch);
-
+    const saveHistorySwitch = createSwitch('<span style="color:#8e8ea0 !important;">Chat History & Training</span>', '<div class="text-left">Save new chats to your history and allow them to be used to improve ChatGPT via model training. Unsaved chats will be deleted from our systems within 30 days. <a href="https://help.openai.com/en/articles/7730893" target="_blank" class="underline" rel="noreferrer">Learn more</a></div>', 'saveHistory', true);
+    settings.appendChild(saveHistorySwitch);
+  });
   const bottom = document.createElement('div');
   bottom.classList = 'w-full h-32 md:h-48 flex-shrink-0';
   innerDiv.appendChild(bottom);
