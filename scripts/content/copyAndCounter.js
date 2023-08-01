@@ -163,6 +163,7 @@ function updateCounters() {
   const assistantChats = allAsistantChats();
   for (let i = 0; i < assistantChats.length; i += 1) {
     const resultElement = assistantChats[i];
+    resultElement.parentElement.classList.add('flex-col');
     addActionWrapperToResult(resultElement, i);
     updateCounterForResult(resultElement, i);
     addCopyButtonToResult(resultElement, i);
@@ -172,6 +173,7 @@ function updateCounterEventListeners() {
   const assistantChats = allAsistantChats();
   for (let i = 0; i < assistantChats.length; i += 1) {
     const resultElement = assistantChats[i];
+    resultElement.parentElement.classList.add('flex-col');
     addActionWrapperToResult(resultElement, i);
     updateCounterForResult(resultElement, i);
     addCopyButtonToResult(resultElement, i);
