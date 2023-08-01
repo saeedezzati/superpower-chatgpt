@@ -18,9 +18,9 @@ function initialize() {
         addQuickAccessMenuEventListener();
         cleanNav();
         upgradeCustomInstructions();
+        initializeExport();
         initializeContinue();
         initializeNewsletter();
-        initializeExport();
         initializeSettings();
         initializeAnnouncement();
         initializeReleaseNote();

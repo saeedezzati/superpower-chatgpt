@@ -127,8 +127,8 @@ function addExportButton() {
   if (!textAreaElement) return;
   const canSubmit = canSubmitPrompt();
 
-  const otherExportButton = document.querySelector('#export-button');
-  if (otherExportButton) otherExportButton.remove();
+  const existingExportButton = document.querySelector('#export-button');
+  if (existingExportButton) existingExportButton.remove();
   const lastExportButton = document.querySelector('#export-conversation-button');
   if ((!canSubmit || assistantChats.length === 0) && lastExportButton) {
     lastExportButton.remove();
@@ -190,15 +190,33 @@ function addExportButton() {
   });
 
   if (canSubmit) {
-    const textAreaElementWrapper = textAreaElement.parentNode;
-    const nodeBeforetTextAreaElement = textAreaElementWrapper.previousSibling;
-    if (!nodeBeforetTextAreaElement) return;
-    if (nodeBeforetTextAreaElement.classList.length === 0) {
-      nodeBeforetTextAreaElement.classList = 'h-full flex ml-1 md:w-full md:m-auto md:mb-2 gap-0 md:gap-2 justify-center';
-      nodeBeforetTextAreaElement.firstChild.classList = '';
-    }
-    nodeBeforetTextAreaElement.style.minHeight = '38px';
-    nodeBeforetTextAreaElement.appendChild(exportButton);
+    const inputForm = document.querySelector('main form');
+    const inputFormFirstChild = inputForm.firstChild;
+    chrome.storage.local.get('settings', ({ settings }) => {
+      let inputFormActionWrapper = settings.autoSync
+        ? inputForm.querySelector('#input-form-action-wrapper')
+        : inputForm.firstChild.firstChild.firstChild;
+      if (!settings.autoSync) {
+        const growElement = inputFormActionWrapper.querySelector('.grow');
+        if (growElement) {
+          growElement.remove();
+        }
+      }
+      if (!inputFormActionWrapper) {
+        if (!inputFormFirstChild.firstChild.contains(textAreaElement)) {
+          inputFormFirstChild.firstChild.remove();
+        }
+        // create new div
+        const newDiv = document.createElement('div');
+        newDiv.id = 'input-form-action-wrapper';
+        newDiv.classList = 'h-full flex ml-1 md:w-full md:m-auto md:mb-4 gap-0 md:gap-2 justify-center';
+        // prepent inputform with new div
+        inputFormFirstChild.prepend(newDiv);
+        inputFormActionWrapper = newDiv;
+      }
+      inputFormActionWrapper.style.minHeight = '38px';
+      if (!existingExportButton) inputFormActionWrapper.appendChild(exportButton);
+    });
   }
 }
 

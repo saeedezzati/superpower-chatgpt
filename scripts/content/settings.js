@@ -39,7 +39,7 @@ function selectedTabContent(selectedTab) {
   }
 }
 function settingsModalContent(initialTab = 0) {
-  const settingsTabs = ['General', 'Auto Sync', 'models', 'Custom Prompts', 'Export', 'Splitter', 'Newsletter', 'Supporters'];
+  const settingsTabs = ['General', 'Auto Sync', 'Models', 'Custom Prompts', 'Export', 'Splitter', 'Newsletter', 'Supporters'];
   let activeTab = initialTab;
   // create history modal content
   const content = document.createElement('div');

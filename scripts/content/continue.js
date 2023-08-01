@@ -183,24 +183,42 @@ function addContinueButton() {
       }
       if (canSubmit) {
         const inputForm = document.querySelector('main form');
+        const inputFormFirstChild = inputForm.firstChild;
+
         const textAreaElement = inputForm.querySelector('textarea');
         if (!textAreaElement) return;
-        const textAreaElementWrapper = textAreaElement.parentNode;
-        let nodeBeforetTextAreaElement = textAreaElementWrapper.previousSibling;
-        if (!nodeBeforetTextAreaElement) {
-          // create a new div
+
+        let inputFormActionWrapper = settings.autoSync
+          ? inputForm.querySelector('#input-form-action-wrapper')
+          : inputForm.firstChild.firstChild.firstChild;
+        if (!settings.autoSync) {
+          const growElement = inputFormActionWrapper.querySelector('.grow');
+          if (growElement) {
+            growElement.remove();
+          }
+        }
+        if (!inputFormActionWrapper) {
+          if (!inputFormFirstChild.firstChild.contains(textAreaElement)) {
+            inputFormFirstChild.firstChild.remove();
+          }
+          // create new div
           const newDiv = document.createElement('div');
-          newDiv.classList = 'h-full flex ml-1 md:w-full md:m-auto md:mb-2 gap-0 md:gap-2 justify-center';
+          newDiv.id = 'input-form-action-wrapper';
+          newDiv.classList = 'h-full flex ml-1 md:w-full md:m-auto md:mb-4 gap-0 md:gap-2 justify-center';
           // prepent inputform with new div
-          inputForm.firstChild.prepend(newDiv);
-          nodeBeforetTextAreaElement = newDiv;
+          inputFormActionWrapper = newDiv;
+          inputFormFirstChild.prepend(inputFormActionWrapper);
         }
-        if (nodeBeforetTextAreaElement.classList.length === 0) {
-          nodeBeforetTextAreaElement.classList = 'h-full flex ml-1 md:w-full md:m-auto md:mb-2 gap-0 md:gap-2 justify-center';
-          nodeBeforetTextAreaElement.firstChild.classList = '';
+        inputFormActionWrapper.style.minHeight = '38px';
+        const existingContinueButton = document.querySelector('#continue-conversation-button-wrapper');
+        const allMessageWrapper = document.querySelectorAll('[id^="message-wrapper-"]');
+        let lastMessageWrapperElement;
+        if (allMessageWrapper.length > 0) {
+          lastMessageWrapperElement = allMessageWrapper[allMessageWrapper.length - 1];
         }
-        nodeBeforetTextAreaElement.style.minHeight = '38px';
-        nodeBeforetTextAreaElement.appendChild(continueButtonWrapper);
+        if (!settings.autoSync || !lastMessageWrapperElement || lastMessageWrapperElement.dataset.role !== 'user') {
+          if (!existingContinueButton) inputFormActionWrapper.appendChild(continueButtonWrapper);
+        }
       }
     }, 200);
   });

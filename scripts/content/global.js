@@ -279,7 +279,7 @@ function addNavToggleButton() {
     sidebar.appendChild(navToggleButton);
   });
 }
-function toggleTextAreaElement(forceShow = false) {
+function showHideTextAreaElement(forceShow = false) {
   const textAreaElement = document.querySelector('main form textarea');
   if (!textAreaElement) return;
   const textAreaParent = textAreaElement.parentElement;
@@ -325,7 +325,7 @@ function showNewChatPage() {
       document.querySelectorAll('#language-list-dropdown li')?.[0]?.click();
       document.querySelectorAll('#tone-list-dropdown li')?.[0]?.click();
       document.querySelectorAll('#writing-style-list-dropdown li')?.[0]?.click();
-      document.querySelector('#auto-click-button').classList.replace('btn-primary', 'btn-neutral');
+      document.querySelector('#auto-click-button')?.classList?.replace('btn-primary', 'btn-neutral');
     });
     runningPromptChainSteps = undefined;
     runningPromptChainIndex = 0;
@@ -352,7 +352,7 @@ function showNewChatPage() {
       const textAreaElement = inputForm.querySelector('textarea');
       textAreaElement.focus();
     }
-    toggleTextAreaElement();
+    showHideTextAreaElement();
     initializeRegenerateResponseButton();// basically just hide the button, so conversationId is not needed
     handleQueryParams(search);
   });
@@ -558,7 +558,7 @@ function canSubmitPrompt() {
 }
 function addActionButtonWrapperAboveInput() {
   const regenerateResponseButton = Array.from(document.querySelectorAll('form button')).find(
-    (button) => button.textContent === 'Regenerate response',
+    (button) => button.textContent === 'Regenerate',
   );
   if (regenerateResponseButton) regenerateResponseButton.style.zIndex = 10;
   const existingActionButtonWrapper = document.querySelector('#action-button-wrapper');

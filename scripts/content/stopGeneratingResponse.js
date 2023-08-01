@@ -7,13 +7,6 @@ function toggleStopGeneratingResponseButton() {
   const submitButton = document.querySelector('main form textarea ~ button');
   if (!submitButton) return;
 
-  const textAreaElementWrapper = textAreaElement.parentNode;
-  const nodeBeforetTextAreaElement = textAreaElementWrapper.previousSibling;
-  if (!nodeBeforetTextAreaElement) return;
-  if (nodeBeforetTextAreaElement.classList.length === 0) {
-    nodeBeforetTextAreaElement.classList = 'h-full flex ml-1 md:w-full md:m-auto md:mb-2 gap-0 md:gap-2 justify-center';
-    nodeBeforetTextAreaElement.firstChild.classList = '';
-  }
   const existingStopGeneratingResponseButton = document.querySelector('#stop-generating-response-button');
   if (existingStopGeneratingResponseButton && !isGenerating) {
     existingStopGeneratingResponseButton.remove();
@@ -32,7 +25,9 @@ function toggleStopGeneratingResponseButton() {
     newStopGeneratingResponseButton.remove();
   });
 
-  nodeBeforetTextAreaElement.appendChild(newStopGeneratingResponseButton);
+  const inputForm = document.querySelector('main form');
+  const inputFormActionWrapper = inputForm.querySelector('#input-form-action-wrapper');
+  inputFormActionWrapper.appendChild(newStopGeneratingResponseButton);
 }
 
 // eslint-disable-next-line no-unused-vars

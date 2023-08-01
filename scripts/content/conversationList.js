@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global markdown, markdownitSup, initializeNavbar, generateInstructions, generateChat, SSE, formatDate, loadConversation, resetSelection, katex, texmath, rowUser, rowAssistant, updateOrCreateConversation, replaceTextAreaElemet, highlight, isGenerating:true, disableTextInput:true, generateTitle, debounce, initializeRegenerateResponseButton, initializeStopGeneratingResponseButton, toggleTextAreaElement, showNewChatPage, chatStreamIsClosed:true, addCopyCodeButtonsEventListeners, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams, addScrollButtons, updateTotalCounter, isWindows, loadSharedConversation, createTemplateWordsModal, addEnforcementTriggerElement, initializePromptChain, insertNextChain, runningPromptChainSteps:true, runningPromptChainIndex:true */
+/* global markdown, markdownitSup, initializeNavbar, generateInstructions, generateChat, SSE, formatDate, loadConversation, resetSelection, katex, texmath, rowUser, rowAssistant, updateOrCreateConversation, replaceTextAreaElemet, highlight, isGenerating:true, disableTextInput:true, generateTitle, debounce, initializeRegenerateResponseButton, initializeStopGeneratingResponseButton, showHideTextAreaElement, showNewChatPage, chatStreamIsClosed:true, addCopyCodeButtonsEventListeners, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams, addScrollButtons, updateTotalCounter, isWindows, loadSharedConversation, createTemplateWordsModal, addEnforcementTriggerElement, initializePromptChain, insertNextChain, runningPromptChainSteps:true, runningPromptChainIndex:true */
 
 // Initial state
 let userChatIsActuallySaved = false;
@@ -525,7 +525,7 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
             isGenerating = false;
             chatStream.close();
             if (syncDiv) syncDiv.style.opacity = '1';
-            toggleTextAreaElement();
+            showHideTextAreaElement();
             initializeStopGeneratingResponseButton();
             initializeRegenerateResponseButton();
             updateTotalCounter();
@@ -736,10 +736,11 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
               chrome.storage.local.set({ capExpiresAt });
               errorMessage = `You've reached the current usage cap for this model. You can continue with the default model now, or try again after ${capExpiresAt}.`;
             } else {
+              showHideTextAreaElement();
               chrome.storage.local.set({ capExpiresAt: '' });
             }
             const conversationBottom = document.querySelector('#conversation-bottom');
-            const errorMessageElement = `<div style="max-width:400px" class="py-2 px-3 my-2 border text-gray-600 rounded-md text-sm dark:text-gray-100 border-red-500 bg-red-500/10">${errorMessage}</div>`;
+            const errorMessageElement = `<div id="response-error-msg" style="max-width:400px" class="py-2 px-3 my-2 border text-gray-600 rounded-md text-sm dark:text-gray-100 border-red-500 bg-red-500/10">${errorMessage}</div>`;
             conversationBottom.insertAdjacentHTML('beforebegin', errorMessageElement);
             conversationBottom.scrollIntoView({ behavior: 'smooth' });
           }

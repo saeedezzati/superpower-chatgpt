@@ -270,21 +270,18 @@ input:checked + .slider:before {
 }
 
 /* ezgif images have transparent background */
-#modal-content-newsletter img:not([src*="ezgif"]), 
 #modal-content-general img,
 [id^="modal-content-release-note"] img {
   border-radius: 8px;
   box-shadow: 0 0 8px rgb(162, 154, 106);
 }
 
-#modal-content-newsletter video,
 #modal-content-general video,
 [id^="modal-content-release-note"] video {
   border-radius: 8px;
   box-shadow: 0 0 8px rgb(162, 154, 106);
 }
 
-#modal-content-newsletter iframe,
 #modal-content-general iframe,
 [id^="modal-content-release-note"] iframe {
   border-radius: 16px;

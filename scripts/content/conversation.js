@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global getConversation, submitChat, openSubmitPromptModal, initializeRegenerateResponseButton, toggleTextAreaElement, rowAssistant, rowUser, copyRichText, messageFeedback, openFeedbackModal, refreshConversations, initializeStopGeneratingResponseButton, chatStreamIsClosed:true, generateInstructions, isGenerating:true, scrolUpDetected:true, addScrollDetector, generateSuggestions, addArkoseScript, addEnforcementTriggerElement, languageList, writingStyleList, toneList */
+/* global getConversation, submitChat, openSubmitPromptModal, initializeRegenerateResponseButton, showHideTextAreaElement, rowAssistant, rowUser, copyRichText, messageFeedback, openFeedbackModal, refreshConversations, initializeStopGeneratingResponseButton, chatStreamIsClosed:true, generateInstructions, isGenerating:true, scrolUpDetected:true, addScrollDetector, generateSuggestions, addArkoseScript, addEnforcementTriggerElement, languageList, writingStyleList, toneList */
 
 function addPinNav(sortedNodes) {
   chrome.storage.local.get(['settings'], (res) => {
@@ -127,7 +127,7 @@ function loadConversationFromNode(conversationId, newMessageId, oldMessageId, se
       // inser messageDiv html above conversation bottom
       conversationBottom.insertAdjacentHTML('beforebegin', messageDiv);
 
-      toggleTextAreaElement();
+      showHideTextAreaElement();
       addConversationsEventListeners(fullConversation.id);
       initializeRegenerateResponseButton();
       initializeStopGeneratingResponseButton();
@@ -253,7 +253,7 @@ function loadConversation(conversationId, searchValue = '', focusOnInput = true)
           searchElement.scrollIntoView();
         }
       }
-      toggleTextAreaElement();
+      showHideTextAreaElement();
       addConversationsEventListeners(fullConversation.id);
       initializeRegenerateResponseButton();
       initializeStopGeneratingResponseButton();
