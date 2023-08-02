@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-/* global installPlugin, uninstallPlugin, showEnableMFA, pluginsDropdown, addPluginsDropdownEventListener */
+/* global installPlugin, uninstallPlugin, pluginsDropdown, addPluginsDropdownEventListener */
 let currentPluginStorePage = 1;
 function initializePluginStoreModal(plugins) {
   const pageSize = 8;
@@ -286,13 +286,6 @@ function addPluginStoreEventListener(plugins) {
   pluginStoreWrapper.addEventListener('click', (event) => {
     // if outside plugin-store-dialog close it
     const pluginStoreDialog = document.getElementById('plugin-store-dialog');
-    const enableMFADialog = document.getElementById('enable-mfa-dialog');
-    if (enableMFADialog && !pluginStoreDialog && !enableMFADialog?.contains(event.target)) {
-      pluginStoreWrapper.innerHTML = initializePluginStoreModal(plugins);
-      addPluginStoreEventListener(plugins);
-
-      return;
-    }
     if (pluginStoreDialog && !pluginStoreDialog?.contains(event.target)) {
       currentPluginStorePage = 1;
       pluginStoreWrapper.remove();
@@ -442,39 +435,31 @@ function addInstallButtonEventListener(plugins) {
       e.stopPropagation();
       button.disabled = true;
       if (button.innerText.toLowerCase() === 'install') {
-        chrome.storage.sync.get(['mfa'], (syncRes) => {
-          const { mfa } = syncRes;
-          const plugin = plugins.find((p) => p.id === pluginId);
-          if (plugin.oauth_client_id) {
-            if (mfa) {
-              const url = `${plugin.manifest.auth.client_url}?response_type=code&client_id=${plugin.oauth_client_id}&redirect_uri=https://chat.openai.com/aip/${plugin.id}/oauth/callback&scope=${plugin.manifest.auth.scope}`;
-              window.open(url, '_self');
-            } else {
-              const pluginStoreWrapper = document.getElementById('plugin-store-wrapper');
-              pluginStoreWrapper.innerHTML = showEnableMFA();
-            }
-          } else {
-            button.classList = 'btn relative btn-light bg-green-100 hover:bg-green-100';
-            button.innerHTML = 'Installing <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="animate-spin text-center" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>';
+        const plugin = plugins.find((p) => p.id === pluginId);
+        if (plugin.oauth_client_id) {
+          const url = `${plugin.manifest.auth.client_url}?response_type=code&client_id=${plugin.oauth_client_id}&redirect_uri=https://chat.openai.com/aip/${plugin.id}/oauth/callback&scope=${plugin.manifest.auth.scope}`;
+          window.open(url, '_self');
+        } else {
+          button.classList = 'btn relative btn-light bg-green-100 hover:bg-green-100';
+          button.innerHTML = 'Installing <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="animate-spin text-center" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>';
 
-            installPlugin(pluginId).then((res) => {
-              chrome.storage.local.get(['allPlugins', 'installedPlugins', 'enabledPluginIds'], (result) => {
-                button.disabled = false;
-                button.classList = 'btn relative btn-light hover:bg-gray-200';
-                button.innerHTML = 'Uninstall <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg" > <circle cx="12" cy="12" r="10"></circle> <line x1="15" y1="9" x2="9" y2="15"></line> <line x1="9" y1="9" x2="15" y2="15"></line> </svg>';
-                const { allPlugins, installedPlugins, enabledPluginIds } = result;
-                const allPluginIndex = allPlugins.findIndex((p) => p.id === pluginId);
-                allPlugins[allPluginIndex] = res;
-                const newInstalledPlugins = installedPlugins.map((p) => p.id).includes(res.id) ? installedPlugins : [...installedPlugins, res];
-                chrome.storage.local.set({ allPlugins, installedPlugins: newInstalledPlugins });
-                const idPrefix = 'navbar';
-                const pluginsDropdownWrapper = document.getElementById(`plugins-dropdown-wrapper-${idPrefix}`);
-                pluginsDropdownWrapper.innerHTML = pluginsDropdown(newInstalledPlugins, enabledPluginIds, idPrefix);
-                addPluginsDropdownEventListener(idPrefix);
-              });
+          installPlugin(pluginId).then((res) => {
+            chrome.storage.local.get(['allPlugins', 'installedPlugins', 'enabledPluginIds'], (result) => {
+              button.disabled = false;
+              button.classList = 'btn relative btn-light hover:bg-gray-200';
+              button.innerHTML = 'Uninstall <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg" > <circle cx="12" cy="12" r="10"></circle> <line x1="15" y1="9" x2="9" y2="15"></line> <line x1="9" y1="9" x2="15" y2="15"></line> </svg>';
+              const { allPlugins, installedPlugins, enabledPluginIds } = result;
+              const allPluginIndex = allPlugins.findIndex((p) => p.id === pluginId);
+              allPlugins[allPluginIndex] = res;
+              const newInstalledPlugins = installedPlugins.map((p) => p.id).includes(res.id) ? installedPlugins : [...installedPlugins, res];
+              chrome.storage.local.set({ allPlugins, installedPlugins: newInstalledPlugins });
+              const idPrefix = 'navbar';
+              const pluginsDropdownWrapper = document.getElementById(`plugins-dropdown-wrapper-${idPrefix}`);
+              pluginsDropdownWrapper.innerHTML = pluginsDropdown(newInstalledPlugins, enabledPluginIds, idPrefix);
+              addPluginsDropdownEventListener(idPrefix);
             });
-          }
-        });
+          });
+        }
       } else {
         button.classList = 'btn relative btn-light bg-green-100 hover:bg-green-100';
         button.innerHTML = 'Unnstalling <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="animate-spin text-center" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>';

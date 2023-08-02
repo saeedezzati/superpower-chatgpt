@@ -51,7 +51,7 @@ function registerUser(data) {
 /* eslint-disable no-unused-vars */
 chrome.webRequest.onBeforeSendHeaders.addListener(
   (details) => {
-    chrome.storage.sync.get(['user_id', 'openai_id', 'version', 'avatar', 'lastUserSync', 'mfa'], (result) => {
+    chrome.storage.sync.get(['user_id', 'openai_id', 'version', 'avatar', 'lastUserSync'], (result) => {
       // or conditionor
       const { version } = chrome.runtime.getManifest();
 
@@ -60,8 +60,6 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
         || !result.avatar
         || !result.user_id
         || !result.openai_id
-        || typeof result.mfa === 'undefined'
-        || !result.mfa
         || result.version !== version;
       if (shouldRegister && details.url === 'https://chat.openai.com/api/auth/session') {
         const requestHeaders = details.requestHeaders.reduce((acc, header) => {

@@ -715,6 +715,7 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
           const submitButton = inputForm.querySelector('textarea ~ button');
           // submitButton.disabled = false;
           submitButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" class="h-4 w-4" stroke-width="2"><path d="M.5 1.163A1 1 0 0 1 1.97.28l12.868 6.837a1 1 0 0 1 0 1.766L1.969 15.72A1 1 0 0 1 .5 14.836V10.33a1 1 0 0 1 .816-.983L8.5 8 1.316 6.653A1 1 0 0 1 .5 5.67V1.163Z" fill="currentColor"></path></svg>';
+          // eslint-disable-next-line no-console
           console.warn(err);
           if (err.data) {
             const error = JSON.parse(err.data);
