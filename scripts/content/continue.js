@@ -204,7 +204,7 @@ function addContinueButton() {
           // create new div
           const newDiv = document.createElement('div');
           newDiv.id = 'input-form-action-wrapper';
-          newDiv.classList = 'h-full flex ml-1 md:w-full md:m-auto md:mb-4 gap-0 md:gap-2 justify-center';
+          newDiv.classList = 'h-full flex ml-1 md:w-full md:m-auto md:mb-4 gap-0 md:gap-2 justify-center items-end';
           // prepent inputform with new div
           inputFormActionWrapper = newDiv;
           inputFormFirstChild.prepend(inputFormActionWrapper);

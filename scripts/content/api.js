@@ -7,12 +7,49 @@ chrome.storage.local.get(['environment'], (result) => {
     API_URL = 'https://dev.wfh.team:8000';
   }
 });
+let lastPromptSuggestions = [];
 
 // get auth token from sync storage
 const defaultHeaders = {
   'content-type': 'application/json',
 };
-function generateChat(message, conversationId, messageId, parentMessageId, token, saveHistory = true, role = 'user', action = 'next') {
+function getExamplePrompts(offset = 0, limit = 4) {
+  const url = new URL('https://chat.openai.com/backend-api/prompt_library/');
+  const params = { offset, limit };
+  url.search = new URLSearchParams(params).toString();
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch(url, {
+    method: 'GET',
+    headers: {
+      ...defaultHeaders,
+      Authorization: result.auth_token,
+    },
+  }).then((response) => response.json()))
+    .then((data) => {
+      lastPromptSuggestions = data.items.map((item) => item.prompt);
+      return data;
+    });
+}
+
+function generateSuggestions(conversationId, messageId, model, numSuggestions = 2) {
+  const payload = {
+    message_id: messageId,
+    model,
+    num_suggestions: numSuggestions,
+  };
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch(`https://chat.openai.com/backend-api/conversation/${conversationId}/experimental/generate_suggestions`, {
+    method: 'POST',
+    headers: {
+      ...defaultHeaders,
+      Authorization: result.auth_token,
+    },
+    body: JSON.stringify(payload),
+  }).then((response) => response.json()))
+    .then((data) => {
+      lastPromptSuggestions = data.suggestions;
+      return data;
+    });
+}
+function generateChat(message, conversationId, messageId, parentMessageId, token, suggestions = [], saveHistory = true, role = 'user', action = 'next') {
   return chrome.storage.local.get(['settings', 'enabledPluginIds']).then((res) => chrome.storage.sync.get(['auth_token']).then((result) => {
     const payload = {
       action,
@@ -20,6 +57,7 @@ function generateChat(message, conversationId, messageId, parentMessageId, token
       model: res.settings.selectedModel.slug,
       parent_message_id: parentMessageId,
       history_and_training_disabled: !saveHistory,
+      suggestions,
       timezone_offset_min: new Date().getTimezoneOffset(),
     };
     if (action === 'next') {

@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global getConversation, submitChat, openSubmitPromptModal, initializeRegenerateResponseButton, showHideTextAreaElement, rowAssistant, rowUser, copyRichText, messageFeedback, openFeedbackModal, refreshConversations, initializeStopGeneratingResponseButton, chatStreamIsClosed:true, generateInstructions, isGenerating:true, scrolUpDetected:true, addScrollDetector, generateSuggestions, addArkoseScript, addEnforcementTriggerElement, languageList, writingStyleList, toneList */
+/* global getConversation, submitChat, openSubmitPromptModal, initializeRegenerateResponseButton, showHideTextAreaElement, rowAssistant, rowUser, copyRichText, messageFeedback, openFeedbackModal, refreshConversations, initializeStopGeneratingResponseButton, chatStreamIsClosed:true, generateInstructions, isGenerating:true, scrolUpDetected:true, addScrollDetector, addArkoseScript, addEnforcementTriggerElement, languageList, writingStyleList, toneList */
 
 function addPinNav(sortedNodes) {
   chrome.storage.local.get(['settings'], (res) => {
@@ -78,7 +78,6 @@ function updateModel(modelSlug, fullConversation) {
   });
 }
 function loadConversationFromNode(conversationId, newMessageId, oldMessageId, searchValue = '') {
-  // chatStreamIsClosed = true;
   chrome.storage.sync.get(['name', 'avatar'], (result) => {
     chrome.storage.local.get(['conversations', 'settings', 'models'], (res) => {
       const fullConversation = res.conversations?.[conversationId];
@@ -140,7 +139,9 @@ function loadConversationFromNode(conversationId, newMessageId, oldMessageId, se
 
 // eslint-disable-next-line no-unused-vars
 function loadConversation(conversationId, searchValue = '', focusOnInput = true) {
-  // chatStreamIsClosed = true;
+  //  = true;
+  const suggestionsWrapper = document.querySelector('#suggestions-wrapper');
+  if (suggestionsWrapper) suggestionsWrapper.remove();
   scrolUpDetected = false;
   chrome.storage.sync.get(['name', 'avatar', 'conversationsOrder'], (result) => {
     chrome.storage.local.get(['conversations', 'settings', 'models'], (res) => {

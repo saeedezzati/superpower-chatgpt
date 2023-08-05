@@ -193,8 +193,8 @@ function registerShortkeys() {
       // cmd/ctrl + shift + s
       if ((e.metaKey || (isWindows() && e.ctrlKey)) && e.shiftKey && e.keyCode === 83) {
         if (!document.querySelector('#modal-settings')) {
-          // open settings
           e.preventDefault();
+          // open settings
           document.querySelector('#settings-button')?.click();
         }
       }

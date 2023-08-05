@@ -14,7 +14,7 @@ function toggleOriginalRegenerateResponseButton() {
   const textAreaElement = inputForm.querySelector('textarea');
   if (!textAreaElement) return;
   const inputFormActionWrapper = inputForm.querySelector('#input-form-action-wrapper');
-
+  if (!inputFormActionWrapper) return;
   const allButtons = Array.from(inputFormActionWrapper.querySelectorAll('button:not([id])'));
   const originalRegenerateResponseButton = allButtons.find((button) => button.textContent.toLowerCase() === 'regenerate');
   if (originalRegenerateResponseButton) {

@@ -209,6 +209,8 @@ function loadCustomPrompts() {
         const newText = textAreaValue.substring(0, previousAtPosition) + prompt.text + textAreaValue.substring(cursorPosition);
         textAreaElement.value = newText;
         textAreaElement.focus();
+        textAreaElement.dispatchEvent(new Event('input', { bubbles: true }));
+        textAreaElement.dispatchEvent(new Event('change', { bubbles: true }));
       });
       menuContent.appendChild(promptElement);
     }

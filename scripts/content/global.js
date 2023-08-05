@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-/* global markdownit, hljs, resetSelection, getPrompt, newChatPage, initializeRegenerateResponseButton, notSelectedClassList, textAreaElementInputEventListener, textAreaElementKeydownEventListenerSync,  languageList, writingStyleList, toneList, refreshPage, runningPromptChainSteps:true, runningPromptChainIndex:true, dropdown */
+/* global markdownit, hljs, resetSelection, getPrompt, newChatPage, initializeRegenerateResponseButton, notSelectedClassList, textAreaElementInputEventListener, textAreaElementKeydownEventListenerSync,  languageList, writingStyleList, toneList, refreshPage, runningPromptChainSteps:true, runningPromptChainIndex:true, dropdown, getExamplePrompts */
 /* eslint-disable no-unused-vars */
 // Gloab variables
 // const { version } = chrome.runtime.getManifest();
@@ -17,7 +17,6 @@ let disableTextInput = false;// to prevent input from showing extra line right b
 let chatStreamIsClosed = false; // to force close the chat stream
 // eslint-disable-next-line prefer-const
 let shiftKeyPressed = false;
-
 // chrome.storage.local.get(['environment'], (result) => {
 //   if (result.environment === 'development') {
 //     chrome.storage.onChanged.addListener((changes, namespace) => {
@@ -311,7 +310,7 @@ function showNewChatPage() {
 
     const { conversationsAreSynced, account, settings } = result;
     const {
-      selectedLanguage, selectedTone, selectedWritingStyle, autoClick,
+      selectedLanguage, selectedTone, selectedWritingStyle, autoClick, showExamplePrompts,
     } = settings;
     chrome.storage.local.set({
       settings: {
@@ -345,16 +344,61 @@ function showNewChatPage() {
     if (pinNav) {
       pinNav.remove();
     }
-    const { pathname, href, search } = new URL(window.location.toString());
-    if (href !== 'https://chat.openai.com') {
-      window.history.replaceState({}, '', 'https://chat.openai.com');
-      const inputForm = main.querySelector('form');
-      const textAreaElement = inputForm.querySelector('textarea');
-      textAreaElement.focus();
+    const { href, search } = new URL(window.location.toString());
+    if (href !== 'https://chat.openai.com/') {
+      window.history.replaceState({}, '', 'https://chat.openai.com/');
     }
+    const inputForm = main.querySelector('form');
+    const textAreaElement = inputForm.querySelector('textarea');
+    textAreaElement.focus();
     showHideTextAreaElement();
+    if (showExamplePrompts) loadExamplePrompts();
     initializeRegenerateResponseButton();// basically just hide the button, so conversationId is not needed
     handleQueryParams(search);
+  });
+}
+function suggestionButton(suggestion) {
+  const button = document.createElement('button');
+  button.className = 'btn relative btn-neutral group w-full whitespace-nowrap rounded-xl text-left text-gray-700 shadow-[0px_1px_6px_0px_rgba(0,0,0,0.02)] dark:text-gray-300 md:whitespace-normal';
+  button.style = 'width: 49%;';
+  button.innerHTML = `<div class="flex w-full gap-2 items-center justify-center"><div class="flex w-full items-center justify-between"><div class="flex flex-col overflow-hidden"><div class="truncate font-semibold">${suggestion.title}</div><div class="truncate opacity-50">${suggestion.description}</div></div><div class="absolute bottom-0 right-0 top-0 flex items-center rounded-xl bg-gradient-to-l from-gray-100 from-[60%] pl-6 pr-3 text-gray-700 opacity-0 group-hover:opacity-100 dark:from-gray-700 dark:text-gray-200"><span class="" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" class="h-4 w-4" stroke-width="2"><path d="M.5 1.163A1 1 0 0 1 1.97.28l12.868 6.837a1 1 0 0 1 0 1.766L1.969 15.72A1 1 0 0 1 .5 14.836V10.33a1 1 0 0 1 .816-.983L8.5 8 1.316 6.653A1 1 0 0 1 .5 5.67V1.163Z" fill="currentColor"></path></svg></span></div></div></div>`;
+  button.addEventListener('click', () => {
+    const textAreaElement = document.querySelector('main form textarea');
+    textAreaElement.value = suggestion.prompt;
+    // remove all suggestion buttons
+    const suggestionsWrapper = document.querySelector('#suggestions-wrapper');
+    if (suggestionsWrapper) suggestionsWrapper.remove();
+    // click the submit button
+    textAreaElement.focus();
+    textAreaElement.dispatchEvent(new Event('input', { bubbles: true }));
+    textAreaElement.dispatchEvent(new Event('change', { bubbles: true }));
+    setTimeout(() => {
+      const submitButton = document.querySelector('main form textarea ~ button');
+      submitButton.click();
+    }, 100);
+  });
+  return button;
+}
+function loadExamplePrompts() {
+  getExamplePrompts().then((examplePrompts) => {
+    setTimeout(() => {
+      const existingSuggestionsWrapper = document.querySelector('#suggestions-wrapper');
+      if (existingSuggestionsWrapper) existingSuggestionsWrapper.remove();
+      const suggestionsWrapper = document.createElement('div');
+      suggestionsWrapper.id = 'suggestions-wrapper';
+      suggestionsWrapper.className = 'flex flex-wrap w-full gap-3';
+      suggestionsWrapper.style = 'z-index:1000;';
+      examplePrompts.items.forEach((examplePrompt) => {
+        const examplePromptButton = suggestionButton(examplePrompt);
+        suggestionsWrapper.appendChild(examplePromptButton);
+      });
+      // check if still on new chat page
+      const { href } = new URL(window.location.toString());
+      if (href === 'https://chat.openai.com/') {
+        const inputFormActionWrapper = document.querySelector('#input-form-action-wrapper');
+        if (inputFormActionWrapper) inputFormActionWrapper.appendChild(suggestionsWrapper);
+      }
+    }, 1000);
   });
 }
 function handleQueryParams(query) {

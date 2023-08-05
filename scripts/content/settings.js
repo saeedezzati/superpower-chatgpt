@@ -452,6 +452,9 @@ function autoSyncTabContent() {
     const quickSyncSwitch = createSwitch('Quick Sync', 'OFF: Sync All Conversations, ON: Sync only the last 100 conversations (Best performance)', 'quickSync', false, resetSync, 'Experimental - Requires Auto-Sync', !autoSync);
     content.appendChild(quickSyncSwitch);
 
+    const showExamplePromptsSwitch = createSwitch('Show Example Prompts', 'Show the example prompts when starting a new chat', 'showExamplePrompts', false, null, 'Requires Auto-Sync', !autoSync);
+    content.appendChild(showExamplePromptsSwitch);
+
     const conversationTimestampSwitch = createSwitch('Conversation Timestamp', 'OFF: Created time, ON: Last updated time', 'conversationTimestamp', false, reloadConversationList, 'Requires Auto-Sync', !autoSync);
     content.appendChild(conversationTimestampSwitch);
 
@@ -1346,6 +1349,7 @@ function initializeSettings() {
         promptHistory: result.settings?.promptHistory !== undefined ? result.settings.promptHistory : true,
         copyMode: result.settings?.copyMode !== undefined ? result.settings.copyMode : false,
         hideBottomSidebar: result.settings?.hideBottomSidebar !== undefined ? result.settings.hideBottomSidebar : false,
+        showExamplePrompts: result.settings?.showExamplePrompts !== undefined ? result.settings.showExamplePrompts : false,
         hideNewsletter: result.settings?.hideNewsletter !== undefined ? result.settings.hideNewsletter : false,
         customInstruction: result.settings?.customInstruction !== undefined ? result.settings.customInstruction : '',
         useCustomInstruction: result.settings?.useCustomInstruction !== undefined ? result.settings.useCustomInstruction : false,
