@@ -149,7 +149,7 @@ function generalTabContent() {
         document.querySelector('#conversation-bottom').firstChild.style.maxWidth = `${newValue}%`;
       }
       document.querySelector('main').querySelector('form').style.maxWidth = `${newValue}%`;
-      chrome.storage.local.set({ settings: { ...result.settings, conversationWidth: newValue } });
+      chrome.storage.local.set({ settings: { ...result.settings, conversationWidth: newValue, customConversationWidth: true } });
     });
     conversationWidthInput.addEventListener('input', () => {
       const curConversationWidthInput = document.querySelector('#conversation-width-input');
@@ -162,7 +162,7 @@ function generalTabContent() {
         document.querySelector('#conversation-bottom').firstChild.style.maxWidth = `${newValue}%`;
       }
       document.querySelector('main').querySelector('form').style.maxWidth = `${newValue}%`;
-      chrome.storage.local.set({ settings: { ...result.settings, conversationWidth: newValue } });
+      chrome.storage.local.set({ settings: { ...result.settings, conversationWidth: newValue, customConversationWidth: true } });
     });
   });
   leftContent.appendChild(conversationWidthInput);
@@ -218,7 +218,7 @@ function generalTabContent() {
   exportButton.textContent = 'Export';
   exportButton.addEventListener('click', () => {
     chrome.storage.sync.get(['conversationsOrder'], (res) => {
-      chrome.storage.local.get(['settings', 'customModels', 'customPrompts'], (result) => {
+      chrome.storage.local.get(['settings', 'customModels', 'customPrompts', 'customInstructionProfiles'], (result) => {
         const {
           settings, customModels, customPrompts, customInstructionProfiles,
         } = result;
@@ -466,6 +466,9 @@ function autoSyncTabContent() {
 
     const autoHideTopNav = createSwitch('Auto hide Top Navbar', 'Automatically hide the navbar at the top of the page when move the mouse out of it.', 'autoHideTopNav', true, toggleTopNav, 'Requires Auto-Sync', !autoSync);
     content.appendChild(autoHideTopNav);
+
+    const autoResetTopNav = createSwitch('Auto Reset Top Navbar', 'Automatically reset the tone, writing style, and language to default when switching to new chats', 'autoResetTopNav', false, toggleTopNav, 'Requires Auto-Sync', !autoSync);
+    content.appendChild(autoResetTopNav);
   });
   return content;
 }
@@ -1348,6 +1351,7 @@ function initializeSettings() {
         safeMode: result.settings?.safeMode !== undefined ? result.settings.safeMode : true,
         promptHistory: result.settings?.promptHistory !== undefined ? result.settings.promptHistory : true,
         copyMode: result.settings?.copyMode !== undefined ? result.settings.copyMode : false,
+        autoResetTopNav: result.settings?.autoResetTopNav !== undefined ? result.settings.hideBottomSidebar : false,
         hideBottomSidebar: result.settings?.hideBottomSidebar !== undefined ? result.settings.hideBottomSidebar : false,
         showExamplePrompts: result.settings?.showExamplePrompts !== undefined ? result.settings.showExamplePrompts : false,
         hideNewsletter: result.settings?.hideNewsletter !== undefined ? result.settings.hideNewsletter : false,

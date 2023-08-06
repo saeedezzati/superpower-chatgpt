@@ -458,7 +458,7 @@ function userRow(message) {
 </div>`;
 }
 function assistantRow(message) {
-  let messageContent = message.content.parts.join('\n');
+  let messageContentParts = message.content.parts.join('\n');
 
   // if citations array is not mpty, replace text from start_ix to end_ix position with citation
   if (message.metadata.citations?.length > 0) {
@@ -473,16 +473,17 @@ function assistantRow(message) {
         citationText = '';
       }
 
-      messageContent = messageContent.replace(messageContent.substring(startIndex, endIndex), citationText);
+      messageContentParts = messageContentParts.replace(messageContentParts.substring(startIndex, endIndex), citationText);
     });
   }
+  messageContentParts = messageContentParts.replace(/[^n}]\n\\/g, '\n\n\\');
   const messageContentPartsHTML = markdown('assistant')
     .use(markdownitSup)
     .use(texmath, {
       engine: katex,
       delimiters: 'brackets',
       katexOptions: { macros: { '\\RR': '\\mathbb{R}' } },
-    }).render(messageContent);
+    }).render(messageContentParts);
   const avatarColor = (message.metadata.model_slug?.includes('plugins') || message.metadata.model_slug?.startsWith('gpt-4')) ? 'rgb(171, 104, 255)' : 'rgb(25, 195, 125)';
 
   return `<div

@@ -94,7 +94,7 @@ function initializeStorage() {
 }
 // eslint-disable-next-line new-cap
 const markdown = (role, searchValue = '') => new markdownit({
-  html: role === 'assistant' && searchValue !== '',
+  html: role === 'assistant' && searchValue === '',
   linkify: true,
   highlight(str, _lang) {
     const { language, value } = hljs.highlightAuto(str);
@@ -230,7 +230,8 @@ function addNavToggleButton() {
     if (!sidebar) return;
     if (!mainContent) return;
     // add transition to nav and main
-    sidebar.style = `${sidebar.style.cssText};transition:margin-left 0.3s ease-in-out;position:relative;overflow:unset`;
+    sidebar.id = 'sidebar';
+    sidebar.style = `${sidebar.style.cssText};width:260px !important;visibility:visible !important;transition:margin-left 0.3s ease-in-out;position:relative;overflow:unset`;
     mainContent.style.transition = 'padding-left 0.3s ease-in-out';
 
     const navToggleButton = document.createElement('div');
@@ -310,20 +311,22 @@ function showNewChatPage() {
 
     const { conversationsAreSynced, account, settings } = result;
     const {
-      selectedLanguage, selectedTone, selectedWritingStyle, autoClick, showExamplePrompts,
+      selectedLanguage, selectedTone, selectedWritingStyle, autoClick, showExamplePrompts, autoResetTopNav,
     } = settings;
     chrome.storage.local.set({
       settings: {
         ...settings,
         autoClick: false,
-        selectedLanguage: languageList.find((language) => language.code === 'default'),
-        selectedTone: toneList.find((tone) => tone.code === 'default'),
-        selectedWritingStyle: writingStyleList.find((writingStyle) => writingStyle.code === 'default'),
+        selectedLanguage: autoResetTopNav ? languageList.find((language) => language.code === 'default') : selectedLanguage,
+        selectedTone: autoResetTopNav ? toneList.find((tone) => tone.code === 'default') : selectedTone,
+        selectedWritingStyle: autoResetTopNav ? writingStyleList.find((writingStyle) => writingStyle.code === 'default') : selectedWritingStyle,
       },
     }, () => {
-      document.querySelectorAll('#language-list-dropdown li')?.[0]?.click();
-      document.querySelectorAll('#tone-list-dropdown li')?.[0]?.click();
-      document.querySelectorAll('#writing-style-list-dropdown li')?.[0]?.click();
+      if (autoResetTopNav) {
+        document.querySelectorAll('#language-list-dropdown li')?.[0]?.click();
+        document.querySelectorAll('#tone-list-dropdown li')?.[0]?.click();
+        document.querySelectorAll('#writing-style-list-dropdown li')?.[0]?.click();
+      }
       document.querySelector('#auto-click-button')?.classList?.replace('btn-primary', 'btn-neutral');
     });
     runningPromptChainSteps = undefined;

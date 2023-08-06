@@ -197,6 +197,10 @@ function registerShortkeys() {
           // open settings
           document.querySelector('#settings-button')?.click();
         }
+        setTimeout(() => {
+          window.localStorage.setItem('UiState.isNavigationCollapsed.1', 'false');
+          document.querySelector('button[aria-label*=sidebar]')?.remove();
+        }, 300);
       }
       // cmd/ctrl + shift + l
       if ((e.metaKey || (isWindows() && e.ctrlKey)) && e.shiftKey && e.keyCode === 76) {

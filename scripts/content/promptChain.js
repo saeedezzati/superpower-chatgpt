@@ -30,7 +30,7 @@ function promptChainListModalContent() {
         const promptChainName = document.createElement('div');
         promptChainName.classList = 'flex-1 truncate relative mr-2';
         promptChainName.innerHTML = `<div style="font-size:1em;">${promptChain.title}</div>`;
-        promptChainName.title = promptChain.title;
+        promptChainName.title = promptChain.steps.map((step, i) => `Step ${i + 1}:\n${step}`).join('\n\n');
         promptChainElement.appendChild(promptChainName);
         promptChainElement.addEventListener('click', () => {
           // document.getElementById('modal-close-button-prompt-chains').click();
@@ -162,7 +162,7 @@ function createNewPromptChainModal(promptChainName, promptChainSteps, chainIndex
   newPromptChainModalContent.id = 'new-prompt-chain-modal-content';
   const modalTitle = document.createElement('div');
   modalTitle.style = 'display:flex; align-items:center; justify-content:space-between;color:white;font-size:1.25rem; font-weight: bold; margin-bottom: 16px;padding: 0 16px;width:100%;';
-  modalTitle.innerHTML = `${isNew ? '<span>Create prompt chain</span>' : '<span>Edit prompt chain</span>'} <button class="btn flex justify-center gap-2 btn-primary border-0 md:border" id="see-all-prompt-chains" style="margin: 0 8px;">See all prompt chains</button>`;
+  modalTitle.innerHTML = `${isNew ? '<span>Create prompt chain</span>' : '<span>Edit prompt chain</span>'} <button class="btn flex justify-center gap-2 btn-primary border-0 md:border" id="see-all-prompt-chains" style="margin:0 8px;">See all prompt chains</button>`;
   newPromptChainModalContent.appendChild(modalTitle);
   const modalSubtitle = document.createElement('div');
   modalSubtitle.style = 'color:lightslategray;font-size:0.875rem; margin-bottom: 16px;padding: 0 16px;';

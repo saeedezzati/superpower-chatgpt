@@ -30,6 +30,10 @@ input[type="checkbox"]:checked:focus {
   background-color: gold;
   background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg viewBox='0 0 16 16' fill='%23808080' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12.207 4.793a1 1 0 0 1 0 1.414l-5 5a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L6.5 9.086l4.293-4.293a1 1 0 0 1 1.414 0z'/%3E%3C/svg%3E");
 }
+#sidebar{
+  visibility: visible !important;
+  width: 260px !important;
+}
 /* sortable */
 .sortable-ghost {
   background-color: #ffd70050 !important;
@@ -258,8 +262,19 @@ input:checked + .slider:before {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
-.markdown ul li>eq {
+.markdown ol li eq,
+.markdown ul li eq {
   margin: 0;
+}
+
+.markdown ol li p,
+.markdown ul li p {
+  white-space: pre-wrap;
+}
+.prose :where(p):not(:where([class~=not-prose] *)),
+.prose :where(ol):not(:where([class~=not-prose] *)), 
+.prose :where(ul):not(:where([class~=not-prose] *)) {
+  margin-bottom: 0 !important;
 }
 .markdown ol, .markdown ul {
   white-space: initial;

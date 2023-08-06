@@ -115,7 +115,11 @@ function toggleOriginalRegenerateResponseButton() {
     inputFormActionWrapper.appendChild(newRegenerateResponseButton);
   } else {
     inputFormActionWrapper.appendChild(newRegenerateResponseButton);
-    inputFormActionWrapper.appendChild(newContinueGeneratingButton);
+    chrome.storage.local.get(['settings'], (result) => {
+      if (!result.settings.selectedModel.slug.includes('plugins')) {
+        inputFormActionWrapper.appendChild(newContinueGeneratingButton);
+      }
+    });
   }
 }
 

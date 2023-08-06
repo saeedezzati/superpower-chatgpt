@@ -357,7 +357,9 @@ function openExportAllModal() {
   exportAllModal.style = 'position:fixed;top:0px;left:0px;width:100%;height:100%;background-color:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;color:lightslategray;';
   exportAllModal.id = 'export-all-modal';
   exportAllModal.addEventListener('click', (e) => {
-    if (e.target.id === 'export-all-modal') {
+    // export-all-modal-progress-bar-fill
+    const exportAllModalProgressBarFill = document.getElementById('export-all-modal-progress-bar-fill');
+    if (e.target.id === 'export-all-modal' && (exportAllModalProgressBarFill.style.width === '0%' || exportAllModalProgressBarFill.style.width === '100%')) {
       exportAllModal.remove();
     }
   });

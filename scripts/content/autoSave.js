@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global updateNewChatButtonNotSynced, getAllConversations, getConversation, loadConversationList, initializeCopyAndCounter, initializeAddToPromptLibrary, initializeTimestamp, addConversationsEventListeners, isGenerating, prependConversation, generateTitleForConversation, canSubmitPrompt, formatDate, userChatIsActuallySaved:true, addAsyncInputEvents, addSyncBanner, insertNextChunk, isWindows */
+/* global updateNewChatButtonNotSynced, getAllConversations, getConversation, loadConversationList, initializeCopyAndCounter, initializeAddToPromptLibrary, initializeTimestamp, addConversationsEventListeners, isGenerating, prependConversation, generateTitleForConversation, canSubmitPrompt, formatDate, userChatIsActuallySaved:true, addAsyncInputEvents, addSyncBanner, isWindows */
 /* eslint-disable no-await-in-loop, */
 let localConversations = {};
 let autoSaveTimeoutId;
@@ -101,6 +101,8 @@ async function updateConversationInStorage(conv) {
 }
 
 function updateOrCreateConversation(conversationId, message, parentId, settings, generateTitle = false, forceRefresh = false, newSystemMessage = {}) {
+  if (!message) return;
+  // eslint-disable-next-line consistent-return
   return chrome.storage.local.get(['conversations', 'enabledPluginIds']).then((result) => {
     const existingConversation = result.conversations?.[conversationId];
     if (existingConversation) {
@@ -187,7 +189,7 @@ function updateOrCreateConversation(conversationId, message, parentId, settings,
       moderation_results: [],
     };
     if (settings.selectedModel.slug.includes('plugins')) {
-      newConversation.plugin_ids = result.enabledPluginIds;
+      newConversation.pluginIds = result.enabledPluginIds;
     }
     return chrome.storage.local.set({
       conversations: {

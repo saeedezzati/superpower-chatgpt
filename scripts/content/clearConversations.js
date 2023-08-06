@@ -165,7 +165,7 @@ function replaceDeleteConversationButton() {
                   if (conversationOrderIndex !== -1) {
                     conversationsOrder.splice(conversationOrderIndex, 1);
                   } else { // if not found, look into folders
-                    const conversationFolder = conversationsOrder.find((f) => (f.id !== 'trash') && (f.conversationIds.includes(convId?.slice(0, 5))));
+                    const conversationFolder = conversationsOrder.find((f) => (f.id !== 'trash') && f.conversationIds && f.conversationIds.includes(convId?.slice(0, 5)));
                     if (conversationFolder) {
                       conversationOrderIndex = conversationFolder.conversationIds.findIndex((id) => id === convId?.slice(0, 5));
                       conversationFolder.conversationIds.splice(conversationOrderIndex, 1);

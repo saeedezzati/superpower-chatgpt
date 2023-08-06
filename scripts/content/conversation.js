@@ -34,7 +34,8 @@ function addPinNav(sortedNodes) {
   });
 }
 function updateModel(modelSlug, fullConversation) {
-  const pluginIds = fullConversation.pluginIds || [];
+  const pluginIds = fullConversation.plugin_ids || [];
+
   const { languageCode, toneCode, writingStyleCode } = fullConversation;
 
   if (!modelSlug) return;

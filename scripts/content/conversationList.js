@@ -670,6 +670,7 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
                   });
                 }
 
+                messageContentParts = messageContentParts.replace(/[^n}]\n\\/g, '\n\n\\');
                 const messageContentPartsHTML = markdown('assistant')
                   .use(markdownitSup)
                   .use(texmath, {
@@ -871,7 +872,7 @@ function overrideSubmitForm() {
             let text = textAreaElement.value.trim();
             if (chunkNumber === 1) {
               finalSummary = '';
-              if (settings.autoSplit && text.length > settings.autoSplitLimit) {
+              if (settings.autoSplit && text.length > settings.autoSplitLimit && !runningPromptChainSteps) {
                 totalChunks = Math.ceil(text.length / settings.autoSplitLimit);
                 const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > text.length ? settings.autoSplitLimit : getLastIndexOf(text, settings.autoSplitLimit);
                 remainingText = text.substring(lastNewLineIndexBeforeLimit);
@@ -912,6 +913,7 @@ ${settings.autoSplitChunkPrompt}`;
               isGenerating = true;
               submitChat(text, conversation, messageId, parentId, settings, models);
               textAreaElement.value = '';
+              textAreaElement.style.height = '24px';
               updateInputCounter('');
             }
           });
@@ -990,6 +992,7 @@ ${settings.autoSplitChunkPrompt}`;
               isGenerating = true;
               submitChat(text, {}, messageId, parentId, settings, models);
               textAreaElement.value = '';
+              textAreaElement.style.height = '24px';
               updateInputCounter('');
             }
           });
@@ -1035,8 +1038,8 @@ ${settings.autoSplitChunkPrompt}`;
           }, 100);
         }
       } else {
-        if (textAreaElement.value.trim().length === 0) return;
         textAreaElement.style.height = '24px';
+        if (textAreaElement.value.trim().length === 0) return;
         addUserPromptToHistory(textAreaElement.value.trim());
         inputForm.dispatchEvent(new Event('submit', { cancelable: true }));
       }

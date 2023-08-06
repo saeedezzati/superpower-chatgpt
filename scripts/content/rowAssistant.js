@@ -8,7 +8,6 @@ function rowAssistant(conversation, node, childIndex, childCount, models, custom
 
   const modelTitle = models.find((m) => m.slug === modelSlug)?.title;
   let messageContentParts = highlight(message.content.parts.join('\n'), searchValue);
-
   // if citations array is not mpty, replace text from start_ix to end_ix position with citation
   if (citations?.length > 0) {
     citations.reverse().forEach((citation, index) => {
@@ -25,11 +24,13 @@ function rowAssistant(conversation, node, childIndex, childCount, models, custom
       messageContentParts = messageContentParts.replace(messageContentParts.substring(startIndex, endIndex), citationText);
     });
   }
+  // replace single \n\\ with \n\n\\
+  messageContentParts = messageContentParts.replace(/[^n}]\n\\/g, '\n\n\\');
   const messageContentPartsHTML = markdown('assistant', searchValue)
     .use(markdownitSup)
     .use(texmath, {
       engine: katex,
-      delimiters: 'brackets',
+      delimiters: ['brackets'],
       katexOptions: { macros: { '\\RR': '\\mathbb{R}' } },
     }).render(messageContentParts);
 

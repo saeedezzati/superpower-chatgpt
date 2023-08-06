@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-/* global getInstalledPlugins, addArkoseScript */
+/* global getInstalledPlugins, addArkoseScript, initializeRegenerateResponseButton */
 // eslint-disable-next-line no-unused-vars
 function modelSwitcher(models, selectedModel, idPrefix, customModels, forceDark = false) {
   if (selectedModel.slug.includes('gpt-4')) {
@@ -114,6 +114,14 @@ function addModelSwitcherEventListener(idPrefix, forceDark = false) {
         const modelSlug = option.id.split(`${idPrefix}-model-switcher-option-`)[1];
         const selectedModel = allModels.find((m) => m.slug === modelSlug);
         const pluginsDropdownWrapper = document.querySelector(`#plugins-dropdown-wrapper-${idPrefix}`);
+        const continueGeneratingButton = document.querySelector('#continue-generating-button');
+        if (selectedModel.slug.includes('plugins')) {
+          if (continueGeneratingButton) {
+            continueGeneratingButton.remove();
+          }
+        } else if (!continueGeneratingButton) {
+          initializeRegenerateResponseButton();
+        }
         if (pluginsDropdownWrapper) {
           if (selectedModel.slug.includes('plugins')) {
             getInstalledPlugins();
