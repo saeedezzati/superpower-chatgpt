@@ -413,6 +413,7 @@ function deleteFolder(folder) {
 
       for (let i = 0; i < selectedConversationIds.length; i += 1) {
         const conv = Object.values(conversations).find((c) => c.id?.slice(0, 5) === selectedConversationIds[i]);
+        if (!conv) continue;
         promises.push(deleteConversation(conv.id).then((data) => {
           if (data.success) {
             successfullyDeletedConvIds.push(conv.id);

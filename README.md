@@ -185,6 +185,17 @@ with
 5. Firefox will prompt you to confirm the installation of the addon. Click Install.
 6. The addon will be installed and will appear in the list of installed addons on the Add-ons page.
 
+## Star History
+
+<a href="https://star-history.com/#saeedezzati/superpower-chatgpt&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=saeedezzati/superpower-chatgpt&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=saeedezzati/superpower-chatgpt&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=saeedezzati/superpower-chatgpt&type=Date" />
+  </picture>
+</a>
+
+
 ## FAQ
 
 Read our [FAQ document](https://ezi.notion.site/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24) for more information about Superpower ChatGPT
