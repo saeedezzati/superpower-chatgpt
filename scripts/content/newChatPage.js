@@ -64,9 +64,9 @@ function customInstructionSettingsElement() {
       let newCustomInstructionProfiles = customInstructionProfiles;
       const selectedProfile = customInstructionProfiles.find((p) => p.isSelected);
 
-      if (!selectedProfile || (selectedProfile.aboutUser !== systemMessage.about_user_message || selectedProfile.aboutModel !== systemMessage.about_model_message)) {
+      if (!selectedProfile || selectedProfile.aboutUser.replace(/[^a-zA-Z]/g, '') !== systemMessage.about_user_message.replace(/[^a-zA-Z]/g, '') || selectedProfile.aboutModel.replace(/[^a-zA-Z]/g, '') !== systemMessage.about_model_message.replace(/[^a-zA-Z]/g, '')) {
         newCustomInstructionProfiles = customInstructionProfiles.map((p) => {
-          if (p.aboutModel === systemMessage.about_model_message && p.aboutUser === systemMessage.about_user_message) {
+          if (p.aboutModel.replace(/[^a-zA-Z]/g, '') === systemMessage.about_model_message.replace(/[^a-zA-Z]/g, '') && p.aboutUser.replace(/[^a-zA-Z]/g, '') === systemMessage.about_user_message.replace(/[^a-zA-Z]/g, '')) {
             return { ...p, isSelected: true };
           }
           if (p.isSelected) {

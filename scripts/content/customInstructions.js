@@ -1,5 +1,5 @@
 /* eslint-disable no-restricted-globals */
-/* global toast, setUserSystemMessage, customInstructionSettingsElement */
+/* global toast, setUserSystemMessage, customInstructionSettingsElement, getUserSystemMessage */
 
 function checkmarkIcon(placement, profileId) {
   const checkmark = document.createElement('span');
@@ -50,6 +50,7 @@ function profileDropdown(customInstructionProfiles, placement) {
     dropdownItem.classList = 'text-gray-900 relative cursor-pointer select-none border-b p-2 last:border-0 border-gray-100 dark:border-white/20 hover:bg-gray-600';
     const dropdownOption = document.createElement('span');
     dropdownOption.classList = 'font-semibold flex h-6 items-center gap-1 truncate text-gray-800 dark:text-gray-100';
+    dropdownOption.style = 'white-space: nowrap; overflow: hidden; text-overflow: ellipsis;display:block;margin-right: 24px; text-align:left';
     dropdownOption.innerText = profileName;
     dropdownOption.title = profileName;
     dropdownItem.appendChild(dropdownOption);
@@ -210,26 +211,34 @@ function upgradeCustomInstructions() {
             const existingProfileButtonWrapper = customInstructionsDialog.querySelector('#custom-instructions-profile-button-wrapper-settings');
             const textAreaFields = customInstructionsDialog.querySelectorAll('textarea');
             if (textAreaFields.length > 0 && !existingProfileButtonWrapper && customInstructionsDialog && customInstructionsDialogHeader.textContent === 'Custom instructions') {
-              const aboutUser = textAreaFields[0]?.value;
-              const aboutModel = textAreaFields[1]?.value;
+              // const aboutUser = textAreaFields[0]?.value;
+              // const aboutModel = textAreaFields[1]?.value;
               const { customInstructionProfiles } = result;
-              let newCustomInstructionProfiles = customInstructionProfiles;
-              let selectedProfile = customInstructionProfiles.find((p) => p.isSelected);
-
-              if (!selectedProfile || (selectedProfile.aboutUser !== aboutUser || selectedProfile.aboutModel !== aboutModel)) {
-                newCustomInstructionProfiles = customInstructionProfiles.map((p) => {
-                  if (p.aboutModel === aboutModel && p.aboutUser === aboutUser) {
-                    selectedProfile = { ...p, isSelected: true };
-                    return { ...p, isSelected: true };
-                  }
-                  if (p.isSelected) {
-                    selectedProfile = undefined;
-                    return { ...p, isSelected: false };
-                  }
-                  return p;
-                });
-                chrome.storage.local.set({ customInstructionProfiles: newCustomInstructionProfiles });
+              const newCustomInstructionProfiles = customInstructionProfiles;
+              const selectedProfile = customInstructionProfiles.find((p) => p.isSelected);
+              if (selectedProfile) {
+                textAreaFields[0].value = selectedProfile.aboutUser;
+                textAreaFields[0].dispatchEvent(new Event('input', { bubbles: true }));
+                textAreaFields[0].dispatchEvent(new Event('change', { bubbles: true }));
+                textAreaFields[1].value = selectedProfile.aboutModel;
+                textAreaFields[1].dispatchEvent(new Event('input', { bubbles: true }));
+                textAreaFields[1].dispatchEvent(new Event('change', { bubbles: true }));
               }
+              // if (!selectedProfile || selectedProfile.aboutUser.replace(/[^a-zA-Z]/g, '') !== aboutUser.replace(/[^a-zA-Z]/g, '') || selectedProfile.aboutModel.replace(/[^a-zA-Z]/g, '') !== aboutModel.replace(/[^a-zA-Z]/g, '')) {
+              //   newCustomInstructionProfiles = customInstructionProfiles.map((p) => {
+              //     if (p.aboutModel.replace(/[^a-zA-Z]/g, '') === aboutModel.replace(/[^a-zA-Z]/g, '') && p.aboutUser.replace(/[^a-zA-Z]/g, '') === aboutUser.replace(/[^a-zA-Z]/g, '')) {
+              //       selectedProfile = { ...p, isSelected: true };
+              //       return { ...p, isSelected: true };
+              //     }
+              //     if (p.isSelected) {
+              //       selectedProfile = undefined;
+              //       return { ...p, isSelected: false };
+              //     }
+              //     return p;
+              //   });
+              //   chrome.storage.local.set({ customInstructionProfiles: newCustomInstructionProfiles });
+              // }
+
               // header = first child
               const header = customInstructionsDialog.firstChild;
               const profileButtonWrapper = document.createElement('div');
