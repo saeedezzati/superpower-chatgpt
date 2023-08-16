@@ -239,7 +239,7 @@ function loadConversation(conversationId, searchValue = '', focusOnInput = true)
       outerDiv.appendChild(innerDiv);
       const contentWrapper = main.querySelector('.flex-1.overflow-hidden');
       contentWrapper.remove();
-      main.prepend(outerDiv);
+      main.firstChild.prepend(outerDiv);
       if (!searchValue) {
         if (focusOnInput) {
           const inputForm = main.querySelector('form');
