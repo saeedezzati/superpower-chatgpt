@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Superpower ChatGPT",
-  "version": "5.1.3",
+  "version": "5.1.4",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzG6ZR+j3lpHF0XrDLIXdrk25idObfq+RK7WM+pIaQmDO2nM5Y+SZJJbFwyxjWX+3V6XOgS5v9Lpnqg46OJ/W9Q5i23Usx1MXgaJBTlEFz0XG+PYK6BElhc9itS7m6oCLknin97a533tusXmm8zW7kaDGy8vycMDY6Ffbqa3sn0PqZ8bXUlAjgO91dQcB8EtlT906hwhZjtfEYvp2hdxYkRFxfuaR1WMLkxttVXv506RXJowxq0LO3aqj83QeJoXkQF1wbzCxYO1VpVGEmYIQxIKw/csusZNZs8gwJrIWtOzhMgDNOFzXNeZl0ASgoj2M9UsZp+Dunn57VT8tQyaE6QIDAQAB",
   "description": "ChatGPT with superpowers! Sync/search history locally, create folders, export all chats, pin messages, access thousands of prompts",
   "icons": {

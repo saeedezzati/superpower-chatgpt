@@ -955,7 +955,7 @@ ${settings.autoSplitChunkPrompt}`;
             const parentId = lastMessage?.id?.split('message-wrapper-')[1] || self.crypto.randomUUID();
             // remove main first child
             const contentWrapper = main.querySelector('.flex-1.overflow-hidden');
-            main.removeChild(contentWrapper);
+            main.firstChild.removeChild(contentWrapper);
 
             const outerDiv = document.createElement('div');
             outerDiv.classList = 'flex-1 overflow-hidden';
@@ -987,7 +987,7 @@ ${settings.autoSplitChunkPrompt}`;
 
             innerDiv.appendChild(conversationDiv);
             outerDiv.appendChild(innerDiv);
-            main.prepend(outerDiv);
+            main.firstChild.prepend(outerDiv);
             if (text) {
               isGenerating = true;
               submitChat(text, {}, messageId, parentId, settings, models);
