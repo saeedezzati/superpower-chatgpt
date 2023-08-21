@@ -58,6 +58,10 @@ function keyboardShortcutsModalContent() {
       <td>Hide/show the sidebar</td>
     </tr>
     <tr>
+      <td>CTRL/CMD + ALT + A</td>
+      <td>Enable/disable auto-sync</td>
+    </tr>
+    <tr>
       <td>CTRL/CMD + SHIFT + Click on the new folder icon</td>
       <td>Reset the order of chats from newest to oldest (removes all folders)</td>
     </tr>
@@ -166,6 +170,18 @@ function registerShortkeys() {
       if (e.altKey && e.shiftKey && e.keyCode === 78) {
         e.preventDefault();
         showNewChatPage();
+      }
+      // cmd/ctrl + alt + A
+      if ((e.metaKey || (isWindows() && e.ctrlKey)) && e.altKey && e.keyCode === 65) {
+        e.preventDefault();
+        if (autoSync) {
+          settings.autoSync = false;
+        } else {
+          settings.autoSync = true;
+        }
+        chrome.storage.local.set({ settings }, () => {
+          window.location.reload();
+        });
       }
       // cmd/ctrl + alt + h
       if ((e.metaKey || (isWindows() && e.ctrlKey)) && e.altKey && e.keyCode === 72) {
