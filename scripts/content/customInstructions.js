@@ -296,7 +296,7 @@ function upgradeCustomInstructions() {
               });
               // find a button inside body that has text "Save"
               const allButtons = body.querySelectorAll('button');
-              const toggleButton = [...allButtons].find((b) => b.role === 'switch');
+              const toggleButton = [...allButtons].find((b) => b.getAttribute('role') === 'switch');
               const saveButton = [...allButtons].find((b) => b.textContent === 'Save');
               // add a chane listener to the toggle button
               toggleButton.addEventListener('click', () => {
