@@ -28,6 +28,8 @@ chrome.runtime.onInstalled.addListener((detail) => {
     chrome.tabs.create({ url: 'https://ezi.notion.site/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24' });
     chrome.tabs.create({ url: 'https://superpowerdaily.com' });
     chrome.tabs.create({ url: 'https://chat.openai.com', active: true });
+  } else {
+    chrome.tabs.create({ url: 'https://superpowerdaily.com' });
   }
 });
 chrome.action.onClicked.addListener((tab) => {

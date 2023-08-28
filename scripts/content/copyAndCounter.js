@@ -27,48 +27,48 @@ function addCopyButtonToResult(resultElement, index) {
   const copyHtmlButton = document.createElement('button');
   copyHtmlButton.textContent = 'HTML';
   copyHtmlButton.id = `result-html-copy-button-${index}`;
-  copyHtmlButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;';
+  copyHtmlButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;background-color:#444554;';
   copyHtmlButton.addEventListener('mouseover', () => {
     copyHtmlButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;background-color:#3b3b43;color:white;';
   });
   copyHtmlButton.addEventListener('mouseout', () => {
-    copyHtmlButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;';
+    copyHtmlButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;background-color:#3b3b43;';
   });
 
   const copyMarkdownButton = document.createElement('button');
   copyMarkdownButton.textContent = 'Markdown';
   copyMarkdownButton.id = `result-markdown-copy-button-${index}`;
-  copyMarkdownButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;';
+  copyMarkdownButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;background-color:#444554;';
   copyMarkdownButton.addEventListener('mouseover', () => {
     copyMarkdownButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;background-color:#3b3b43;color:white;';
   });
   copyMarkdownButton.addEventListener('mouseout', () => {
-    copyMarkdownButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;';
+    copyMarkdownButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;background-color:#3b3b43;';
   });
 
   const copyMenu = document.createElement('div');
-  copyMenu.style = 'font-size:10px;position:absolute;right:0;bottom:49px;display:none;width:64px;';
+  copyMenu.style = 'font-size:10px;position:absolute;right:0;bottom:49px;display:none;width:64px;background-color:#3b3b43;';
   copyMenu.appendChild(copyMarkdownButton);
   copyMenu.appendChild(copyHtmlButton);
 
   const copyButton = document.createElement('button');
   copyButton.textContent = 'Copy';
   copyButton.id = `result-copy-button-${index}`;
-  copyButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;position:absolute;right:0;width:64px;';
+  copyButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;position:absolute;right:0;width:64px;background-color:#444554;';
   // add hover style to button
   copyButton.addEventListener('mouseover', () => {
     copyButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;position:absolute;right:0;width:64px;background-color:#3b3b43;color:white;';
-    copyMenu.style = 'font-size:10px;position:absolute;right:0;bottom:49px;width:64px;';
+    copyMenu.style = 'font-size:10px;position:absolute;right:0;bottom:49px;width:64px;background-color:#444554;';
   });
   copyButton.addEventListener('mouseout', () => {
-    copyButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;position:absolute;right:0;width:64px;';
-    copyMenu.style = 'font-size:10px;position:absolute;right:0;bottom:49px;display:none;width:64px;';
+    copyButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;position:absolute;right:0;width:64px;background-color:#444554;';
+    copyMenu.style = 'font-size:10px;position:absolute;right:0;bottom:49px;display:none;width:64px;background-color:#444554;';
   });
   copyMenu.addEventListener('mouseover', () => {
-    copyMenu.style = 'font-size:10px;position:absolute;right:0;bottom:49px;width:64px;';
+    copyMenu.style = 'font-size:10px;position:absolute;right:0;bottom:49px;width:64px;background-color:#444554;';
   });
   copyMenu.addEventListener('mouseout', () => {
-    copyMenu.style = 'font-size:10px;position:absolute;right:0;bottom:49px;display:none;width:64px;';
+    copyMenu.style = 'font-size:10px;position:absolute;right:0;bottom:49px;display:none;width:64px;background-color:#444554;';
   });
   copyButton.addEventListener('click', () => {
     chrome.storage.local.get(['settings'], (result) => {

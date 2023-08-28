@@ -123,6 +123,10 @@ function generalTabContent() {
   const copyModeSwitch = createSwitch('Copy mode', 'OFF: only copy response / ON: copy both request and response', 'copyMode', false);
   leftContent.appendChild(copyModeSwitch);
 
+  // auto scroll
+  const autoScrollSwitch = createSwitch('Auto Scroll', 'Automatically scroll down while responding', 'autoScroll', true);
+  leftContent.appendChild(autoScrollSwitch);
+
   // prompt template
   const promptTemplateSwitch = createSwitch('Prompt Template', 'Enable/disable the doube {{curly}} brackets replacement (<a style="text-decoration:underline; color:gold;" href="https://www.notion.so/ezi/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24?pvs=4#d744b8220a374af394b0bcf82274e290" target="blank">Learn More</a>)', 'promptTemplate', true);
   leftContent.appendChild(promptTemplateSwitch);
@@ -372,7 +376,7 @@ function generalTabContent() {
   linkWrapper.appendChild(updatesLink);
   // add link for feedback email
   const feedbackLink = document.createElement('a');
-  feedbackLink.href = 'mailto:m4rkobay@gmail.com?subject=Superpower ChatGPT Feature Request&body=Hi Marko,%0DReporting a bug? Any of the following information would help me figure it out faster: %0D- What version of the extension do you have? (You can find that at the bottom of the "settings" menu) %0D- What browser are you using? %0D- Do you see any errors in the console log? %0D- Do you have a plus account? %0D- How many conversations do you have approximately? %0D- Do you have the Auto Sync feature ON? %0D- Are all of your conversations synced? %0D- Do you see the "settings" menu on the sidebar? %0D- Does your issue go away if you turn the Auto Sync OFF in the settings menu? %0D- Does this issue happen to all prompts? Or only the first prompt? %0D- Are you using any other ChatGPT extensions at the same time? %0D- Can you email me a screenshot or video of the ChatGPT page when the bug happens? (with the extension installed)%0DThanks!';
+  feedbackLink.href = 'mailto:saeed@superpowerdaily.com?subject=Superpower ChatGPT Feature Request&body=Hi Marko,%0DReporting a bug? Any of the following information would help me figure it out faster: %0D- What version of the extension do you have? (You can find that at the bottom of the "settings" menu) %0D- What browser are you using? %0D- Do you see any errors in the console log? %0D- Do you have a plus account? %0D- How many conversations do you have approximately? %0D- Do you have the Auto Sync feature ON? %0D- Are all of your conversations synced? %0D- Do you see the "settings" menu on the sidebar? %0D- Does your issue go away if you turn the Auto Sync OFF in the settings menu? %0D- Does this issue happen to all prompts? Or only the first prompt? %0D- Are you using any other ChatGPT extensions at the same time? %0D- Can you email me a screenshot or video of the ChatGPT page when the bug happens? (with the extension installed)%0DThanks!';
   feedbackLink.target = '_blank';
   feedbackLink.textContent = 'Feature Request ➜';
   feedbackLink.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
@@ -1345,6 +1349,7 @@ function initializeSettings() {
     chrome.storage.local.set({
       settings: {
         ...result.settings,
+        autoScroll: result.settings?.autoScroll !== undefined ? result.settings.autoScroll : true,
         autoSync: result.settings?.autoSync !== undefined ? result.settings.autoSync : true,
         quickSync: result.settings?.quickSync !== undefined ? result.settings.quickSync : false,
         quickSyncCount: result.settings?.quickSyncCount !== undefined ? result.settings.quickSyncCount : 100,

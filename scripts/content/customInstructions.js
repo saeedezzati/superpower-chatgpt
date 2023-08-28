@@ -299,65 +299,69 @@ function upgradeCustomInstructions() {
               const toggleButton = [...allButtons].find((b) => b.getAttribute('role') === 'switch');
               const saveButton = [...allButtons].find((b) => b.textContent === 'Save');
               // add a chane listener to the toggle button
-              toggleButton.addEventListener('click', () => {
-                const currState = toggleButton.getAttribute('aria-checked');
+              if (toggleButton) {
+                toggleButton.addEventListener('click', () => {
+                  const currState = toggleButton.getAttribute('aria-checked');
 
-                // when toggle off nameinput shoud be disabled
-                const curNameInput = document.querySelector('#custom-instructions-name-input');
-                if (currState === 'true') {
-                  curNameInput.disabled = true;
-                  curNameInput.classList.add('text-gray-300');
-                } else {
-                  curNameInput.disabled = false;
-                  curNameInput.classList.remove('text-gray-300');
-                }
-                setTimeout(() => {
-                  if (curNameInput.value === '') {
-                    saveButton.disabled = true;
-                    saveButton.classList.add('opacity-50', 'cursor-not-allowed');
-                  } else if (curNameInput.value !== selectedProfile?.name) {
-                    saveButton.disabled = false;
-                    saveButton.classList.remove('opacity-50', 'cursor-not-allowed');
-                  }
-                }, 10);
-              });
-              // add a click listener to the save button
-              saveButton.addEventListener('click', () => {
-                chrome.storage.local.get(['customInstructionProfiles'], (res) => {
-                  const { customInstructionProfiles: cip } = res;
+                  // when toggle off nameinput shoud be disabled
                   const curNameInput = document.querySelector('#custom-instructions-name-input');
-                  const curTextAreaFields = document.querySelectorAll('[role="dialog"][data-state="open"][tabindex="-1"] textarea');
-                  const curAboutUserInput = curTextAreaFields[0];
-                  const curAboutModelInput = curTextAreaFields[1];
-                  const curSelectedProfile = cip.find((p) => p.isSelected);
-
-                  if (!curSelectedProfile) {
-                    const newCip = [...cip, {
-                      name: curNameInput.value, aboutUser: curAboutUserInput.value, aboutModel: curAboutModelInput.value, isSelected: true, id: self.crypto.randomUUID(),
-                    }];
-                    chrome.storage.local.set({ customInstructionProfiles: newCip }, () => {
-                      toast('Profile saved');
-                      reloadCustomInstructionSettings();
-                    });
+                  if (currState === 'true') {
+                    curNameInput.disabled = true;
+                    curNameInput.classList.add('text-gray-300');
                   } else {
-                    const newCip = cip.map((p) => {
-                      if (p.isSelected) {
-                        return {
-                          ...p, name: curNameInput.value, aboutUser: curAboutUserInput.value, aboutModel: curAboutModelInput.value,
-                        };
-                      }
-                      return p;
-                    });
-                    chrome.storage.local.set({ customInstructionProfiles: newCip }, () => {
-                      toast('Profile updated');
-                      reloadCustomInstructionSettings();
-                    });
+                    curNameInput.disabled = false;
+                    curNameInput.classList.remove('text-gray-300');
                   }
+                  setTimeout(() => {
+                    if (curNameInput.value === '') {
+                      saveButton.disabled = true;
+                      saveButton.classList.add('opacity-50', 'cursor-not-allowed');
+                    } else if (curNameInput.value !== selectedProfile?.name) {
+                      saveButton.disabled = false;
+                      saveButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                    }
+                  }, 10);
                 });
-              });
+              }
+              if (saveButton) {
+                // add a click listener to the save button
+                saveButton.addEventListener('click', () => {
+                  chrome.storage.local.get(['customInstructionProfiles'], (res) => {
+                    const { customInstructionProfiles: cip } = res;
+                    const curNameInput = document.querySelector('#custom-instructions-name-input');
+                    const curTextAreaFields = document.querySelectorAll('[role="dialog"][data-state="open"][tabindex="-1"] textarea');
+                    const curAboutUserInput = curTextAreaFields[0];
+                    const curAboutModelInput = curTextAreaFields[1];
+                    const curSelectedProfile = cip.find((p) => p.isSelected);
+
+                    if (!curSelectedProfile) {
+                      const newCip = [...cip, {
+                        name: curNameInput.value, aboutUser: curAboutUserInput.value, aboutModel: curAboutModelInput.value, isSelected: true, id: self.crypto.randomUUID(),
+                      }];
+                      chrome.storage.local.set({ customInstructionProfiles: newCip }, () => {
+                        toast('Profile saved');
+                        reloadCustomInstructionSettings();
+                      });
+                    } else {
+                      const newCip = cip.map((p) => {
+                        if (p.isSelected) {
+                          return {
+                            ...p, name: curNameInput.value, aboutUser: curAboutUserInput.value, aboutModel: curAboutModelInput.value,
+                          };
+                        }
+                        return p;
+                      });
+                      chrome.storage.local.set({ customInstructionProfiles: newCip }, () => {
+                        toast('Profile updated');
+                        reloadCustomInstructionSettings();
+                      });
+                    }
+                  });
+                });
+              }
             }
           });
-        }, 200);
+        }, 500);
       }
     });
   };

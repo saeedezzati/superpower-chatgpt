@@ -644,7 +644,7 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
               const existingRowAssistant = continueGenerating ? lastRowAssistant : document.querySelector(`[id="message-wrapper-${message.id}"][data-role="assistant"]`);
 
               if (existingRowAssistant) {
-                if (!scrolUpDetected) {
+                if (!scrolUpDetected && settings.autoScroll) {
                   document.querySelector('#conversation-bottom').scrollIntoView();
                 }
 
@@ -694,7 +694,7 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
                     const assistantRow = rowAssistant(conversation, data, threadCount, threadCount, models, settings.customConversationWidth, settings.conversationWidth);
                     const conversationBottom = document.querySelector('#conversation-bottom');
                     conversationBottom.insertAdjacentHTML('beforebegin', assistantRow);
-                    if (!scrolUpDetected) {
+                    if (!scrolUpDetected && settings.autoScroll) {
                       conversationBottom.scrollIntoView();
                     }
                   }
@@ -709,6 +709,10 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
           }
         });
         chatStream.addEventListener('error', (err) => {
+          // Firefox returns error when closing chat stream
+          const isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+          // if firefox and no error data, do nothing
+          if (isFirefox && !err.data) return;
           isGenerating = false;
           chunkNumber = 1;
           totalChunks = 1;
