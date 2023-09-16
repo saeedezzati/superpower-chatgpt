@@ -37,15 +37,19 @@ function shareModal(conversation, shareData, name) {
     currentNodeId = parentId;
   }
   sortedNodes.reverse();
-  const filteredSortedNodes = sortedNodes.filter((n) => n?.message?.author?.role === 'user' || (n?.message?.recipient === 'all' && n?.message?.author?.role === 'assistant'));
+  const filteredSortedNodes = sortedNodes.filter((n) => {
+    const role = n?.message?.author?.role || n?.message?.role;
+    const recipient = n?.message?.recipient;
+    return role === 'user' || (recipient === 'all' && role === 'assistant');
+  });
 
   return `<div
   data-state="open"
-  class="fixed inset-0 bg-gray-500/90 dark:bg-gray-800/90"
+  class="fixed inset-0 bg-gray-300/70 dark:bg-gray-600/70"
   style="pointer-events: auto;"
 >
   <div
-    class="grid-cols-[minmax(10px,30px)_1fr_minmax(10px,30px)] grid h-full w-full grid-rows-[minmax(10px,_1fr)_auto_minmax(10px,_1fr)] md:grid-rows-[minmax(20px,_1fr)_auto_minmax(20px,_1fr)] overflow-y-auto"
+    class="grid-cols-[10px_1fr_10px] grid h-full w-full grid-rows-[minmax(10px,_1fr)_auto_minmax(10px,_1fr)] md:grid-rows-[minmax(20px,_1fr)_auto_minmax(20px,_1fr)] overflow-y-auto"
   >
     <div
       role="dialog"
@@ -53,7 +57,7 @@ function shareModal(conversation, shareData, name) {
       aria-describedby="radix-:r5u:"
       aria-labelledby="radix-:r5t:"
       data-state="open"
-      class="relative col-auto col-start-2 row-auto row-start-2 w-full rounded-lg text-left shadow-xl transition-all left-1/2 -translate-x-1/2 bg-white dark:bg-gray-900 max-w-md max-w-[550px]"
+      class="relative col-auto col-start-2 row-auto row-start-2 w-full rounded-lg text-left shadow-xl transition-all left-1/2 -translate-x-1/2 bg-white dark:bg-gray-900 max-w-[550px]"
       tabindex="-1"
       style="pointer-events: auto;"
     >
@@ -398,7 +402,7 @@ function addConversationNameEventListener(shareData) {
 function generateContent(nodes) {
   return nodes.map((node, index) => {
     const { message } = node;
-    if (message.author?.role === 'user') {
+    if (message.role === 'user' || message.author?.role === 'user') {
       return userRow(message);
     }
     return assistantRow(message);

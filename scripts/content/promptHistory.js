@@ -519,18 +519,19 @@ function textAreaElementInputEventListener(event) {
     }
   }
   updateInputCounter(event.target.value);
-  // input size
-  if (disableTextInput && !isGenerating) {
-    event.preventDefault();
-    disableTextInput = false;
-    return;
-  }
 
   event.target.style.height = 'auto';
   event.target.style.height = `${event.target.scrollHeight}px`;
   if (event.target.scrollHeight > 200) {
     event.target.style.overflowY = 'scroll';
     event.target.scrollTop = event.target.scrollHeight;
+  }
+
+  // input size
+  if (disableTextInput && !isGenerating) {
+    event.preventDefault();
+    disableTextInput = false;
+    return;
   }
 
   // history
@@ -551,14 +552,14 @@ function textAreaElementInputEventListener(event) {
 function textAreaElementKeydownEventListenerASync(event) {
   const textAreaElement = event.target;
 
-  if (event.key === 'Enter' && event.which === 13 && !event.shiftKey) {
+  if (event.key === 'Enter' && event.which === 13 && !event.shiftKey && !isGenerating) {
     updateInputCounter('');
     chrome.storage.local.get(['textInputValue'], (result) => {
       const textInputValue = result.textInputValue || '';
       if (textInputValue === '') return;
       const templateWords = textAreaElement.value.match(/{{(.*?)}}/g);
       if (!templateWords) {
-        textAreaElement.style.height = '24px';
+        textAreaElement.style.height = '56px';
       }
       addUserPromptToHistory(textInputValue);
     });
@@ -636,7 +637,7 @@ function textAreaElementKeydownEventListenerASync(event) {
 function textAreaElementKeydownEventListenerSync(event) {
   const textAreaElement = event.target;
 
-  if (event.key === 'Enter' && event.which === 13 && !event.shiftKey) {
+  if (event.key === 'Enter' && event.which === 13 && !event.shiftKey && !isGenerating) {
     event.preventDefault();
     event.stopPropagation();
     updateInputCounter('');
@@ -645,7 +646,7 @@ function textAreaElementKeydownEventListenerSync(event) {
       if (textInputValue === '') return;
       const templateWords = textAreaElement.value.match(/{{(.*?)}}/g);
       if (!templateWords) {
-        textAreaElement.style.height = '24px';
+        textAreaElement.style.height = '56px';
       }
       addUserPromptToHistory(textInputValue);
     });
@@ -798,7 +799,7 @@ function addAsyncInputEvents() {
       const textInputValue = curTextAreaElement.value;
       // add text input value to local storage history
       if (textInputValue === '') return;
-      textAreaElement.style.height = '24px';
+      textAreaElement.style.height = '56px';
       addUserPromptToHistory(textInputValue);
     });
   }

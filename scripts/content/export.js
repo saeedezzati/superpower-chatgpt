@@ -37,7 +37,11 @@ function getSingelConversation(conversationId, title) {
       }
       // download as .txt file
       if (title.toLowerCase() === 'text') {
-        const conversationText = messages.reverse().filter((m) => ['user', 'assistant'].includes(m.role) || ['user', 'assistant'].includes(m.author?.role)).map((m) => `${exportMode === 'both' ? `>> ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}: ` : ''}${m.content.parts.join('\n').replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`).join('\n\n');
+        const conversationText = messages.reverse().filter((m) => {
+          const role = m?.author?.role || m?.role;
+          const recipient = m?.recipient;
+          return role === 'user' || (recipient === 'all' && role === 'assistant');
+        }).map((m) => `${exportMode === 'both' ? `>> ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}: ` : ''}${m.content?.parts?.join('\n').replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`).join('\n\n');
         const element = document.createElement('a');
         element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(conversationText)}`);
         element.setAttribute('download', `${filePrefix}-${conversationTitle}.${fileFormatConverter(title.toLowerCase())}`);
@@ -50,7 +54,11 @@ function getSingelConversation(conversationId, title) {
       }
       // download as .md file
       if (title.toLowerCase() === 'markdown') {
-        const conversationMarkdown = messages.reverse().filter((m) => ['user', 'assistant'].includes(m.role) || ['user', 'assistant'].includes(m.author?.role)).map((m) => `${exportMode === 'both' ? `## ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}\n` : ''}${m.content.parts.join('\n').replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`).join('\n\n');
+        const conversationMarkdown = messages.reverse().filter((m) => {
+          const role = m?.author?.role || m?.role;
+          const recipient = m?.recipient;
+          return role === 'user' || (recipient === 'all' && role === 'assistant');
+        }).map((m) => `${exportMode === 'both' ? `## ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}\n` : ''}${m.content?.parts?.join('\n').replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`).join('\n\n');
         const element = document.createElement('a');
         element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(conversationMarkdown)}`);
         // add timestamp to conversation title to make file name
@@ -141,8 +149,8 @@ function addExportButton() {
   exportButton.id = 'export-conversation-button';
   exportButton.type = 'button';
   exportButton.textContent = 'Export';
-  exportButton.classList.add('btn', 'flex', 'justify-center', 'gap-2', 'btn-neutral', 'border');
-  exportButton.style = 'position:absolute;right:0px;width:104px;';
+  exportButton.classList.add('btn', 'justify-center', 'gap-2', 'btn-neutral', 'border');
+  exportButton.style = 'position:absolute;right:0px;width:104px;display:none;';
   // add icon
   const exportButtonIcon = document.createElement('img');
   exportButtonIcon.style = 'height:20px;';
@@ -215,6 +223,7 @@ function addExportButton() {
         inputFormActionWrapper = newDiv;
       }
       inputFormActionWrapper.style.minHeight = '38px';
+      exportButton.style.display = settings.showExportButton ? 'flex' : 'none';
       if (!existingExportButton) inputFormActionWrapper.appendChild(exportButton);
     });
   }
@@ -280,7 +289,11 @@ function exportAllConversations(exportFormat) {
         }
         // download as .txt file
         if (exportFormat === 'text') {
-          const conversationText = messages.reverse().filter((m) => ['user', 'assistant'].includes(m.role) || ['user', 'assistant'].includes(m.author?.role)).map((m) => `${exportMode === 'both' ? `>> ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}: ` : ''}${m.content?.parts?.join('\n').replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`)?.join('\n\n');
+          const conversationText = messages.reverse().filter((m) => {
+            const role = m?.author?.role || m?.role;
+            const recipient = m?.recipient;
+            return role === 'user' || (recipient === 'all' && role === 'assistant');
+          }).map((m) => `${exportMode === 'both' ? `>> ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}: ` : ''}${m.content?.parts?.join('\n').replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`)?.join('\n\n');
           zip.file(`${folderName}/${filePrefix}-${conversationTitle}.${fileFormatConverter(exportFormat)}`, conversationText);
         }
         // download as .json file
@@ -290,7 +303,11 @@ function exportAllConversations(exportFormat) {
         }
         // download as .md file
         if (exportFormat === 'markdown') {
-          const conversationMarkdown = messages.reverse().filter((m) => ['user', 'assistant'].includes(m.role) || ['user', 'assistant'].includes(m.author?.role)).map((m) => `${exportMode === 'both' ? `## ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}\n` : ''}${m.content?.parts?.join('\n').replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`)?.join('\n\n');
+          const conversationMarkdown = messages.reverse().filter((m) => {
+            const role = m?.author?.role || m?.role;
+            const recipient = m?.recipient;
+            return role === 'user' || (recipient === 'all' && role === 'assistant');
+          }).map((m) => `${exportMode === 'both' ? `## ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}\n` : ''}${m.content?.parts?.join('\n').replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`)?.join('\n\n');
           zip.file(`${folderName}/${filePrefix}-${conversationTitle}.${fileFormatConverter(exportFormat)}`, conversationMarkdown);
         }
 

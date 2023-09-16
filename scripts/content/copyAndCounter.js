@@ -138,25 +138,29 @@ function addCopyButtonToResult(resultElement, index) {
   actionWrapper.appendChild(copyButton);
 }
 function updateCounterForResult(resultElement, index) {
-  const prevCounter = document.querySelector(`#result-counter-${index}`);
-  let prevCounterText = '';
-  if (prevCounter) {
-    prevCounterText = prevCounter.innerText;
-  }
-  const resultText = resultElement.innerText;
-  const wordCount = resultText.split(/[ /]/).length; // +1 because of the "/" in the counter
-  const charCount = resultText.length;
-  const counterElement = document.createElement('div');
-  counterElement.textContent = `${Math.max(charCount, 0)} chars / ${Math.max(wordCount, 0)} words`;
-  if (prevCounterText !== counterElement.textContent) {
+  chrome.storage.local.get(['settings'], (result) => {
+    const { showWordCount } = result.settings;
+    if (!showWordCount) return;
+    const prevCounter = document.querySelector(`#result-counter-${index}`);
+    let prevCounterText = '';
     if (prevCounter) {
-      prevCounter.remove();
+      prevCounterText = prevCounter.innerText;
     }
-    counterElement.id = `result-counter-${index}`;
-    const actionWrapper = document.querySelector(`#result-action-wrapper-${index}`);
+    const resultText = resultElement.innerText;
+    const wordCount = resultText.split(/[ /]/).length; // +1 because of the "/" in the counter
+    const charCount = resultText.length;
+    const counterElement = document.createElement('div');
+    counterElement.textContent = `${Math.max(charCount, 0)} chars / ${Math.max(wordCount, 0)} words`;
+    if (prevCounterText !== counterElement.textContent) {
+      if (prevCounter) {
+        prevCounter.remove();
+      }
+      counterElement.id = `result-counter-${index}`;
+      const actionWrapper = document.querySelector(`#result-action-wrapper-${index}`);
 
-    actionWrapper.appendChild(counterElement);
-  }
+      actionWrapper.appendChild(counterElement);
+    }
+  });
 }
 
 function updateCounters() {

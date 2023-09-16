@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global updateNewChatButtonNotSynced, getAllConversations, getConversation, loadConversationList, initializeCopyAndCounter, initializeAddToPromptLibrary, initializeTimestamp, addConversationsEventListeners, isGenerating, prependConversation, generateTitleForConversation, canSubmitPrompt, formatDate, userChatIsActuallySaved:true, addAsyncInputEvents, addSyncBanner, isWindows */
+/* global updateNewChatButtonNotSynced, getAllConversations, getConversation, loadConversationList, initializeCopyAndCounter, initializeAddToPromptLibrary, initializeTimestamp, addConversationsEventListeners, isGenerating, prependConversation, generateTitleForConversation, canSubmitPrompt, formatDate, userChatIsActuallySaved:true, addAsyncInputEvents, addSyncBanner, isWindows, toast */
 /* eslint-disable no-await-in-loop, */
 let localConversations = {};
 let autoSaveTimeoutId;
@@ -138,9 +138,9 @@ function updateOrCreateConversation(conversationId, message, parentId, settings,
           userChatIsActuallySaved = true;
           addConversationsEventListeners(existingConversation.id);
           const mapping = Object.values(existingConversation.mapping);
-          if (generateTitle && existingConversation.title === 'New chat' && mapping.length < 5 && mapping.filter((m) => m.message?.author.role === 'assistant').length === 1) { // only one assistant message
+          if (generateTitle && existingConversation.title === 'New chat' && mapping.length < 5 && mapping.filter((m) => m.message?.role === 'assistant' || m.message?.author.role === 'assistant').length === 1) { // only one assistant message
             if (settings.saveHistory) {
-              const systemMessage = mapping.find((m) => m.message?.author.role === 'system');
+              const systemMessage = mapping.find((m) => m.message?.role === 'system' || m.message?.author.role === 'system');
               generateTitleForConversation(existingConversation.id, message.id, systemMessage?.message?.metadata?.user_context_message_data);
             }
           } else if (settings.conversationTimestamp) { // === updated
@@ -149,10 +149,23 @@ function updateOrCreateConversation(conversationId, message, parentId, settings,
             const conversationCreateTime = formatDate(new Date());
             const conversationTimestampElement = conversationElement.querySelector('#timestamp');
             conversationTimestampElement.innerHTML = conversationCreateTime;
-            // const searchBoxWrapper = document.querySelector('#conversation-search-wrapper');
-            // if (conversationElement && searchBoxWrapper) {
-            //   searchBoxWrapper.after(conversationElement);
-            // }
+            const searchBoxWrapper = document.querySelector('#conversation-search-wrapper');
+            if (conversationElement && searchBoxWrapper) {
+              // update conversationorder
+              chrome.storage.sync.get(['conversationsOrder'], (res) => {
+                const { conversationsOrder } = res;
+                const conversationIndex = conversationsOrder.findIndex((conv) => conv === conversationId?.slice(0, 5));
+                if (conversationIndex !== -1) {
+                  // this guarantees we only move if conversation is not in a folder
+                  searchBoxWrapper.after(conversationElement);
+                  conversationsOrder.splice(conversationIndex, 1);
+                  conversationsOrder.unshift(conversationId);
+                  chrome.storage.sync.set({
+                    conversationsOrder,
+                  });
+                }
+              });
+            }
           }
         },
       );
@@ -284,6 +297,9 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
 
   const forceRefresh = true;
   getAllConversations(forceRefresh).then((remoteConversations) => {
+    if (remoteConversations.length > 500) {
+      toast('Looks like you have over 500 conversation in your history. For best performance, please consider deleting some conversations to keep your history under 200 conversations!', 'warning', 10000);
+    }
     chrome.storage.sync.get(['conversationsOrder'], (res) => {
       const { conversationsOrder } = res;
       chrome.storage.local.get(['conversations', 'account', 'settings'], (result) => {
@@ -510,7 +526,19 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
                   }
                   const existingSyncBanner = document.querySelector('#sync-nav-wrapper');
                   if (existingSyncBanner) {
-                    window.location.reload();
+                    if (settings.autoRefreshAfterSync) {
+                      window.location.reload();
+                    } else {
+                      // replace the content with "sync is complete" and a refresh button
+                      const pageRefreshButton = document.createElement('button');
+                      pageRefreshButton.style = 'color: gold; cursor: pointer; border: solid 1px gold; padding: 8px; border-radius: 4px; margin-left: 16px;';
+                      pageRefreshButton.innerText = 'Refresh page';
+                      pageRefreshButton.addEventListener('click', () => {
+                        window.location.reload();
+                      });
+                      existingSyncBanner.firstChild.innerHTML = 'Sync is complete! Refresh the page to see your changes.';
+                      existingSyncBanner.firstChild.appendChild(pageRefreshButton);
+                    }
                   } else {
                     loadConversationList(skipInputFormReload);
                   }

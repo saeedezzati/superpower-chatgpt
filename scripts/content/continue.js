@@ -90,7 +90,7 @@ function addContinueButton() {
   if (syncDiv) syncDiv.style.opacity = '1';
 
   const continueButtonWrapper = document.createElement('div');
-  continueButtonWrapper.style = 'position:absolute;left:0;display:flex;z-index:200';
+  continueButtonWrapper.style = 'position:absolute;left:0;z-index:200;display:none;';
   continueButtonWrapper.id = 'continue-conversation-button-wrapper';
 
   const continueButtonDropdown = document.createElement('button');
@@ -174,6 +174,7 @@ function addContinueButton() {
 
   chrome.storage.local.get('settings', ({ settings }) => {
     setTimeout(() => {
+      continueButtonWrapper.style.display = settings.showCustomPromptsButton ? 'flex' : 'none';
       continueButtonWrapper.appendChild(shiftClickText);
       continueButtonWrapper.appendChild(continueButtonDropdown);
       continueButtonWrapper.appendChild(promptDropdown());

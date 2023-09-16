@@ -123,6 +123,10 @@ function generalTabContent() {
   const copyModeSwitch = createSwitch('Copy mode', 'OFF: only copy response / ON: copy both request and response', 'copyMode', false);
   leftContent.appendChild(copyModeSwitch);
 
+  // show word counter
+  const showWordCountSwitch = createSwitch('Word/Char Count', 'Show/hide word/char count on each message', 'showWordCount', true, reloadConversationList);
+  leftContent.appendChild(showWordCountSwitch);
+
   // auto scroll
   const autoScrollSwitch = createSwitch('Auto Scroll', 'Automatically scroll down while responding', 'autoScroll', true);
   leftContent.appendChild(autoScrollSwitch);
@@ -453,14 +457,20 @@ function autoSyncTabContent() {
   chrome.storage.local.get(['settings'], (result) => {
     const { autoSync } = result.settings;
 
+    const autoRefreshAfterSyncSwitch = createSwitch('Auto Refresh After Sync', 'Automatically refresh the page after syncing conversations is completed', 'autoRefreshAfterSync', true, null, 'Requires Auto-Sync', !autoSync);
+    content.appendChild(autoRefreshAfterSyncSwitch);
+
     const quickSyncSwitch = createSwitch('Quick Sync', 'OFF: Sync All Conversations, ON: Sync only the last 100 conversations (Best performance)', 'quickSync', false, resetSync, 'Experimental - Requires Auto-Sync', !autoSync);
     content.appendChild(quickSyncSwitch);
 
     const showExamplePromptsSwitch = createSwitch('Show Example Prompts', 'Show the example prompts when starting a new chat', 'showExamplePrompts', false, null, 'Requires Auto-Sync', !autoSync);
     content.appendChild(showExamplePromptsSwitch);
 
-    const conversationTimestampSwitch = createSwitch('Conversation Timestamp', 'OFF: Created time, ON: Last updated time', 'conversationTimestamp', false, reloadConversationList, 'Requires Auto-Sync', !autoSync);
+    const conversationTimestampSwitch = createSwitch('Conversation Order', 'OFF: Created time, ON: Last updated time', 'conversationTimestamp', false, reloadConversationList, 'Requires Auto-Sync', !autoSync);
     content.appendChild(conversationTimestampSwitch);
+
+    const showMessageTimestampSwitch = createSwitch('Message Timestamp', 'Show/hide timestamps on each message', 'showMessageTimestamp', false, reloadConversationList, 'Requires Auto-Sync', !autoSync);
+    content.appendChild(showMessageTimestampSwitch);
 
     const pinNavSwitch = createSwitch('Pin Navigation', 'Show/hide message pins for quick navigation(only when conversations are fully synced)', 'showPinNav', true, refreshPage, 'Requires Auto-Sync', !autoSync);
     content.appendChild(pinNavSwitch);
@@ -468,7 +478,7 @@ function autoSyncTabContent() {
     const showGpt4Counter = createSwitch('Show GPT-4 Counter', 'Show the number of GPT-4 messages in the last 3 hours', 'showGpt4Counter', true, toggleGpt4Counter, 'Requires Auto-Sync', !autoSync);
     content.appendChild(showGpt4Counter);
 
-    const autoHideTopNav = createSwitch('Auto hide Top Navbar', 'Automatically hide the navbar at the top of the page when move the mouse out of it.', 'autoHideTopNav', true, toggleTopNav, 'Requires Auto-Sync', !autoSync);
+    const autoHideTopNav = createSwitch('Auto Hide Top Navbar', 'Automatically hide the navbar at the top of the page when move the mouse out of it.', 'autoHideTopNav', true, toggleTopNav, 'Requires Auto-Sync', !autoSync);
     content.appendChild(autoHideTopNav);
 
     const autoResetTopNav = createSwitch('Auto Reset Top Navbar', 'Automatically reset the tone, writing style, and language to default when switching to new chats', 'autoResetTopNav', false, toggleTopNav, 'Requires Auto-Sync', !autoSync);
@@ -485,7 +495,14 @@ function resetSync() {
   });
 }
 function reloadConversationList() {
-  loadConversationList(true);
+  chrome.storage.local.get(['settings'], (result) => {
+    const { autoSync } = result.settings;
+    if (autoSync) {
+      loadConversationList(true);
+    } else {
+      refreshPage();
+    }
+  });
 }
 function toggleGpt4Counter(show) {
   const gpt4CounterElement = document.querySelector('#gpt4-counter');
@@ -642,6 +659,14 @@ function modelsTabContent() {
   content.appendChild(newCustomModelWrapper);
   return content;
 }
+function toggleCustomPromptsButtonVisibility(isChecked) {
+  const customPromptsButton = document.querySelector('#continue-conversation-button-wrapper');
+  if (isChecked) {
+    customPromptsButton.style.display = 'flex';
+  } else {
+    customPromptsButton.style.display = 'none';
+  }
+}
 function customPromptTabContent() {
   const content = document.createElement('div');
   content.id = 'settings-modal-tab-content';
@@ -650,10 +675,13 @@ function customPromptTabContent() {
   chrome.storage.local.get(['customPrompts', 'settings'], (result) => {
     // custom prompts section
     const customPromptSectionWrapper = document.createElement('div');
-    customPromptSectionWrapper.style = 'display: flex; justify-content:space-between; align-items:center; width: 100%; color: lightslategray; font-size: 16px; margin: 24px 0 12px 0;';
+    customPromptSectionWrapper.style = 'display: flex; justify-content:space-between; align-items:center; width: 100%; color: lightslategray; font-size: 16px;';
     const customPromptSection = document.createElement('div');
     customPromptSection.style = 'color: lightslategray; font-size: 16px; margin: 12px 0;';
-    customPromptSection.textContent = 'Custom Prompts';
+    // customPromptSection.textContent = 'Custom Prompts';
+
+    const showCustomPromptsButtonSwitch = createSwitch('Show Custom Prompts Button', 'Show/hide the button to use custom prompts', 'showCustomPromptsButton', true, toggleCustomPromptsButtonVisibility);
+    customPromptSection.appendChild(showCustomPromptsButtonSwitch);
 
     const newCustomPromptButton = document.createElement('button');
     newCustomPromptButton.textContent = 'Add New Custom Prompts';
@@ -885,10 +913,22 @@ function createPromptRow(promptTitle, promptText, isDefault, promptObjectName) {
   }
   return promptWrapper;
 }
+function toggleExportButtonVisibility(isChecked) {
+  const exportButton = document.querySelector('#export-conversation-button');
+  if (isChecked) {
+    exportButton.style.display = 'flex';
+  } else {
+    exportButton.style.display = 'none';
+  }
+}
 function exportTabContent() {
   const content = document.createElement('div');
   content.id = 'settings-modal-tab-content';
   content.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;';
+
+  // showExportButton
+  const showExportButtonSwitch = createSwitch('Show Export Button', 'Show/hide the button to export the conversation', 'showExportButton', true, toggleExportButtonVisibility);
+  content.appendChild(showExportButtonSwitch);
   // Export Mode
   const exportModeSwitchWrapper = document.createElement('div');
   exportModeSwitchWrapper.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start; width: 100%; margin: 8px 0;';
@@ -943,7 +983,7 @@ function splitterTabContent() {
     const { autoSync } = result.settings;
     const splitterSwitchWrapper = document.createElement('div');
     splitterSwitchWrapper.style = 'display: flex; gap:16px; justify-content: start; align-items: start; width: 100%; margin: 8px 0;';
-    const autoSplitSwitch = createSwitch('Auto Split', 'Automatically split long prompts into smaller chunks (<a style="text-decoration:underline; color:gold;" href="https://www.notion.so/ezi/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24?pvs=4#4fe6dfb33eea451d92ed4d8c240bac1e" target="blank">Learn More</a>)', 'autoSplit', true, null, 'Requires Auto-Sync', !autoSync);
+    const autoSplitSwitch = createSwitch('Auto Split', 'Automatically split long prompts into smaller chunks (<a style="text-decoration:underline; color:gold;" href="https://www.notion.so/ezi/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24?pvs=4#4fe6dfb33eea451d92ed4d8c240bac1e" target="blank">Learn More</a>)', 'autoSplit', true, toggleAutoSummarizerSwitch, 'Requires Auto-Sync', !autoSync);
     const autoSummarizeSwitch = createSwitch('Auto Summarize', 'Automatically summarize each chunk after auto split (<a style="text-decoration:underline; color:gold;" href="https://www.notion.so/ezi/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24?pvs=4#edb708ffea3647509d4957765ab0529c" target="blank">Learn More</a>)', 'autoSummarize', false, updateAutoSplitPrompt, 'Requires Auto-Sync', !autoSync);
 
     const autoSplitChunkSizeLabel = document.createElement('div');
@@ -1031,6 +1071,18 @@ function splitterTabContent() {
     content.appendChild(autoSplitChunkPromptText);
   });
   return content;
+}
+function toggleAutoSummarizerSwitch(isChecked) {
+  // if autoSplit is off, check autoSummarize and turn it off if it's on
+  if (!isChecked) {
+    const autoSummarizeSwitch = document.querySelector('#switch-auto-summarize');
+    if (autoSummarizeSwitch.checked) {
+      autoSummarizeSwitch.checked = false;
+      chrome.storage.local.get('settings', ({ settings }) => {
+        chrome.storage.local.set({ settings: { ...settings, autoSummarize: false } });
+      });
+    }
+  }
 }
 function updateAutoSplitPrompt(autoSummarize) {
   const autoSplitChunkPrompt = `Reply with OK: [CHUNK x/TOTAL]
@@ -1351,6 +1403,7 @@ function initializeSettings() {
         ...result.settings,
         autoScroll: result.settings?.autoScroll !== undefined ? result.settings.autoScroll : true,
         autoSync: result.settings?.autoSync !== undefined ? result.settings.autoSync : true,
+        autoRefreshAfterSync: result.settings?.autoRefreshAfterSync !== undefined ? result.settings.autoRefreshAfterSync : true,
         quickSync: result.settings?.quickSync !== undefined ? result.settings.quickSync : false,
         quickSyncCount: result.settings?.quickSyncCount !== undefined ? result.settings.quickSyncCount : 100,
         safeMode: result.settings?.safeMode !== undefined ? result.settings.safeMode : true,
@@ -1359,6 +1412,10 @@ function initializeSettings() {
         autoResetTopNav: result.settings?.autoResetTopNav !== undefined ? result.settings.hideBottomSidebar : false,
         hideBottomSidebar: result.settings?.hideBottomSidebar !== undefined ? result.settings.hideBottomSidebar : false,
         showExamplePrompts: result.settings?.showExamplePrompts !== undefined ? result.settings.showExamplePrompts : false,
+        showMessageTimestamp: result.settings?.showMessageTimestamp !== undefined ? result.settings.showMessageTimestamp : false,
+        showCustomPromptsButton: result.settings?.showCustomPromptsButton !== undefined ? result.settings.showCustomPromptsButton : true,
+        showExportButton: result.settings?.showExportButton !== undefined ? result.settings.showExportButton : true,
+        showWordCount: result.settings?.showWordCount !== undefined ? result.settings.showWordCount : true,
         hideNewsletter: result.settings?.hideNewsletter !== undefined ? result.settings.hideNewsletter : false,
         customInstruction: result.settings?.customInstruction !== undefined ? result.settings.customInstruction : '',
         useCustomInstruction: result.settings?.useCustomInstruction !== undefined ? result.settings.useCustomInstruction : false,

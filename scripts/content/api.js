@@ -9,7 +9,6 @@ chrome.storage.local.get(['environment'], (result) => {
 });
 let lastPromptSuggestions = [];
 
-
 // get auth token from sync storage
 const defaultHeaders = {
   'content-type': 'application/json',

@@ -18,12 +18,39 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
       curFolderElement?.click();
     }
   });
+  // folder element
   const folderElement = document.createElement('div');
   folderElement.id = `folder-${folderId}`;
   folderElement.classList = 'flex py-3 px-3 pr-3 w-full items-center gap-3 relative rounded-md hover:bg-[#2A2B32] cursor-pointer break-all hover:pr-20 group';
   folderElement.style.backgroundColor = folder.color || 'transparent';
-  // eslint-disable-next-line no-loop-func
-
+  folderElement.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // get closet element with id starting with conversation-button
+    chrome.storage.sync.get(['conversationsOrder'], (result) => {
+      const { conversationsOrder } = result;
+      const folderElementId = e.srcElement.closest('[id^="folder-"]').id.split('folder-')[1];
+      const curFolderIcon = document.querySelector(`#folder-${folderElementId} img`);
+      curFolderIcon.src = chrome.runtime.getURL(`${curFolderIcon.dataset.isOpen === 'false' ? 'icons/folder-open.png' : 'icons/folder.png'}`);
+      curFolderIcon.dataset.isOpen = curFolderIcon.dataset.isOpen === 'false' ? 'true' : 'false';
+      const curFolderContent = document.querySelector(`#folder-content-${folderElementId}`);
+      curFolderContent.style.display = folderContent.style.display === 'none' ? 'block' : 'none';
+      conversationsOrder.find((c) => c.id === folderElementId).isOpen = curFolderIcon.dataset.isOpen === 'true';
+      chrome.storage.sync.set({ conversationsOrder });
+    });
+  });
+  folderElement.addEventListener('dragenter', (e) => {
+    // if folder content is not visible, show it
+    const curFolderId = e.srcElement.id.split('folder-')[1];
+    const curFolderContent = document.querySelector(`#folder-content-${curFolderId}`);
+    if (curFolderContent.style.display === 'none') {
+      curFolderContent.style.display = 'block';
+      const curFolderIcon = document.querySelector(`#folder-${curFolderId} img`);
+      curFolderIcon.src = chrome.runtime.getURL('icons/folder-open.png');
+      curFolderIcon.dataset.isOpen = 'true';
+    }
+  });
+  // folder icon
   const folderIcon = document.createElement('img');
   folderIcon.classList = 'w-4 h-4';
   folderIcon.src = folder.isOpen ? chrome.runtime.getURL('icons/folder-open.png') : chrome.runtime.getURL('icons/folder.png');
@@ -37,6 +64,7 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
   folderElement.title = folder.name;
   folderElement.appendChild(folderTitle);
 
+  // folder content
   const folderContent = document.createElement('div');
   folderContent.id = `folder-content-${folderId}`;
   folderContent.classList = 'w-full border-l border-gray-500';
@@ -57,22 +85,6 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
     folderContent.appendChild(emptyFolderElement(folderId));
   }
 
-  folderElement.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    // get closet element with id starting with conversation-button
-    chrome.storage.sync.get(['conversationsOrder'], (result) => {
-      const { conversationsOrder } = result;
-      const folderElementId = e.srcElement.closest('[id^="folder-"]').id.split('folder-')[1];
-      const curFolderIcon = document.querySelector(`#folder-${folderElementId} img`);
-      curFolderIcon.src = chrome.runtime.getURL(`${curFolderIcon.dataset.isOpen === 'false' ? 'icons/folder-open.png' : 'icons/folder.png'}`);
-      curFolderIcon.dataset.isOpen = curFolderIcon.dataset.isOpen === 'false' ? 'true' : 'false';
-      const curFolderContent = document.querySelector(`#folder-content-${folderElementId}`);
-      curFolderContent.style.display = folderContent.style.display === 'none' ? 'block' : 'none';
-      conversationsOrder.find((c) => c.id === folderElementId).isOpen = curFolderIcon.dataset.isOpen === 'true';
-      chrome.storage.sync.set({ conversationsOrder });
-    });
-  });
   // action icons
   folderElement.appendChild(folderActions(folderId));
 

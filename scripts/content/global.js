@@ -280,24 +280,26 @@ function addNavToggleButton() {
   });
 }
 function showHideTextAreaElement(forceShow = false) {
-  const textAreaElement = document.querySelector('main form textarea');
-  if (!textAreaElement) return;
-  const textAreaParent = textAreaElement.parentElement;
-  const allMessageWrapper = document.querySelectorAll('[id^="message-wrapper-"]');
-  const continueButton = document.querySelector('#continue-conversation-button-wrapper');
-  if (allMessageWrapper.length > 0) {
-    const lastMessageWrapperElement = allMessageWrapper[allMessageWrapper.length - 1];
+  chrome.storage.local.get('settings', ({ settings }) => {
+    const textAreaElement = document.querySelector('main form textarea');
+    if (!textAreaElement) return;
+    const textAreaParent = textAreaElement.parentElement;
+    const allMessageWrapper = document.querySelectorAll('[id^="message-wrapper-"]');
+    const continueButton = document.querySelector('#continue-conversation-button-wrapper');
+    if (allMessageWrapper.length > 0) {
+      const lastMessageWrapperElement = allMessageWrapper[allMessageWrapper.length - 1];
 
-    if (!forceShow && lastMessageWrapperElement && lastMessageWrapperElement.dataset.role === 'user') {
-      textAreaParent.style.display = 'none';
-      if (continueButton) continueButton.style.display = 'none';
+      if (!forceShow && lastMessageWrapperElement && lastMessageWrapperElement.dataset.role === 'user') {
+        textAreaParent.style.display = 'none';
+        if (continueButton) continueButton.style.display = 'none';
+      } else {
+        textAreaParent.style = '';
+        if (continueButton && settings.showCustomPromptsButton) continueButton.style.display = 'flex';
+      }
     } else {
       textAreaParent.style = '';
-      if (continueButton) continueButton.style.display = 'flex';
     }
-  } else {
-    textAreaParent.style = '';
-  }
+  });
 }
 function showNewChatPage() {
   // chatStreamIsClosed = true;
@@ -464,7 +466,7 @@ function replaceTextAreaElemet(settings) {
   let textAreaElement = inputForm.querySelector('textarea');
 
   if (!textAreaElement) {
-    const textAreaElementWrapperHTML = '<div class="flex flex-col w-full py-[10px] flex-grow md:py-4 md:pl-4 relative border border-black/10 bg-white dark:border-gray-900/50 dark:text-white dark:bg-gray-700 rounded-xl shadow-xs dark:shadow-xs"><textarea id="prompt-textarea" tabindex="0" data-id="request-:r0:-0" rows="1" placeholder="Send a message." class="m-0 w-full resize-none border-0 bg-transparent p-0 pr-10 focus:ring-0 focus-visible:ring-0 dark:bg-transparent md:pr-12 pl-3 md:pl-0" style="max-height: 200px; height: 24px; overflow-y: hidden;"></textarea><button class="absolute p-1 rounded-md bottom-[10px] md:bottom-3 md:p-2 md:right-3 dark:hover:bg-gray-900 dark:disabled:hover:bg-transparent right-2 disabled:text-gray-400 text-white transition-colors disabled:opacity-40"><span class="" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" class="h-4 w-4" stroke-width="2"><path d="M.5 1.163A1 1 0 0 1 1.97.28l12.868 6.837a1 1 0 0 1 0 1.766L1.969 15.72A1 1 0 0 1 .5 14.836V10.33a1 1 0 0 1 .816-.983L8.5 8 1.316 6.653A1 1 0 0 1 .5 5.67V1.163Z" fill="currentColor"></path></svg></span></button></div>';
+    const textAreaElementWrapperHTML = '<div class="flex flex-col w-full py-[10px] flex-grow md:py-4 md:pl-4 relative border border-black/10 bg-white dark:border-gray-900/50 dark:text-white dark:bg-gray-700 rounded-xl shadow-xs dark:shadow-xs"><textarea id="prompt-textarea" tabindex="0" data-id="request-:r0:-0" rows="1" placeholder="Send a message." class="m-0 w-full resize-none border-0 bg-transparent p-0 pr-10 focus:ring-0 focus-visible:ring-0 dark:bg-transparent md:pr-12 pl-3 md:pl-0" style="max-height: 200px; height: 56px; overflow-y: hidden;"></textarea><button class="absolute p-1 rounded-md bottom-[10px] md:bottom-3 md:p-2 md:right-3 dark:hover:bg-gray-900 dark:disabled:hover:bg-transparent right-2 disabled:text-gray-400 text-white transition-colors disabled:opacity-40"><span class="" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" class="h-4 w-4" stroke-width="2"><path d="M.5 1.163A1 1 0 0 1 1.97.28l12.868 6.837a1 1 0 0 1 0 1.766L1.969 15.72A1 1 0 0 1 .5 14.836V10.33a1 1 0 0 1 .816-.983L8.5 8 1.316 6.653A1 1 0 0 1 .5 5.67V1.163Z" fill="currentColor"></path></svg></span></button></div>';
     // insert text area element wrapper in input form first child at the end
     inputForm.firstChild.insertAdjacentHTML('beforeend', textAreaElementWrapperHTML);
     textAreaElement = inputForm.querySelector('textarea');
@@ -474,16 +476,16 @@ function replaceTextAreaElemet(settings) {
   newTextAreaElement.dir = 'auto';
   // auto resize textarea height up to 200px
   newTextAreaElement.style.height = 'auto';
-  newTextAreaElement.style.height = `${newTextAreaElement.scrollHeight}px`;
+  newTextAreaElement.style.height = `${newTextAreaElement.scrollHeight || '56'}px`;
   newTextAreaElement.style.maxHeight = '200px';
-  newTextAreaElement.style.minHeight = '24px';
+  newTextAreaElement.style.minHeight = '56px';
   newTextAreaElement.style.paddingRight = '40px';
   newTextAreaElement.style.overflowY = 'hidden';
 
   newTextAreaElement.addEventListener('keydown', textAreaElementKeydownEventListenerSync);
   // also async
   newTextAreaElement.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter' && event.which === 13 && !event.shiftKey) {
+    if (event.key === 'Enter' && event.which === 13 && !event.shiftKey && !isGenerating) {
       disableTextInput = true;
       if (newTextAreaElement.value.trim().length === 0) {
         event.preventDefault();
@@ -495,6 +497,7 @@ function replaceTextAreaElemet(settings) {
     }
   });
   newTextAreaElement.addEventListener('input', textAreaElementInputEventListener);
+  // newTextAreaElement.addEventListener('paste', textAreaElementInputEventListener);
 
   textAreaElement.replaceWith(newTextAreaElement);
   addInputCounter();
@@ -555,10 +558,13 @@ function addGpt4Counter() {
     if (!result.models.find((model) => model.slug === 'gpt-4')) return;
     gpt4CounterElement.style.display = result.settings.showGpt4Counter ? 'block' : 'none';
     const gpt4Timestamps = result.gpt4Timestamps || [];
+
     const messageCap = result?.conversationLimit?.message_cap || 50;
     const messageCapWindow = result?.conversationLimit?.message_cap_window || 180;
     const now = new Date().getTime();
-    const gpt4counter = gpt4Timestamps.filter((timestamp) => now - timestamp < (messageCapWindow / 60) * 60 * 60 * 1000).length;
+    const timestampsInCapWindow = gpt4Timestamps.filter((timestamp) => now - timestamp < (messageCapWindow / 60) * 60 * 60 * 1000);
+    // const resetTimeText = timestampsInCapWindow.length > 0 ? `New message available at: ${new Date(timestampsInCapWindow[0] + (messageCapWindow / 60) * 60 * 60 * 1000).toLocaleString()}` : '';
+    const gpt4counter = timestampsInCapWindow.length;
     const capExpiresAtTimeString = result.capExpiresAt ? `(Cap Expires At: ${result.capExpiresAt})` : '';
     if (gpt4counter) {
       gpt4CounterElement.innerText = `GPT-4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): ${gpt4counter}/${messageCap} ${capExpiresAtTimeString}`;
@@ -575,6 +581,7 @@ function addGpt4Counter() {
     }
   });
 }
+
 function updateInputCounter(text) {
   const curInputCounterElement = document.querySelector('#gptx-input-counter');
   if (curInputCounterElement) {
@@ -906,9 +913,12 @@ function toast(html, type = 'info', duration = 4000) {
   if (existingToast) existingToast.remove();
   const element = document.createElement('div');
   element.id = 'gptx-toast';
-  element.style = 'position:fixed;right:24px;top:24px;border-radius:4px;background-color:#19c37d;padding:8px 16px;z-index:100001;';
+  element.style = 'position:fixed;right:24px;top:24px;border-radius:4px;background-color:#19c37d;padding:8px 16px;z-index:100001;max-width:600px;';
   if (type === 'error') {
     element.style.backgroundColor = '#ef4146';
+  }
+  if (type === 'warning') {
+    element.style.backgroundColor = '#e06c2b';
   }
   element.innerHTML = html;
   document.body.appendChild(element);

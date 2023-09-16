@@ -1,4 +1,4 @@
-/* global isWindows, createModal, settingsModalActions, initializePluginStoreModal, addPluginStoreEventListener, showNewChatPage, createPromptChainListModal */
+/* global isWindows, createModal, settingsModalActions, initializePluginStoreModal, addPluginStoreEventListener, showNewChatPage, createPromptChainListModal, toast */
 
 // eslint-disable-next-line no-unused-vars
 function createKeyboardShortcutsModal(version) {
@@ -19,6 +19,8 @@ function keyboardShortcutsModalContent() {
   content.appendChild(logoWatermark);
   const keyboardShortcutsText = document.createElement('div');
   keyboardShortcutsText.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; height: 100%; width: 100%; white-space: break-spaces; overflow-wrap: break-word;padding: 16px;position: relative;z-index:10;color: #fff;';
+  const refreshButton = document.getElementById('sync-refresh-button').innerHTML;
+
   keyboardShortcutsText.innerHTML = `
   <table style="width:100%">
     <tr>
@@ -42,7 +44,7 @@ function keyboardShortcutsModalContent() {
       <td>Open Newsletter Archive</td>
     </tr>
     <tr>
-      <td>CTRL/CMD + SHIFT + X (or SHIFT + Click on New Prompt Chain button)</td>
+      <td>CTRL/CMD + SHIFT + X (or SHIFT + Click on New Prompt Chain button <span style="display:inline-block;width:32px;height:24px;"><img src="chrome-extension://amhmeenmapldpjdedekalnfifgnpfnkc/icons/new-prompt-chain.png"></span>)</td>
       <td>Open Prompt Chain List</td>
     </tr>
     <tr>
@@ -62,11 +64,11 @@ function keyboardShortcutsModalContent() {
       <td>Enable/disable auto-sync</td>
     </tr>
     <tr>
-      <td>CTRL/CMD + SHIFT + Click on the new folder icon</td>
+      <td>CTRL/CMD + SHIFT + Click on the new folder icon <span style="display:inline-block;"><img class="w-4 h-4" src="chrome-extension://amhmeenmapldpjdedekalnfifgnpfnkc/icons/new-folder.png"></span></td>
       <td>Reset the order of chats from newest to oldest (removes all folders)</td>
     </tr>
     <tr>
-      <td>CTRL/CMD + SHIFT + Click on the sync button in the bottom-left corner</td>
+      <td>CTRL/CMD + SHIFT + Click on the sync button in the bottom-left corner <span style="display: inline-block;width:12px;height:12px;">${refreshButton}</span></td>
       <td>Reset Auto Sync</td>
     </tr>
     <tr>
@@ -182,6 +184,14 @@ function registerShortkeys() {
         chrome.storage.local.set({ settings }, () => {
           window.location.reload();
         });
+      }
+      // cmd/ctrl + alt + S
+      if ((e.metaKey || (isWindows() && e.ctrlKey)) && e.altKey && e.keyCode === 83) {
+        e.preventDefault();
+        settings.autoSplit = !settings.autoSplit;
+        settings.autoSummarize = false;
+        toast(`Auto-split is now ${settings.autoSplit ? 'ON' : 'OFF'}`);
+        chrome.storage.local.set({ settings });
       }
       // cmd/ctrl + alt + h
       if ((e.metaKey || (isWindows() && e.ctrlKey)) && e.altKey && e.keyCode === 72) {

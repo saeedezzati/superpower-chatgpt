@@ -393,7 +393,7 @@ function promptLibraryListComponent(libraryData, loading = false) {
     libraryItemEditButton.style = 'font-size:0.7em; padding:4px 8px; margin-left:8px;width:60px;color:lightgray;';
     libraryItemEditButton.textContent = 'Edit';
     libraryItemEditButton.addEventListener('click', () => {
-      openSubmitPromptModal(libraryPrompt.text, libraryPrompt.model_slug, libraryPrompt.id, libraryPrompt.title, libraryPrompt.categories, libraryPrompt.language, libraryPrompt.hide_full_prompt);
+      openSubmitPromptModal(libraryPrompt.text, libraryPrompt.model_slug, libraryPrompt.id, libraryPrompt.title, libraryPrompt.categories, libraryPrompt.language, true, libraryPrompt.hide_full_prompt);
     });
     // delete button
     const libraryItemDeleteButton = document.createElement('button');
@@ -585,7 +585,7 @@ function promptLibraryModalContent(libraryData) {
   // add next/previous page buttons
   const pageButtonsWrapper = document.createElement('div');
   pageButtonsWrapper.id = 'library-page-buttons-wrapper';
-  pageButtonsWrapper.style = 'display: flex; flex-direction: row; flex-wrap:wrap;justify-content: center; align-items: center;margin:8px 0;';
+  pageButtonsWrapper.style = 'display: flex; flex-direction: row; flex-wrap:wrap;justify-content: center; align-items: center;margin:8px 0;width: 100%; position:relative;';
   const pageNumberElement = document.createElement('span');
   pageNumberElement.id = 'library-page-number';
   pageNumberElement.style = 'color: lightslategray; font-size:0.8em; width: 100%; text-align: center;';
@@ -637,6 +637,16 @@ function promptLibraryModalContent(libraryData) {
     pageNumberElement.textContent = `Page ${promptLibraryPageNumber} of ${promptLibraryMaxPageNumber}`;
   });
   pageButtonsWrapper.appendChild(nextPageButton);
+
+  // submit prompt button
+  const submitPromptButton = document.createElement('button');
+  submitPromptButton.classList = 'btn flex justify-center gap-2 btn-primary border-0 md:border';
+  submitPromptButton.style = 'font-size:0.8em; padding:4px 8px; margin-left:8px;position: absolute;right: 24px;bottom: 0;';
+  submitPromptButton.textContent = '+ Share a prompt';
+  submitPromptButton.addEventListener('click', () => {
+    openSubmitPromptModal('', '', null, '', [], '', true);
+  });
+  pageButtonsWrapper.appendChild(submitPromptButton);
 
   content.appendChild(libraryFilterElement);
   content.appendChild(libraryList);

@@ -83,7 +83,7 @@ function validateFields() {
   return valid;
 }
 
-function openSubmitPromptModal(text, modelSlug = '', promptId = null, title = '', categories = [], language = '', hideFullPrompt = false) {
+function openSubmitPromptModal(text = '', modelSlug = '', promptId = null, title = '', categories = [], language = '', refreshPromptLibrary = false, hideFullPrompt = false) {
   selectedCategories = categories;
   const submitPromptModal = document.createElement('div');
   submitPromptModal.style = 'position:fixed;top:0px;left:0px;width:100%;height:100%;background-color:rgba(0,0,0,0.7);z-index:1000;display:flex;align-items:center;justify-content:center;z-index:10001;overflow-y: scroll; max-height: 100vh;';
@@ -98,7 +98,7 @@ function openSubmitPromptModal(text, modelSlug = '', promptId = null, title = ''
   submitPromptModalContent.id = 'submit-prompt-modal-content';
   const modalTitle = document.createElement('div');
   modalTitle.style = 'color:white;font-size:1.25rem;margin-bottom: 8px;';
-  modalTitle.textContent = promptId ? 'Update prompt' : 'Submit prompt to library';
+  modalTitle.textContent = promptId ? 'Update prompt' : 'Share a prompt with the community';
   submitPromptModalContent.appendChild(modalTitle);
   const languageRowWrapper = document.createElement('div');
   languageRowWrapper.style = 'display:flex;align-items:start;justify-content:space-between;width:100%;margin-top: 16px;';
@@ -252,7 +252,7 @@ function openSubmitPromptModal(text, modelSlug = '', promptId = null, title = ''
           }
           toast('Prompt submitted!');
           submitPromptModal.remove();
-          if (promptId) {
+          if (refreshPromptLibrary) {
             fetchPrompts(promptLibraryPageNumber);
           }
         });

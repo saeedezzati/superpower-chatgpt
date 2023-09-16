@@ -283,6 +283,8 @@ function upgradeCustomInstructions() {
               textAreaFields.forEach((t) => {
                 t.addEventListener('input', () => {
                   setTimeout(() => {
+                    const allButtons = body.querySelectorAll('button');
+                    const saveButton = [...allButtons].find((b) => b.textContent === 'Save');
                     const curNameInput = document.querySelector('#custom-instructions-name-input');
                     if (curNameInput.value === '') {
                       saveButton.disabled = true;
@@ -313,12 +315,14 @@ function upgradeCustomInstructions() {
                     curNameInput.classList.remove('text-gray-300');
                   }
                   setTimeout(() => {
+                    const curAllButtons = body.querySelectorAll('button');
+                    const curSaveButton = [...curAllButtons].find((b) => b.textContent === 'Save');
                     if (curNameInput.value === '') {
-                      saveButton.disabled = true;
-                      saveButton.classList.add('opacity-50', 'cursor-not-allowed');
+                      curSaveButton.disabled = true;
+                      curSaveButton.classList.add('opacity-50', 'cursor-not-allowed');
                     } else if (curNameInput.value !== selectedProfile?.name) {
-                      saveButton.disabled = false;
-                      saveButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                      curSaveButton.disabled = false;
+                      curSaveButton.classList.remove('opacity-50', 'cursor-not-allowed');
                     }
                   }, 10);
                 });
@@ -361,7 +365,7 @@ function upgradeCustomInstructions() {
               }
             }
           });
-        }, 500);
+        }, 100);
       }
     });
   };

@@ -140,12 +140,12 @@ function addPluginsDropdownEventListener(idPrefix, forceDark = false) {
         const pluginId = option.id.split(`${idPrefix}-plugins-dropdown-option-`)[1];
         const plugin = installedPlugins.find((p) => p.id === pluginId);
 
-        if (enabledPluginIds.includes(pluginId)) {
+        if (enabledPluginIds?.includes(pluginId)) {
           const newEnabledPluginIds = enabledPluginIds.filter((id) => id !== pluginId);
           chrome.storage.local.set({ enabledPluginIds: newEnabledPluginIds });
         } else {
           // eslint-disable-next-line no-lonely-if
-          if (enabledPluginIds.length >= 3) {
+          if (enabledPluginIds?.length >= 3) {
             const enabledPluginLimit = document.querySelector('#enabled-plugins-limit');
             enabledPluginLimit.classList = `flex h-8 flex-shrink-0 items-center justify-center border-b ${forceDark ? 'border-white/20 bg-red-200 text-red-800' : 'border-black/10 bg-red-200 text-red-800'} text-xs dark:border-white/20 transition-colors duration-300 dark:bg-red-200 dark:text-red-800`;
             setTimeout(() => {

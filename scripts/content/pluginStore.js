@@ -11,7 +11,7 @@ function initializePluginStoreModal(plugins) {
         style="pointer-events: auto;"
       >
         <div
-          class="grid-cols-[minmax(10px,30px)_1fr_minmax(10px,30px)] grid h-full w-full grid-rows-[minmax(10px,_1fr)_auto_minmax(10px,_1fr)] md:grid-rows-[minmax(20px,_1fr)_auto_minmax(20px,_1fr)] overflow-y-auto"
+          class="grid-cols-[10px_1fr_10px] grid h-full w-full grid-rows-[minmax(10px,_1fr)_auto_minmax(10px,_1fr)] md:grid-rows-[minmax(20px,_1fr)_auto_minmax(20px,_1fr)] overflow-y-auto"
         >
           <div
             role="dialog"
@@ -19,7 +19,7 @@ function initializePluginStoreModal(plugins) {
             aria-describedby="radix-:r2r:"
             aria-labelledby="radix-:r2q:"
             data-state="open"
-            class="relative col-auto col-start-2 row-auto row-start-2 w-full rounded-lg text-left shadow-xl transition-all left-1/2 -translate-x-1/2 bg-white dark:bg-gray-900 max-w-md w-full !max-w-7xl bg-gray-50 md:min-w-[672px] lg:min-w-[896px] xl:min-w-[1024px]"
+            class="relative col-auto col-start-2 row-auto row-start-2 w-full rounded-lg text-left shadow-xl transition-all left-1/2 -translate-x-1/2 bg-white dark:bg-gray-900 w-full max-w-7xl bg-gray-50 md:min-w-[672px] lg:min-w-[896px] xl:min-w-[1024px]"
             tabindex="-1"
             style="pointer-events: auto;"
           >

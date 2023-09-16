@@ -608,12 +608,16 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
               } else if (!userChatSavedLocally) {
                 const userMessage = {
                   id: messageId,
-                  role: 'user',
+                  author: {
+                    role: 'user',
+                    metadata: {},
+                  },
                   content: {
                     content_type: 'text',
                     parts: [userInput],
                   },
                   metadata: { model_slug: settings.selectedModel.slug },
+                  recipient: recipient || 'all',
                 };
 
                 // set forcerefresh=true when adding user chat, and set it to false when stream ends. This way if something goes wrong in between, the conversation will be refreshed later
@@ -623,7 +627,7 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
               if (!conversation?.id || userChatSavedLocally) {
                 // save assistant chat locally
                 finalMessage = message;
-                if (!assistantChatSavedLocally && message.author.role === 'assistant' && message.recipient === 'all') {
+                if (!assistantChatSavedLocally && (message.role === 'assistant' || message.author.role === 'assistant') && message.recipient === 'all') {
                   assistantChatSavedLocally = true;
                   const tempId = setInterval(() => {
                     if (userChatIsActuallySaved) {
@@ -682,8 +686,9 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
                 const charCount = messageContentParts.replace(/\n/g, '').length + existingCharCount;
 
                 existingRowAssistantTextWrapper.innerHTML = `${existingInnerHTML}${messageContentPartsHTML}`;
-
-                resultCounter.innerHTML = `${charCount} chars / ${wordCount} words`;
+                if (resultCounter) {
+                  resultCounter.innerHTML = `${charCount} chars / ${wordCount} words`;
+                }
               } else {
                 const lastMessageWrapper = [...document.querySelectorAll('[id^="message-wrapper-"]')].pop();
                 if (lastMessageWrapper?.dataset?.role !== 'assistant') {
@@ -691,7 +696,7 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
                   if (existingRowUser) {
                     let threadCount = Object.keys(conversation).length > 0 ? conversation?.mapping[messageId]?.children?.length || 1 : 1;
                     if (regenerateResponse) threadCount += 1;
-                    const assistantRow = rowAssistant(conversation, data, threadCount, threadCount, models, settings.customConversationWidth, settings.conversationWidth);
+                    const assistantRow = rowAssistant(conversation, data, threadCount, threadCount, models, settings.customConversationWidth, settings.conversationWidth, settings.showMessageTimestamp, settings.showWordCount);
                     const conversationBottom = document.querySelector('#conversation-bottom');
                     conversationBottom.insertAdjacentHTML('beforebegin', assistantRow);
                     if (!scrolUpDetected && settings.autoScroll) {
@@ -917,7 +922,7 @@ ${settings.autoSplitChunkPrompt}`;
               isGenerating = true;
               submitChat(text, conversation, messageId, parentId, settings, models);
               textAreaElement.value = '';
-              textAreaElement.style.height = '24px';
+              textAreaElement.style.height = '56px';
               updateInputCounter('');
             }
           });
@@ -996,7 +1001,7 @@ ${settings.autoSplitChunkPrompt}`;
               isGenerating = true;
               submitChat(text, {}, messageId, parentId, settings, models);
               textAreaElement.value = '';
-              textAreaElement.style.height = '24px';
+              textAreaElement.style.height = '56px';
               updateInputCounter('');
             }
           });
@@ -1042,7 +1047,7 @@ ${settings.autoSplitChunkPrompt}`;
           }, 100);
         }
       } else {
-        textAreaElement.style.height = '24px';
+        textAreaElement.style.height = '56px';
         if (textAreaElement.value.trim().length === 0) return;
         addUserPromptToHistory(textAreaElement.value.trim());
         inputForm.dispatchEvent(new Event('submit', { cancelable: true }));
