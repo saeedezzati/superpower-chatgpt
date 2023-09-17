@@ -50,7 +50,7 @@ function generateSuggestions(conversationId, messageId, model, numSuggestions = 
     });
 }
 function generateChat(message, conversationId, messageId, parentMessageId, token, suggestions = [], saveHistory = true, role = 'user', action = 'next') {
-  return chrome.storage.local.get(['settings', 'enabledPluginIds']).then((res) => chrome.storage.sync.get(['auth_token']).then((result) => {
+  return chrome.storage.local.get(['settings', 'enabledPluginIds', 'installedPlugins']).then((res) => chrome.storage.sync.get(['auth_token']).then((result) => {
     const payload = {
       action,
       arkose_token: res.settings.selectedModel.slug.includes('gpt-4') && !res.settings.selectedModel.tags.includes('Unofficial') ? token : null,
@@ -79,7 +79,10 @@ function generateChat(message, conversationId, messageId, parentMessageId, token
     }
     // plugin model: text-davinci-002-plugins
     if (!conversationId && res.settings.selectedModel.slug.includes('plugins')) {
-      payload.plugin_ids = res.enabledPluginIds;
+      // remove plugin ids from enabledPluginIds that are not installed
+      const newEnabledPluginIds = res.enabledPluginIds.filter((id) => res.installedPlugins.find((p) => p.id === id));
+      payload.plugin_ids = newEnabledPluginIds;
+      chrome.storage.local.set({ enabledPluginIds: newEnabledPluginIds });
     }
     const eventSource = new SSE(
       '/backend-api/conversation',
@@ -180,6 +183,9 @@ function getUserSystemMessage() {
 
         const newCustomInstructionProfiles = customInstructionProfiles.map((p) => {
           if (p.isSelected) {
+            if (p.aboutModel === data.about_model_message && p.aboutUser === data.about_user_message) {
+              return p;
+            }
             return { ...p, isSelected: false };
           }
           if (p.aboutModel === data.about_model_message && p.aboutUser === data.about_user_message) {

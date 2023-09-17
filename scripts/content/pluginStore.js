@@ -474,6 +474,7 @@ function addInstallButtonEventListener(plugins) {
             allPlugins[allPluginIndex] = res;
             const installedPluginIndex = installedPlugins.findIndex((p) => p.id === pluginId);
             installedPlugins.splice(installedPluginIndex, 1);
+            const newEnabledPluginIds = enabledPluginIds.filter((id) => id !== pluginId);
             const selectedFilter = document.querySelector('[id^="plugin-filter-"].btn-light');
             const filter = selectedFilter ? selectedFilter.id.split('plugin-filter-')[1] : 'all';
             if (filter === 'installed') {
@@ -486,10 +487,10 @@ function addInstallButtonEventListener(plugins) {
               addPaginationEventListener(installedPlugins);
             }
 
-            chrome.storage.local.set({ allPlugins, installedPlugins });
+            chrome.storage.local.set({ allPlugins, installedPlugins, enabledPluginIds: newEnabledPluginIds });
             const idPrefix = 'navbar';
             const pluginsDropdownWrapper = document.getElementById(`plugins-dropdown-wrapper-${idPrefix}`);
-            pluginsDropdownWrapper.innerHTML = pluginsDropdown(installedPlugins, enabledPluginIds, idPrefix);
+            pluginsDropdownWrapper.innerHTML = pluginsDropdown(installedPlugins, newEnabledPluginIds, idPrefix);
             addPluginsDropdownEventListener(idPrefix);
           });
         });

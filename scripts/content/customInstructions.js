@@ -72,7 +72,7 @@ function profileDropdown(customInstructionProfiles, placement) {
     });
     dropdownItem.addEventListener('click', () => {
       const customInstructionsDialog = document.querySelector('[role="dialog"][data-state="open"][tabindex="-1"]');
-      if (placement === 'new-page') {
+      if (placement === 'new-page' && profileName !== '+ Add new profile') {
         setUserSystemMessage(profileAboutUser, profileAboutModel, true);
       }
       if (profileName === '+ Add new profile' && !customInstructionsDialog) {
@@ -87,7 +87,7 @@ function profileDropdown(customInstructionProfiles, placement) {
           setTimeout(() => {
             const cusstomInstructionsProfileDropdown = document.querySelector('#custom-instructions-profile-dropdown-list-settings');
             cusstomInstructionsProfileDropdown.lastChild.click();
-          }, 1000);
+          }, 600);
         }, 300);
         return;
       }
@@ -111,16 +111,19 @@ function profileDropdown(customInstructionProfiles, placement) {
         const previousSelectedProfile = oldCip.find((p) => p.isSelected);
 
         setTimeout(() => {
-          const newCip = oldCip.map((p) => {
-            if (p.id === profileId) {
-              return { ...p, isSelected: true };
-            }
-            return { ...p, isSelected: false };
-          });
+          const newCip = placement === 'new-page'
+            ? oldCip.map((p) => {
+              if (p.id === profileId) {
+                return { ...p, isSelected: true };
+              }
+              return { ...p, isSelected: false };
+            })
+            : oldCip;
 
           chrome.storage.local.set({ customInstructionProfiles: newCip }, () => {
-            const selectedProfileTitle = document.querySelector(`#custom-instructions-selected-profile-title-${placement}`);
+            const selectedProfileTitle = document.querySelector(`[id^="custom-instructions-selected-profile-title-${placement}-"]`);
             selectedProfileTitle.textContent = profileName;
+            selectedProfileTitle.id = `custom-instructions-selected-profile-title-${placement}-${profileId}`;
             // remove the old checkmark from the previous selected profile
             const oldCheckmark = document.querySelector(`[id^=custom-instructions-profile-dropdown-checkmark-${placement}-`);
             if (oldCheckmark) oldCheckmark.remove();
@@ -177,7 +180,7 @@ function profileDropdownButton(customInstructionProfiles, placement) {
   span.appendChild(span2);
   const span3 = document.createElement('span');
   span3.className = 'font-semibold truncate';
-  span3.id = `custom-instructions-selected-profile-title-${placement}`;
+  span3.id = `custom-instructions-selected-profile-title-${placement}-${selectedProfile?.id}`;
   span3.textContent = selectedProfile?.name || customInstructionProfiles[0]?.name || 'No saved profile';
   span2.appendChild(span3);
   const span4 = document.createElement('span');
@@ -216,6 +219,7 @@ function upgradeCustomInstructions() {
               const { customInstructionProfiles } = result;
               const newCustomInstructionProfiles = customInstructionProfiles;
               const selectedProfile = customInstructionProfiles.find((p) => p.isSelected);
+
               if (selectedProfile) {
                 textAreaFields[0].value = selectedProfile.aboutUser;
                 textAreaFields[0].dispatchEvent(new Event('input', { bubbles: true }));
@@ -336,10 +340,12 @@ function upgradeCustomInstructions() {
                     const curTextAreaFields = document.querySelectorAll('[role="dialog"][data-state="open"][tabindex="-1"] textarea');
                     const curAboutUserInput = curTextAreaFields[0];
                     const curAboutModelInput = curTextAreaFields[1];
-                    const curSelectedProfile = cip.find((p) => p.isSelected);
+                    const selectedProfileTitle = document.querySelector('[id^="custom-instructions-selected-profile-title-settings-"]');
+                    const selectedProfileId = selectedProfileTitle.id.split('custom-instructions-selected-profile-title-settings-')[1];
+                    const curSelectedProfile = cip.find((p) => p.id === selectedProfileId);
 
                     if (!curSelectedProfile) {
-                      const newCip = [...cip, {
+                      const newCip = [...cip.map((p) => ({ ...p, isSelected: false })), {
                         name: curNameInput.value, aboutUser: curAboutUserInput.value, aboutModel: curAboutModelInput.value, isSelected: true, id: self.crypto.randomUUID(),
                       }];
                       chrome.storage.local.set({ customInstructionProfiles: newCip }, () => {
@@ -348,12 +354,12 @@ function upgradeCustomInstructions() {
                       });
                     } else {
                       const newCip = cip.map((p) => {
-                        if (p.isSelected) {
+                        if (p.id === selectedProfileId) {
                           return {
-                            ...p, name: curNameInput.value, aboutUser: curAboutUserInput.value, aboutModel: curAboutModelInput.value,
+                            ...p, name: curNameInput.value, aboutUser: curAboutUserInput.value, aboutModel: curAboutModelInput.value, isSelected: true,
                           };
                         }
-                        return p;
+                        return { ...p, isSelected: false };
                       });
                       chrome.storage.local.set({ customInstructionProfiles: newCip }, () => {
                         toast('Profile updated');

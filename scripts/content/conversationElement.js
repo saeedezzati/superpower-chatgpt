@@ -435,12 +435,11 @@ function addCheckboxToConversationElement(conversationElement, conversation) {
       checkboxWrapper.style.display = 'block';
     });
     conversationElement.addEventListener('mouseleave', () => {
-      chrome.storage.local.get(['selectedConversations'], (res) => {
-        const { selectedConversations } = res;
-        if (selectedConversations.length === 0) {
-          checkboxWrapper.style.display = 'none';
-        }
-      });
+      const conversationList = document.querySelector('#conversation-list');
+      const selectedConversations = conversationList.querySelectorAll('input[type="checkbox"]:checked');
+      if (selectedConversations.length === 0) {
+        checkboxWrapper.style.display = 'none';
+      }
     });
   });
 }

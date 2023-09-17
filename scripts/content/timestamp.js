@@ -204,12 +204,11 @@ function updateTimestamp(conversationList) {
             checkboxWrapper.style.display = 'block';
           });
           button.addEventListener('mouseleave', () => {
-            chrome.storage.local.get(['selectedConversations'], (res) => {
-              const { selectedConversations } = res;
-              if (selectedConversations.length === 0) {
-                checkboxWrapper.style.display = 'none';
-              }
-            });
+            const curConversationList = document.querySelector('#conversation-list');
+            const selectedConversations = curConversationList.querySelectorAll('input[type="checkbox"]:checked');
+            if (selectedConversations.length === 0) {
+              checkboxWrapper.style.display = 'none';
+            }
           });
         }
       });

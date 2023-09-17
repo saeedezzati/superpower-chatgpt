@@ -202,10 +202,10 @@ function generalTabContent() {
         }
         const importedData = JSON.parse(e.target.result);
         const {
-          settings, customModels, customPrompts, conversationsOrder, customInstructionProfiles,
+          settings, customModels, customPrompts, conversationsOrder, customInstructionProfiles, promptChains,
         } = importedData;
         chrome.storage.local.set({
-          settings, customModels, customPrompts, customInstructionProfiles,
+          settings, customModels, customPrompts, customInstructionProfiles, promptChains,
         }, () => {
           chrome.storage.sync.set({
             conversationsOrder,
@@ -226,13 +226,13 @@ function generalTabContent() {
   exportButton.textContent = 'Export';
   exportButton.addEventListener('click', () => {
     chrome.storage.sync.get(['conversationsOrder'], (res) => {
-      chrome.storage.local.get(['settings', 'customModels', 'customPrompts', 'customInstructionProfiles'], (result) => {
+      chrome.storage.local.get(['settings', 'customModels', 'customPrompts', 'customInstructionProfiles', 'promptChains'], (result) => {
         const {
-          settings, customModels, customPrompts, customInstructionProfiles,
+          settings, customModels, customPrompts, customInstructionProfiles, promptChains,
         } = result;
         const { conversationsOrder } = res;
         const data = {
-          settings, customModels, customPrompts, conversationsOrder, customInstructionProfiles,
+          settings, customModels, customPrompts, conversationsOrder, customInstructionProfiles, promptChains,
         };
         const element = document.createElement('a');
         element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(JSON.stringify(data))}`);
