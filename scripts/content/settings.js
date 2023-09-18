@@ -205,13 +205,9 @@ function generalTabContent() {
           settings, customModels, customPrompts, conversationsOrder, customInstructionProfiles, promptChains,
         } = importedData;
         chrome.storage.local.set({
-          settings, customModels, customPrompts, customInstructionProfiles, promptChains,
+          settings, customModels, customPrompts, customInstructionProfiles, promptChains, conversationsOrder,
         }, () => {
-          chrome.storage.sync.set({
-            conversationsOrder,
-          }, () => {
-            window.location.reload();
-          });
+          window.location.reload();
           toast('Imported Settings Successfully');
         });
       };
@@ -225,27 +221,24 @@ function generalTabContent() {
   exportButton.className = 'w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800';
   exportButton.textContent = 'Export';
   exportButton.addEventListener('click', () => {
-    chrome.storage.sync.get(['conversationsOrder'], (res) => {
-      chrome.storage.local.get(['settings', 'customModels', 'customPrompts', 'customInstructionProfiles', 'promptChains'], (result) => {
-        const {
-          settings, customModels, customPrompts, customInstructionProfiles, promptChains,
-        } = result;
-        const { conversationsOrder } = res;
-        const data = {
-          settings, customModels, customPrompts, conversationsOrder, customInstructionProfiles, promptChains,
-        };
-        const element = document.createElement('a');
-        element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(JSON.stringify(data))}`);
-        const todatDate = new Date();
-        const filePostfix = `${todatDate.getFullYear()}-${todatDate.getMonth() + 1}-${todatDate.getDate()}`;
+    chrome.storage.local.get(['conversationsOrder', 'settings', 'customModels', 'customPrompts', 'customInstructionProfiles', 'promptChains'], (result) => {
+      const {
+        settings, customModels, customPrompts, customInstructionProfiles, promptChains, conversationsOrder,
+      } = result;
+      const data = {
+        settings, customModels, customPrompts, conversationsOrder, customInstructionProfiles, promptChains,
+      };
+      const element = document.createElement('a');
+      element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(JSON.stringify(data))}`);
+      const todatDate = new Date();
+      const filePostfix = `${todatDate.getFullYear()}-${todatDate.getMonth() + 1}-${todatDate.getDate()}`;
 
-        element.setAttribute('download', `superpower-chatgpt-settings-${filePostfix}.json`);
-        element.style.display = 'none';
-        document.body.appendChild(element);
-        element.click();
-        document.body.removeChild(element);
-        toast('Settings exported');
-      });
+      element.setAttribute('download', `superpower-chatgpt-settings-${filePostfix}.json`);
+      element.style.display = 'none';
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+      toast('Settings exported');
     });
   });
   importExportButtonWrapper.appendChild(exportButton);

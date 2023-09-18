@@ -27,7 +27,7 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
     e.preventDefault();
     e.stopPropagation();
     // get closet element with id starting with conversation-button
-    chrome.storage.sync.get(['conversationsOrder'], (result) => {
+    chrome.storage.local.get(['conversationsOrder'], (result) => {
       const { conversationsOrder } = result;
       const folderElementId = e.srcElement.closest('[id^="folder-"]').id.split('folder-')[1];
       const curFolderIcon = document.querySelector(`#folder-${folderElementId} img`);
@@ -36,7 +36,7 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
       const curFolderContent = document.querySelector(`#folder-content-${folderElementId}`);
       curFolderContent.style.display = folderContent.style.display === 'none' ? 'block' : 'none';
       conversationsOrder.find((c) => c.id === folderElementId).isOpen = curFolderIcon.dataset.isOpen === 'true';
-      chrome.storage.sync.set({ conversationsOrder });
+      chrome.storage.local.set({ conversationsOrder });
     });
   });
   folderElement.addEventListener('dragenter', (e) => {
@@ -75,7 +75,7 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
 
   if (folder.conversationIds.length > 0) {
     folder.conversationIds.forEach((conversationId) => {
-      const conversation = Object.values(conversations).find((c) => c.id?.slice(0, 5) === conversationId);
+      const conversation = Object.values(conversations).find((c) => c.id === conversationId);
       if (conversation && !conversation.skipped) {
         const conversationElement = createConversation(conversation, conversationTimestamp);
         folderContent.appendChild(conversationElement);
@@ -117,7 +117,7 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
       const toId = isToFolder ? to.id.split('folder-content-')[1] : 'conversation-list';
       if (oldDraggableIndex === newDraggableIndex && toId === fromId) return;
 
-      chrome.storage.sync.get(['conversationsOrder'], (result) => {
+      chrome.storage.local.get(['conversationsOrder'], (result) => {
         const { conversationsOrder } = result;
         const fromFolderIndex = conversationsOrder.findIndex((c) => c.id === fromId);
         const fromFolder = conversationsOrder[fromFolderIndex];
@@ -130,16 +130,16 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
           if (curEmptyFolder) curEmptyFolder.remove();
           const toFolderIndex = conversationsOrder.findIndex((c) => c.id === toId);
           const toFolder = conversationsOrder[toFolderIndex];
-          toFolder.conversationIds.splice(newDraggableIndex, 0, itemId?.slice(0, 5));
+          toFolder.conversationIds.splice(newDraggableIndex, 0, itemId);
           conversationsOrder.splice(toFolderIndex, 1, toFolder);
           if (!isFolder && toId === 'trash' && fromId !== 'trash') {
             deleteConversationOnDragToTrash(itemId);
           }
         } else {
-          conversationsOrder.splice(newIndex - 1, 0, itemId?.slice(0, 5)); // if adding to conversation list use index-1(for search box)
+          conversationsOrder.splice(newIndex - 1, 0, itemId); // if adding to conversation list use index-1(for search box)
         }
 
-        chrome.storage.sync.set({ conversationsOrder });
+        chrome.storage.local.set({ conversationsOrder });
       });
     },
   });
@@ -171,7 +171,7 @@ function folderActions(folderId) {
   changeColorButton.addEventListener('click', (event) => {
     event.preventDefault();
     event.stopPropagation();
-    chrome.storage.sync.get(['conversationsOrder'], (result) => {
+    chrome.storage.local.get(['conversationsOrder'], (result) => {
       const { conversationsOrder } = result;
       actionsWrapper.replaceWith(colorPicker(conversationsOrder.find((conv) => conv.id === folderId)));
       const colorPickerElement = document.getElementById(`color-picker-${folderId}`);
@@ -186,7 +186,7 @@ function folderActions(folderId) {
   editFolderNameButton.addEventListener('click', (event) => {
     event.preventDefault();
     event.stopPropagation();
-    chrome.storage.sync.get(['conversationsOrder'], (result) => {
+    chrome.storage.local.get(['conversationsOrder'], (result) => {
       const { conversationsOrder } = result;
       const textInput = document.createElement('input');
       const folderTitle = document.querySelector(`#title-folder-${folderId}`);
@@ -211,7 +211,7 @@ function folderActions(folderId) {
   deleteFolderButton.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
-    chrome.storage.sync.get(['conversationsOrder'], (result) => {
+    chrome.storage.local.get(['conversationsOrder'], (result) => {
       const { conversationsOrder } = result;
       actionsWrapper.replaceWith(folderConfirmActions(conversationsOrder.find((conv) => conv.id === folderId), 'delete'));
     });
@@ -245,13 +245,13 @@ function colorPicker(folder) {
   colorPickerElement.lastChild.addEventListener('input', (e) => {
     e.preventDefault();
     e.stopPropagation();
-    chrome.storage.sync.get(['conversationsOrder'], (result) => {
+    chrome.storage.local.get(['conversationsOrder'], (result) => {
       const { conversationsOrder } = result;
       const curFolderElement = document.querySelector(`#folder-${folder.id}`);
       const folderContentElement = document.querySelector(`#folder-content-${folder.id}`);
       const folderIndex = conversationsOrder.findIndex((f) => f.id === folder.id);
       conversationsOrder[folderIndex].color = e.target.value;
-      chrome.storage.sync.set({ conversationsOrder }, () => {
+      chrome.storage.local.set({ conversationsOrder }, () => {
         curFolderElement.style.backgroundColor = e.target.value;
         folderContentElement.style.borderColor = e.target.value;
       });
@@ -262,13 +262,13 @@ function colorPicker(folder) {
   colorPickerElement.firstChild.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
-    chrome.storage.sync.get(['conversationsOrder'], (result) => {
+    chrome.storage.local.get(['conversationsOrder'], (result) => {
       const { conversationsOrder } = result;
       const curFolderElement = document.querySelector(`#folder-${folder.id}`);
       const folderContentElement = document.querySelector(`#folder-content-${folder.id}`);
       const folderIndex = conversationsOrder.findIndex((f) => f.id === folder.id);
       conversationsOrder[folderIndex].color = undefined;
-      chrome.storage.sync.set({ conversationsOrder }, () => {
+      chrome.storage.local.set({ conversationsOrder }, () => {
         curFolderElement.style.backgroundColor = 'transparent';
         folderContentElement.style.borderColor = '#8e8ea0';
       });
@@ -310,10 +310,10 @@ function folderConfirmActions(folder, action) {
       actionsWrapper.replaceWith(folderActions(folder.id));
       skipBlur = false;
 
-      chrome.storage.sync.get(['conversationsOrder'], (result) => {
+      chrome.storage.local.get(['conversationsOrder'], (result) => {
         const { conversationsOrder } = result;
         conversationsOrder.find((f) => f.id === folder.id).name = textInput.value;
-        chrome.storage.sync.set({ conversationsOrder });
+        chrome.storage.local.set({ conversationsOrder });
       });
       folderElement.classList.replace('pr-20', 'pr-3');
       folderElement.classList.replace('hover:pr-20', 'hover:pr-20');
@@ -371,126 +371,116 @@ function folderConfirmActions(folder, action) {
 }
 function emptyTrash() {
   showNewChatPage();
-  chrome.storage.sync.get(['conversationsOrder'], (res) => {
-    chrome.storage.local.get(['conversations'], (result) => {
-      const { conversationsOrder } = res;
-      const { conversations } = result;
-      const newConversations = {};
-      Object.keys(conversations).forEach((key) => {
-        if (!conversations[key].archived) {
-          newConversations[key] = conversations[key];
-        }
-      });
-      const newConversationsOrder = conversationsOrder;
-
-      const trashFolderContent = document.querySelector('#folder-content-trash');
-      if (trashFolderContent) {
-        // remove all children
-        while (trashFolderContent.firstChild) {
-          trashFolderContent.removeChild(trashFolderContent.firstChild);
-        }
-        trashFolderContent.appendChild(emptyFolderElement('trash'));
+  chrome.storage.local.get(['conversations', 'conversationsOrder'], (result) => {
+    const { conversations, conversationsOrder } = result;
+    const newConversations = {};
+    Object.keys(conversations).forEach((key) => {
+      if (!conversations[key].archived) {
+        newConversations[key] = conversations[key];
       }
+    });
+    const newConversationsOrder = conversationsOrder;
 
-      const trashFolder = conversationsOrder?.find((f) => f.id === 'trash');
-      trashFolder.conversationIds = [];
+    const trashFolderContent = document.querySelector('#folder-content-trash');
+    if (trashFolderContent) {
+      // remove all children
+      while (trashFolderContent.firstChild) {
+        trashFolderContent.removeChild(trashFolderContent.firstChild);
+      }
+      trashFolderContent.appendChild(emptyFolderElement('trash'));
+    }
 
-      chrome.storage.local.set({ conversations: newConversations });
-      chrome.storage.sync.set(
-        {
-          conversationsOrder: newConversationsOrder.map((f) => {
-            if (f.id === 'trash') {
-              return trashFolder;
-            }
-            return f;
-          }),
-        },
-      );
+    const trashFolder = conversationsOrder?.find((f) => f.id === 'trash');
+    trashFolder.conversationIds = [];
+
+    chrome.storage.local.set({
+      conversations: newConversations,
+      conversationsOrder: newConversationsOrder.map((f) => {
+        if (f.id === 'trash') {
+          return trashFolder;
+        }
+        return f;
+      }),
     });
   });
 }
 function deleteFolder(folder) {
-  chrome.storage.sync.get(['conversationsOrder'], (res) => {
-    chrome.storage.local.get(['conversations'], (result) => {
-      const { conversationsOrder } = res;
-      const { conversations } = result;
-      let newConversationsOrder = conversationsOrder;
+  chrome.storage.local.get(['conversations', 'conversationsOrder'], (result) => {
+    const { conversations, conversationsOrder } = result;
+    let newConversationsOrder = conversationsOrder;
 
-      const trashFolder = newConversationsOrder?.find((f) => f.id === 'trash');
+    const trashFolder = newConversationsOrder?.find((f) => f.id === 'trash');
 
-      const selectedConversationIds = folder.conversationIds;
-      const successfullyDeletedConvIds = [];
-      // wait for all deleteConversation to be resolved
-      const promises = [];
+    const selectedConversationIds = folder.conversationIds;
+    const successfullyDeletedConvIds = [];
+    // wait for all deleteConversation to be resolved
+    const promises = [];
 
-      for (let i = 0; i < selectedConversationIds.length; i += 1) {
-        const conv = Object.values(conversations).find((c) => c.id?.slice(0, 5) === selectedConversationIds[i]);
-        if (!conv) continue;
-        promises.push(deleteConversation(conv.id).then((data) => {
-          if (data.success) {
-            successfullyDeletedConvIds.push(conv.id);
-            const conversationElement = document.querySelector(`#conversation-button-${conv.id}`);
-            if (conversationElement && conversationElement.classList.contains('selected')) {
-              showNewChatPage();
-            }
-            conversationElement.querySelector('[id^=checkbox-wrapper-]').remove();
-            conversationElement.querySelector('[id^=actions-wrapper-]').remove();
-            conversationElement.classList = notSelectedClassList;
-            conversationElement.style.opacity = 0.7;
-            conversationElement.classList.remove('hover:pr-20');
-            const conversationElementIcon = conversationElement.querySelector('img');
-            conversationElementIcon.src = chrome.runtime.getURL('icons/trash.png');
-            const trashFolderContent = document.querySelector('#folder-content-trash');
-            if (trashFolderContent) {
-              const curEmptyFolderElement = trashFolderContent.querySelector('#empty-folder-trash');
-              if (curEmptyFolderElement) curEmptyFolderElement.remove();
-              // prepend conversation to trash folder
-              trashFolderContent.prepend(conversationElement);
-            }
+    for (let i = 0; i < selectedConversationIds.length; i += 1) {
+      const conv = Object.values(conversations).find((c) => c.id === selectedConversationIds[i]);
+      if (!conv) continue;
+      promises.push(deleteConversation(conv.id).then((data) => {
+        if (data.success) {
+          successfullyDeletedConvIds.push(conv.id);
+          const conversationElement = document.querySelector(`#conversation-button-${conv.id}`);
+          if (conversationElement && conversationElement.classList.contains('selected')) {
+            showNewChatPage();
           }
-        }, () => { }));
-      }
-      // set archived = true for all selected conversations
-      Promise.all(promises).then(() => {
-        if (successfullyDeletedConvIds.length === folder.conversationIds.length) {
-          // remove folder element
-          document.querySelector(`#wrapper-folder-${folder.id}`)?.remove();
-          // remove folder from conversationsOrder
-          newConversationsOrder = conversationsOrder.filter((f) => f.id !== folder.id);
+          conversationElement.querySelector('[id^=checkbox-wrapper-]').remove();
+          conversationElement.querySelector('[id^=actions-wrapper-]').remove();
+          conversationElement.classList = notSelectedClassList;
+          conversationElement.style.opacity = 0.7;
+          conversationElement.classList.remove('hover:pr-20');
+          const conversationElementIcon = conversationElement.querySelector('img');
+          conversationElementIcon.src = chrome.runtime.getURL('icons/trash.png');
+          const trashFolderContent = document.querySelector('#folder-content-trash');
+          if (trashFolderContent) {
+            const curEmptyFolderElement = trashFolderContent.querySelector('#empty-folder-trash');
+            if (curEmptyFolderElement) curEmptyFolderElement.remove();
+            // prepend conversation to trash folder
+            trashFolderContent.prepend(conversationElement);
+          }
         }
-        const newConversations = conversations
-          ? Object.keys(conversations).reduce(
-            (acc, key) => {
-              if (successfullyDeletedConvIds.includes(key)) {
-                acc[key] = {
-                  ...conversations[key],
-                  archived: true,
-                };
-              } else {
-                acc[key] = {
-                  ...conversations[key],
-                };
-              }
-              return acc;
-            },
-            {},
-          )
-          : {};
-        trashFolder.conversationIds = [...successfullyDeletedConvIds, ...trashFolder.conversationIds];
-        // remove duplicate conversationIds
-        trashFolder.conversationIds = [...new Set(trashFolder.conversationIds)];
-
-        chrome.storage.local.set({ conversations: newConversations });
-        chrome.storage.sync.set(
-          {
-            conversationsOrder: newConversationsOrder.map((f) => {
-              if (f.id === 'trash') {
-                return trashFolder;
-              }
-              return f;
-            }),
+      }, () => { }));
+    }
+    // set archived = true for all selected conversations
+    Promise.all(promises).then(() => {
+      if (successfullyDeletedConvIds.length === folder.conversationIds.length) {
+        // remove folder element
+        document.querySelector(`#wrapper-folder-${folder.id}`)?.remove();
+        // remove folder from conversationsOrder
+        newConversationsOrder = conversationsOrder.filter((f) => f.id !== folder.id);
+      }
+      const newConversations = conversations
+        ? Object.keys(conversations).reduce(
+          (acc, key) => {
+            if (successfullyDeletedConvIds.includes(key)) {
+              acc[key] = {
+                ...conversations[key],
+                archived: true,
+              };
+            } else {
+              acc[key] = {
+                ...conversations[key],
+              };
+            }
+            return acc;
           },
-        );
+          {},
+        )
+        : {};
+      trashFolder.conversationIds = [...successfullyDeletedConvIds, ...trashFolder.conversationIds];
+      // remove duplicate conversationIds
+      trashFolder.conversationIds = [...new Set(trashFolder.conversationIds)];
+
+      chrome.storage.local.set({
+        conversations: newConversations,
+        conversationsOrder: newConversationsOrder.map((f) => {
+          if (f.id === 'trash') {
+            return trashFolder;
+          }
+          return f;
+        }),
       });
     });
   });

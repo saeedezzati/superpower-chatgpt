@@ -144,11 +144,10 @@ function loadConversation(conversationId, searchValue = '', focusOnInput = true)
   const suggestionsWrapper = document.querySelector('#suggestions-wrapper');
   if (suggestionsWrapper) suggestionsWrapper.remove();
   scrolUpDetected = false;
-  chrome.storage.sync.get(['name', 'avatar', 'conversationsOrder'], (result) => {
-    chrome.storage.local.get(['conversations', 'settings', 'models'], (res) => {
-      const { conversationsOrder } = result;
-      const { settings } = res;
-      const folderConatainingConversation = conversationsOrder.find((folder) => folder?.conversationIds?.includes(conversationId?.slice(0, 5)));
+  chrome.storage.sync.get(['name', 'avatar'], (result) => {
+    chrome.storage.local.get(['conversationsOrder', 'conversations', 'settings', 'models'], (res) => {
+      const { settings, conversationsOrder } = res;
+      const folderConatainingConversation = conversationsOrder.find((folder) => folder?.conversationIds?.includes(conversationId));
       let folderName = '';
       if (folderConatainingConversation) {
         folderName = folderConatainingConversation.name;

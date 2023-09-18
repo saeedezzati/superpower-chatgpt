@@ -56,39 +56,59 @@ function initializeStorage() {
   //   const allKeys = Object.keys(items);
   //   console.log('local', items);
   // });
-  return chrome.storage.sync.get(['conversationsOrder']).then((res) => {
-    const syncConversationsOrder = res.conversationsOrder || [];
-    return chrome.storage.local.get(['selectedConversations', 'conversationsOrder', 'customModels']).then((result) => {
-      const localConversationsOrder = result.conversationsOrder || [];
-      return chrome.storage.sync.set({
-        conversationsOrder: [...new Set([...syncConversationsOrder, ...localConversationsOrder])],
-      }).then(() => chrome.storage.local.remove(['conversationsOrder']).then(() => {
-        chrome.storage.local.set({
-          selectedConversations: result.selectedConversations || [],
-          lastSelectedConversation: null,
-          customModels: result.customModels || [],
-          unofficialModels: [
-            {
-              title: 'gpt-4-0314',
-              description: 'Previous snapshot of the GPT-4. The March 14th snapshot will be available until June 14th.',
-              slug: 'gpt-4-0314',
-              tags: ['Unofficial'],
-            },
-            {
-              title: 'gpt-4-32k',
-              description: 'GPT-4 with 32k token limit.',
-              slug: 'gpt-4-32k',
-              tags: ['Unofficial'],
-            },
-            {
-              title: 'gpt-4-32k-0314',
-              description: 'Previous snapshot of the GPT-4-32k. The March 14th snapshot will be available until June 14th.',
-              slug: 'gpt-4-32k-0314',
-              tags: ['Unofficial'],
-            },
-          ],
-        });
-      }));
+  return chrome.storage.local.get(['selectedConversations', 'conversationsOrder', 'customModels', 'conversations']).then((result) => {
+    const localConversationsOrder = result.conversationsOrder || [];
+    const allConversationKeys = Object.keys(result.conversations || []);
+    return chrome.storage.sync.get(['conversationsOrder']).then((res) => {
+      const syncConversationsOrder = res.conversationsOrder || [];
+      // for each sync conversation order, if it's type=string, find a key in allConversationKeys that starts with that string
+      // if found, replace the string with the key
+      syncConversationsOrder.forEach((conversationOrder, index) => {
+        if (typeof conversationOrder === 'string') {
+          const foundKey = allConversationKeys.find((key) => key.startsWith(conversationOrder));
+          if (foundKey) {
+            syncConversationsOrder[index] = foundKey;
+          }
+        } else {
+          const { conversationIds } = conversationOrder;
+          conversationIds.forEach((conversationId, i) => {
+            if (typeof conversationId === 'string') {
+              const foundKey = allConversationKeys.find((key) => key.startsWith(conversationId));
+              if (foundKey) {
+                conversationIds[i] = foundKey;
+              }
+            }
+          });
+          syncConversationsOrder[index] = { ...syncConversationsOrder[index], conversationIds };
+        }
+      });
+
+      return chrome.storage.local.set({
+        conversationsOrder: [...new Set([...localConversationsOrder, ...syncConversationsOrder])],
+        selectedConversations: result.selectedConversations || [],
+        lastSelectedConversation: null,
+        customModels: result.customModels || [],
+        unofficialModels: [
+          {
+            title: 'gpt-4-0314',
+            description: 'Previous snapshot of the GPT-4. The March 14th snapshot will be available until June 14th.',
+            slug: 'gpt-4-0314',
+            tags: ['Unofficial'],
+          },
+          {
+            title: 'gpt-4-32k',
+            description: 'GPT-4 with 32k token limit.',
+            slug: 'gpt-4-32k',
+            tags: ['Unofficial'],
+          },
+          {
+            title: 'gpt-4-32k-0314',
+            description: 'Previous snapshot of the GPT-4-32k. The March 14th snapshot will be available until June 14th.',
+            slug: 'gpt-4-32k-0314',
+            tags: ['Unofficial'],
+          },
+        ],
+      }, () => { chrome.storage.sync.remove(['conversationsOrder']); });
     });
   });
 }

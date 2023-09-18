@@ -44,13 +44,13 @@ function removeOriginalConversationList() {
         const isToFolder = to.id.startsWith('folder-content-');
 
         const fromId = 'conversation-list';
-        const toId = isToFolder ? to.id.split('folder-content-')[1]?.slice(0, 5) : 'conversation-list';
+        const toId = isToFolder ? to.id.split('folder-content-')[1] : 'conversation-list';
         if (oldDraggableIndex === newDraggableIndex && toId === fromId) return;
 
         if (!isFolder && isToFolder && toId === 'trash') {
           deleteConversationOnDragToTrash(item.id.split('conversation-button-')[1]);
         }
-        chrome.storage.sync.get(['conversationsOrder'], (result) => {
+        chrome.storage.local.get(['conversationsOrder'], (result) => {
           const { conversationsOrder } = result;
           const movingItem = conversationsOrder.splice(oldDraggableIndex, 1)[0];
 
@@ -69,7 +69,7 @@ function removeOriginalConversationList() {
               conversationsOrder.splice(newDraggableIndex, 0, movingItem);
             }
           }
-          chrome.storage.sync.set({ conversationsOrder });
+          chrome.storage.local.set({ conversationsOrder });
         });
       },
     });
@@ -135,43 +135,40 @@ function createSearchBox() {
     });
     searchbox.addEventListener('input', debounce((event) => {
       const searchValue = event.target.value.toLowerCase();
-      chrome.storage.sync.get(['conversationsOrder'], (syncResult) => {
-        chrome.storage.local.get(['conversations'], (result) => {
-          const { conversationsOrder } = syncResult;
-          const { conversations } = result;
-          // remove existing conversations
-          const curConversationList = document.querySelector('#conversation-list');
-          // remove conversations list childs other than the search box wrapper (first child)
-          while (curConversationList.childNodes.length > 1) {
-            curConversationList.removeChild(curConversationList.lastChild);
-          }
+      chrome.storage.local.get(['conversationsOrder', 'conversations'], (result) => {
+        const { conversations, conversationsOrder } = result;
+        // remove existing conversations
+        const curConversationList = document.querySelector('#conversation-list');
+        // remove conversations list childs other than the search box wrapper (first child)
+        while (curConversationList.childNodes.length > 1) {
+          curConversationList.removeChild(curConversationList.lastChild);
+        }
 
-          const allConversations = Object.values(conversations).filter((c) => !c.skipped);
-          let filteredConversations = allConversations.sort((a, b) => b.update_time - a.update_time);
+        const allConversations = Object.values(conversations).filter((c) => !c.skipped);
+        let filteredConversations = allConversations.sort((a, b) => b.update_time - a.update_time);
 
-          resetSelection();
-          if (searchValue) {
-            filteredConversations = allConversations.filter((c) => (
-              c.title?.toLowerCase()?.includes(searchValue.toLowerCase())
-              || Object.values(c.mapping).map((m) => m?.message?.content?.parts?.join(' ')?.replace(/## Instructions[\s\S]*## End Instructions\n\n/, ''))
-                .join(' ')?.toLowerCase()
-                .includes(searchValue.toLowerCase())));
-            const filteredConversationIds = filteredConversations.map((c) => c.id.slice(0, 5));
-            // convert filtered conversations to object with id as key
-            const filteredConversationsObj = filteredConversations.reduce((acc, cur) => {
-              acc[cur.id] = cur;
-              return acc;
-            }, {});
-            loadStorageConversations(filteredConversationsObj, filteredConversationIds, searchValue);
-          } else {
-            loadStorageConversations(conversations, conversationsOrder, searchValue);
-            const { pathname } = new URL(window.location.toString());
-            const conversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
-            if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) {
-              loadConversation(conversationId, '', false);
-            }
+        resetSelection();
+        if (searchValue) {
+          filteredConversations = allConversations.filter((c) => (
+            c.title?.toLowerCase()?.includes(searchValue.toLowerCase())
+            || Object.values(c.mapping).map((m) => m?.message?.content?.parts?.join(' ')?.replace(/## Instructions[\s\S]*## End Instructions\n\n/, ''))
+              .join(' ')?.toLowerCase()
+              .includes(searchValue.toLowerCase())));
+          const filteredConversationIds = filteredConversations.map((c) => c.id);
+          // convert filtered conversations to object with id as key
+          const filteredConversationsObj = filteredConversations.reduce((acc, cur) => {
+            acc[cur.id] = cur;
+            return acc;
+          }, {});
+          loadStorageConversations(filteredConversationsObj, filteredConversationIds, searchValue);
+        } else {
+          loadStorageConversations(conversations, conversationsOrder, searchValue);
+          const { pathname } = new URL(window.location.toString());
+          const conversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
+          if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) {
+            loadConversation(conversationId, '', false);
           }
-        });
+        }
       });
     }), 500);
 
@@ -195,23 +192,20 @@ function createSearchBox() {
       // inser a new folder at the top of the list
       // if cmnd + shift
       if (e.shiftKey && (e.metaKey || (isWindows() && e.ctrlKey))) {
-        chrome.storage.sync.remove('conversationsOrder');
+        chrome.storage.local.remove('conversationsOrder');
         window.location.reload();
         return;
       }
-      chrome.storage.sync.get(['conversationsOrder'], (syncResult) => {
-        chrome.storage.local.get(['settings'], (result) => {
-          const newFolder = {
-            id: self.crypto.randomUUID().slice(0, 5), name: 'New Folder', conversationIds: [], isOpen: true,
-          };
-          const { conversationsOrder } = syncResult;
-          const { settings } = result;
-          chrome.storage.sync.set({ conversationsOrder: [newFolder, ...conversationsOrder] });
-          const newFolderElement = createFolder(newFolder, settings.conversationTimestamp, [], true);
-          const curConversationList = document.querySelector('#conversation-list');
-          curConversationList.insertBefore(newFolderElement, searchboxWrapper.nextSibling);
-          curConversationList.scrollTop = 0;
-        });
+      chrome.storage.local.get(['settings', 'conversationsOrder'], (result) => {
+        const newFolder = {
+          id: self.crypto.randomUUID(), name: 'New Folder', conversationIds: [], isOpen: true,
+        };
+        const { settings, conversationsOrder } = result;
+        chrome.storage.local.set({ conversationsOrder: [newFolder, ...conversationsOrder] });
+        const newFolderElement = createFolder(newFolder, settings.conversationTimestamp, [], true);
+        const curConversationList = document.querySelector('#conversation-list');
+        curConversationList.insertBefore(newFolderElement, searchboxWrapper.nextSibling);
+        curConversationList.scrollTop = 0;
       });
     });
     searchboxWrapper.append(newFolderButton);
@@ -297,9 +291,9 @@ function prependConversation(conversation) {
   } else {
     conversationList.prepend(conversationElement);
   }
-  chrome.storage.sync.get(['conversationsOrder'], (result) => {
+  chrome.storage.local.get(['conversationsOrder'], (result) => {
     const { conversationsOrder } = result;
-    chrome.storage.sync.set({ conversationsOrder: [conversation.id?.slice(0, 5), ...conversationsOrder] });
+    chrome.storage.local.set({ conversationsOrder: [conversation.id, ...conversationsOrder] });
   });
 
   // after adding first conversation
@@ -352,7 +346,7 @@ function loadStorageConversations(conversations, conversationsOrder = [], search
         const folderElement = createFolder(conversation, conversationTimestamp, conversations);
         conversationList.appendChild(folderElement);
       } else {
-        const conv = Object.values(conversations).find((c) => c.id?.slice(0, 5) === conversation);
+        const conv = Object.values(conversations).find((c) => c.id === conversation);
         if (!conv) continue;
         if (conv.skipped) continue;
         const conversationElement = createConversation(conv, conversationTimestamp, searchValue);
@@ -1085,59 +1079,57 @@ function setBackButtonDetection() {
 
 // eslint-disable-next-line no-unused-vars
 function loadConversationList(skipInputFormReload = false) {
-  chrome.storage.sync.get(['conversationsOrder'], (res) => {
-    chrome.storage.local.get(['conversations', 'conversationsAreSynced', 'settings'], (result) => {
-      if (result.conversationsAreSynced && typeof result.conversations !== 'undefined') {
-        updateNewChatButtonSynced();
-        if (!skipInputFormReload) initializeNavbar();
-        if (!skipInputFormReload) replaceTextAreaElemet(result.settings);
-        removeOriginalConversationList();
-        createSearchBox();
-        loadStorageConversations(result.conversations, res.conversationsOrder);
-        const { origin, pathname, search } = new URL(window.location.toString());
-        // const isSharedConversation = pathname.startsWith('/share/') && window.location.href.endsWith('/continue');
-        // console.warn('isSharedConversation', isSharedConversation);
-        // if (isSharedConversation) {
-        //   const conversationId = pathname.split('/').pop().pop().replace(/[^a-z0-9-]/gi, '');
-        //   // get content of script element with id=__NEXT_DATA__
-        //   if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) {
-        //     const script = document.querySelector('#__NEXT_DATA__');
-        //     const scriptContent = JSON.parse(script.innerHTML);
-        //     const { props } = scriptContent;
-        //     const { pageProps } = props;
-        //     const conversation = pageProps.serverResponse.data;
-        //    console.warn('conversation', conversation);
-        //     loadSharedConversation(conversationId, conversation);
-        //   }
-        // } else {
-        const conversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
-        const conversationList = document.querySelector('#conversation-list');
-        if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) {
-          if (!result.conversations[conversationId].archived && !result.conversations[conversationId].skipped) {
-            setTimeout(() => {
-              const focusedConversation = conversationList.querySelector(`#conversation-button-${conversationId}`);
+  chrome.storage.local.get(['conversationsOrder', 'conversations', 'conversationsAreSynced', 'settings'], (result) => {
+    if (result.conversationsAreSynced && typeof result.conversations !== 'undefined') {
+      updateNewChatButtonSynced();
+      if (!skipInputFormReload) initializeNavbar();
+      if (!skipInputFormReload) replaceTextAreaElemet(result.settings);
+      removeOriginalConversationList();
+      createSearchBox();
+      loadStorageConversations(result.conversations, result.conversationsOrder);
+      const { origin, pathname, search } = new URL(window.location.toString());
+      // const isSharedConversation = pathname.startsWith('/share/') && window.location.href.endsWith('/continue');
+      // console.warn('isSharedConversation', isSharedConversation);
+      // if (isSharedConversation) {
+      //   const conversationId = pathname.split('/').pop().pop().replace(/[^a-z0-9-]/gi, '');
+      //   // get content of script element with id=__NEXT_DATA__
+      //   if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) {
+      //     const script = document.querySelector('#__NEXT_DATA__');
+      //     const scriptContent = JSON.parse(script.innerHTML);
+      //     const { props } = scriptContent;
+      //     const { pageProps } = props;
+      //     const conversation = pageProps.serverResponse.data;
+      //    console.warn('conversation', conversation);
+      //     loadSharedConversation(conversationId, conversation);
+      //   }
+      // } else {
+      const conversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
+      const conversationList = document.querySelector('#conversation-list');
+      if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) {
+        if (!result.conversations[conversationId].archived && !result.conversations[conversationId].skipped) {
+          setTimeout(() => {
+            const focusedConversation = conversationList.querySelector(`#conversation-button-${conversationId}`);
 
-              if (focusedConversation) {
-                focusedConversation.scrollIntoView({ block: 'nearest' });
-              }
-            }, 500);
-            loadConversation(conversationId);
-            if (search) {
-              window.history.replaceState({}, '', `${origin}${pathname}`);
-              handleQueryParams(search);
+            if (focusedConversation) {
+              focusedConversation.scrollIntoView({ block: 'nearest' });
             }
-          } else {
-            showNewChatPage();
+          }, 500);
+          loadConversation(conversationId);
+          if (search) {
+            window.history.replaceState({}, '', `${origin}${pathname}`);
+            handleQueryParams(search);
           }
-        } else { // } if (url === 'https://chat.openai.com/') {
+        } else {
           showNewChatPage();
         }
-        // }
-        if (!skipInputFormReload) addScrollButtons();
-        if (!skipInputFormReload) initializePromptChain();
-        if (!skipInputFormReload) overrideSubmitForm();
-        if (!skipInputFormReload) setBackButtonDetection();
+      } else { // } if (url === 'https://chat.openai.com/') {
+        showNewChatPage();
       }
-    });
+      // }
+      if (!skipInputFormReload) addScrollButtons();
+      if (!skipInputFormReload) initializePromptChain();
+      if (!skipInputFormReload) overrideSubmitForm();
+      if (!skipInputFormReload) setBackButtonDetection();
+    }
   });
 }

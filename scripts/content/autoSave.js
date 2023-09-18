@@ -42,13 +42,11 @@ async function addConversationToStorage(conv) {
       update_time: new Date(conv.update_time).getTime() / 1000,
     };
     if (Object.keys(localConversations).length > 0) {
-      chrome.storage.sync.get(['conversationsOrder'], (result) => {
+      chrome.storage.local.get(['conversationsOrder'], (result) => {
         const { conversationsOrder } = result;
         chrome.storage.local.set({
           conversations: localConversations,
-        });
-        chrome.storage.sync.set({
-          conversationsOrder: conversationsOrder.includes(conv.id?.slice(0, 5)) ? conversationsOrder : [conv.id?.slice(0, 5), ...conversationsOrder],
+          conversationsOrder: conversationsOrder.includes(conv.id) ? conversationsOrder : [conv.id, ...conversationsOrder],
         });
       });
     }
@@ -63,13 +61,11 @@ async function addConversationToStorage(conv) {
         update_time: new Date(conv.update_time).getTime() / 1000,
       };
       if (Object.keys(localConversations).length > 0) {
-        chrome.storage.sync.get(['conversationsOrder'], (result) => {
+        chrome.storage.local.get(['conversationsOrder'], (result) => {
           const { conversationsOrder } = result;
           chrome.storage.local.set({
             conversations: localConversations,
-          });
-          chrome.storage.sync.set({
-            conversationsOrder: [conv.id?.slice(0, 5), ...conversationsOrder],
+            conversationsOrder: [conv.id, ...conversationsOrder],
           });
         });
       }
@@ -151,16 +147,16 @@ function updateOrCreateConversation(conversationId, message, parentId, settings,
             conversationTimestampElement.innerHTML = conversationCreateTime;
             const searchBoxWrapper = document.querySelector('#conversation-search-wrapper');
             if (conversationElement && searchBoxWrapper) {
-              // update conversationorder
-              chrome.storage.sync.get(['conversationsOrder'], (res) => {
+              // update conversationsOrder
+              chrome.storage.local.get(['conversationsOrder'], (res) => {
                 const { conversationsOrder } = res;
-                const conversationIndex = conversationsOrder.findIndex((conv) => conv === conversationId?.slice(0, 5));
+                const conversationIndex = conversationsOrder.findIndex((conv) => conv === conversationId);
                 if (conversationIndex !== -1) {
                   // this guarantees we only move if conversation is not in a folder
                   searchBoxWrapper.after(conversationElement);
                   conversationsOrder.splice(conversationIndex, 1);
                   conversationsOrder.unshift(conversationId);
-                  chrome.storage.sync.set({
+                  chrome.storage.local.set({
                     conversationsOrder,
                   });
                 }
@@ -300,257 +296,248 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
     if (remoteConversations.length > 500) {
       toast('Looks like you have over 500 conversation in your history. For best performance, please consider deleting some conversations to keep your history under 200 conversations!', 'warning', 10000);
     }
-    chrome.storage.sync.get(['conversationsOrder'], (res) => {
-      const { conversationsOrder } = res;
-      chrome.storage.local.get(['conversations', 'account', 'settings'], (result) => {
-        const { account, settings } = result;
-        const isPaid = account?.account_plan?.is_paid_subscription_active || account?.accounts?.default?.entitlement?.has_active_subscription || false;
-        if (result.conversations && Object.keys(result.conversations).length > 0) {
-          localConversations = result.conversations;
-        }
-        const oldConversationsOrder = conversationsOrder && (conversationsOrder?.findIndex((f) => f && f.id === 'trash') !== -1)
-          ? conversationsOrder
-          : [{
-            id: 'trash',
-            name: 'Trash',
-            conversationIds: [],
-            isOpen: false,
-          }];
-        chrome.storage.local.set({
-          conversationsAreSynced: false,
-        }, () => {
-          // check if old conversations order include at least one id longer than 4 chars
-          const oldConversationsOrderHasLongIds = oldConversationsOrder.findIndex((conv) => {
+    chrome.storage.local.get(['conversationsOrder', 'conversations', 'account', 'settings'], (result) => {
+      const { account, settings, conversationsOrder } = result;
+      const isPaid = account?.account_plan?.is_paid_subscription_active || account?.accounts?.default?.entitlement?.has_active_subscription || false;
+      if (result.conversations && Object.keys(result.conversations).length > 0) {
+        localConversations = result.conversations;
+      }
+      const oldConversationsOrder = conversationsOrder && (conversationsOrder?.findIndex((f) => f && f.id === 'trash') !== -1)
+        ? conversationsOrder
+        : [{
+          id: 'trash',
+          name: 'Trash',
+          conversationIds: [],
+          isOpen: false,
+        }];
+      chrome.storage.local.set({
+        conversationsAreSynced: false,
+      }, () => {
+        // check if old conversations order include at least one id longer than 4 chars
+        const oldConversationsOrderHasLongIds = oldConversationsOrder.findIndex((conv) => {
+          if (typeof conv === 'string') {
+            return conv.length > 5;
+          }
+          return conv.id.length > 5 || conv.conversationIds.findIndex((id) => id.length > 5) !== -1;
+        }) !== -1;
+
+        const newConversationsOrder = oldConversationsOrderHasLongIds
+          ? oldConversationsOrder.map((conv) => {
             if (typeof conv === 'string') {
-              return conv.length > 5;
+              return conv;
             }
-            return conv.id.length > 5 || conv.conversationIds.findIndex((id) => id.length > 5) !== -1;
-          }) !== -1;
+            if (!conv.id) return conv;
+            return { ...conv, id: conv.id, conversationIds: conv.conversationIds };
+          })
+          : oldConversationsOrder;
+        chrome.storage.local.set({
+          conversationsOrder: newConversationsOrder,
+        }, async () => {
+          const remoteConvIds = remoteConversations.map((conv) => conv.id);
+          const localConvIds = Object.keys(localConversations);
+          const visibleAndNotSkippedLocalConvIds = Object.keys(localConversations).filter((id) => !localConversations[id].archived && !localConversations[id].skipped);
+          const visibleAndRefreshedLocalConvIds = Object.keys(localConversations).filter((id) => !localConversations[id].archived && !localConversations[id].shouldRefresh);
 
-          const newConversationsOrder = oldConversationsOrderHasLongIds
-            ? oldConversationsOrder.map((conv) => {
-              if (typeof conv === 'string') {
-                return conv?.slice(0, 5);
-              }
-              if (!conv.id) return conv;
-              return { ...conv, id: conv.id?.slice(0, 5), conversationIds: conv.conversationIds.map((id) => id?.slice(0, 5)) };
-            })
-            : oldConversationsOrder;
-          chrome.storage.sync.set({
-            conversationsOrder: newConversationsOrder,
-          }, async () => {
-            const remoteConvIds = remoteConversations.map((conv) => conv.id);
-            const localConvIds = Object.keys(localConversations);
-            const visibleAndNotSkippedLocalConvIds = Object.keys(localConversations).filter((id) => !localConversations[id].archived && !localConversations[id].skipped);
-            const visibleAndRefreshedLocalConvIds = Object.keys(localConversations).filter((id) => !localConversations[id].archived && !localConversations[id].shouldRefresh);
-
-            for (let i = 0; i < localConvIds.length; i += 1) {
-              const remoteConv = remoteConversations.find((conv) => conv.id === localConvIds[i]) || localConversations[localConvIds[i]];
-              localConversations[localConvIds[i]].title = remoteConv.title;
-              // eslint-disable-next-line prefer-destructuring
-              if (localConversations[localConvIds[i]].update_time === 'force_copy') {
-                localConversations[localConvIds[i]].update_time = new Date(remoteConv.update_time).getTime() / 1000;
-              }
-              // delete conversation key(legacy)
-              if ('conversation' in localConversations[localConvIds[i]]) {
-                delete localConversations[localConvIds[i]].conversation;
-              }
-              if (typeof localConversations[localConvIds[i]].skipped === 'undefined') {
-                localConversations[localConvIds[i]].skipped = false;
-              }
-              if (typeof localConversations[localConvIds[i]].languageCode === 'undefined') {
-                localConversations[localConvIds[i]].languageCode = 'default';
-              }
-              if (typeof localConversations[localConvIds[i]].toneCode === 'undefined') {
-                localConversations[localConvIds[i]].toneCode = 'default';
-              }
-              if (typeof localConversations[localConvIds[i]].writingStyleCode === 'undefined') {
-                localConversations[localConvIds[i]].writingStyleCode = 'default';
-              }
-              if (typeof localConversations[localConvIds[i]].archived === 'undefined') {
-                localConversations[localConvIds[i]].archived = false;
-              }
-              if (localConversations[localConvIds[i]].saveHistory === undefined) {
-                localConversations[localConvIds[i]].saveHistory = true;
-              }
-              // archive deleted conversations
-              if (localConversations[localConvIds[i]].id && localConversations[localConvIds[i]].saveHistory && !remoteConvIds.includes(localConversations[localConvIds[i]].id)) {
-                localConversations[localConvIds[i]].archived = true;
-                // check conversations
-                if (newConversationsOrder.indexOf(localConversations[localConvIds[i]].id?.slice(0, 5)) !== -1) {
-                  newConversationsOrder.splice(newConversationsOrder.indexOf(localConversations[localConvIds[i]].id?.slice(0, 5)), 1);
-                } else {
-                  // check folders
-                  // eslint-disable-next-line no-loop-func
-                  newConversationsOrder.forEach((folder) => {
-                    if (typeof folder === 'object' && folder.id !== 'trash' && folder.conversationIds.indexOf(localConversations[localConvIds[i]].id?.slice(0, 5)) !== -1) {
-                      folder.conversationIds.splice(folder.conversationIds.indexOf(localConversations[localConvIds[i]].id?.slice(0, 5)), 1);
-                    }
-                  });
-                }
-                const trashFolder = newConversationsOrder.find((folder) => folder?.id === 'trash');
-
-                // remove duplicate conversation from trash folder(to be safe)
-                trashFolder.conversationIds = [...new Set(trashFolder.conversationIds)];
-                // add conversation to the begining of trash folder
-                if (!settings.quickSync && !trashFolder?.conversationIds.includes(localConversations[localConvIds[i]].id?.slice(0, 5))) {
-                  newConversationsOrder.find((folder) => folder?.id === 'trash')?.conversationIds.unshift(localConversations[localConvIds[i]].id?.slice(0, 5));
-                }
-              }
-              // update conversations if shouldRefresh is true
-              if (localConversations[localConvIds[i]].shouldRefresh) {
-                await updateConversationInStorage(localConversations[localConvIds[i]]);
-              }
+          for (let i = 0; i < localConvIds.length; i += 1) {
+            const remoteConv = remoteConversations.find((conv) => conv.id === localConvIds[i]) || localConversations[localConvIds[i]];
+            localConversations[localConvIds[i]].title = remoteConv.title;
+            // eslint-disable-next-line prefer-destructuring
+            if (localConversations[localConvIds[i]].update_time === 'force_copy') {
+              localConversations[localConvIds[i]].update_time = new Date(remoteConv.update_time).getTime() / 1000;
             }
-            const allVisibleConversationsOrderIds = newConversationsOrder.filter((conv) => conv.id !== 'trash').map((conv) => (typeof conv === 'object' ? conv.conversationIds : conv)).flat();
-
-            if (remoteConvIds.length > 0 && remoteConvIds.length - inSyncConversations(localConversations, remoteConversations).length > 3) {
-              initializeCopyAndCounter();
-              initializeAddToPromptLibrary();
-              initializeTimestamp();
-              updateNewChatButtonNotSynced();
-              addAsyncInputEvents();
-              addSyncBanner();
+            // delete conversation key(legacy)
+            if ('conversation' in localConversations[localConvIds[i]]) {
+              delete localConversations[localConvIds[i]].conversation;
             }
-            // Add missing conversations
-            for (let i = 0; i < remoteConvIds.length; i += 1) {
-              if (localConversations[remoteConvIds[i]]?.skipped) {
-                // make sure skipped are not archived
-                localConversations[remoteConvIds[i]].archived = false;
-                continue;
-              }
-              if (localConvIds.includes(remoteConvIds[i]) && !visibleAndNotSkippedLocalConvIds.includes(remoteConvIds[i])) {
-                localConversations[remoteConvIds[i]].archived = false;
-              }
-              if (!allVisibleConversationsOrderIds.includes(remoteConvIds[i]?.slice(0, 5))) {
-                if (!conversationsOrder || conversationsOrder.length === 0) { // if conversationsOrder does not exist, add to the end of it right before trash folder (last element -1)
-                  newConversationsOrder.splice(newConversationsOrder.length - 1, 0, remoteConvIds[i]?.slice(0, 5));
-                } else { // if conversationsOrder exists, insert it at index i in newConversationsOrder
-                  newConversationsOrder.splice(i, 0, remoteConvIds[i]?.slice(0, 5));
-                }
-              }
-              if (forceRefreshIds.includes(remoteConvIds[i])
-                || !visibleAndNotSkippedLocalConvIds.includes(remoteConvIds[i])
-                || typeof localConversations[remoteConvIds[i]]?.shouldRefresh === 'undefined'
-                || localConversations[remoteConvIds[i]]?.shouldRefresh
-                || !localConversations[remoteConvIds[i]].id
-                || !localConversations[remoteConvIds[i]].create_time
-                || (remoteConversations[i].current_node && !localConversations[remoteConvIds[i]].current_node)
-                || (remoteConversations[i].update_time && (localConversations[remoteConvIds[i]].update_time !== new Date(remoteConversations[i].update_time).getTime() / 1000))
-                // || (localConversations[remoteConvIds[i]].mapping[localConversations[remoteConvIds[i]].current_node].message.metadata.model_slug.includes('plugins') && typeof localConversations[remoteConvIds[i]].plugin_ids === 'undefined')
-              ) {
-                await addConversationToStorage(remoteConversations[i]);
-                const progressLabel = document.getElementById('sync-progresslabel');
-                if (progressLabel) {
-                  // eslint-disable-next-line no-loop-func
-                  progressLabel.innerText = `Syncing(${inSyncConversations(localConversations, remoteConversations).length}/${remoteConvIds.length})`;
-                  addSyncBanner();
-                }
-                if (remoteConvIds.length - inSyncConversations(localConversations, remoteConversations).length > 3) {
-                  await autoSaveCountDownAsync(isPaid);
-                }
-              }
+            if (typeof localConversations[localConvIds[i]].skipped === 'undefined') {
+              localConversations[localConvIds[i]].skipped = false;
             }
-            // remove duplicate convids from newConversationsOrder and remove duplicates from conversationsIds in each folder
-            newConversationsOrder.forEach((folder, index) => {
-              if (typeof folder === 'string') {
-                if (newConversationsOrder.indexOf(folder) !== newConversationsOrder.lastIndexOf(folder)) {
-                  newConversationsOrder.splice(newConversationsOrder.lastIndexOf(folder), 1);
-                }
-              }
-              if (typeof folder === 'object') {
-                folder.conversationIds = [...new Set(folder.conversationIds)];
-                newConversationsOrder[index] = folder;
-                // compare inside and outside folders
-                for (let i = 0; i < folder.conversationIds.length; i += 1) {
-                  if (newConversationsOrder.indexOf(folder.conversationIds[i]) !== -1) {
-                    newConversationsOrder.splice(newConversationsOrder.indexOf(folder.conversationIds[i]), 1);
-                  }
-                }
-              }
-            });
-
-            const conversationsAreSynced = checkConversationAreSynced(localConversations, remoteConversations);
-
-            if (conversationsAreSynced) {
-              chrome.storage.local.set({
-                conversations: localConversations,
-                conversationsAreSynced,
-              }, () => {
-                chrome.storage.sync.set({
-                  conversationsOrder: newConversationsOrder,
-                }, () => {
-                  clearTimeout(initializeTimoutId);
-                  const progressBar = document.getElementById('sync-progressbar');
-                  const progressLabel = document.getElementById('sync-progresslabel');
-                  const tooltip = document.getElementById('sync-tooltip');
-                  if (progressBar && progressLabel && tooltip) {
-                    progressBar.style.backgroundColor = 'gold';
-                    progressBar.classList.remove('animate-pulse');
-                    progressLabel.innerText = `Synced (${settings.quickSync ? 'Quick' : 'Full'})`;
-                    tooltip.innerText = 'Your conversations are synced!';
-                  }
-                  const refreshButton = document.getElementById('sync-refresh-button');
-                  if (refreshButton) {
-                    refreshButton.title = 'Sync Conversations';
-                    refreshButton.classList.add('cursor-pointer');
-                    refreshButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="gold" d="M468.9 32.11c13.87 0 27.18 10.77 27.18 27.04v145.9c0 10.59-8.584 19.17-19.17 19.17h-145.7c-16.28 0-27.06-13.32-27.06-27.2c0-6.634 2.461-13.4 7.96-18.9l45.12-45.14c-28.22-23.14-63.85-36.64-101.3-36.64c-88.09 0-159.8 71.69-159.8 159.8S167.8 415.9 255.9 415.9c73.14 0 89.44-38.31 115.1-38.31c18.48 0 31.97 15.04 31.97 31.96c0 35.04-81.59 70.41-147 70.41c-123.4 0-223.9-100.5-223.9-223.9S132.6 32.44 256 32.44c54.6 0 106.2 20.39 146.4 55.26l47.6-47.63C455.5 34.57 462.3 32.11 468.9 32.11z"/></svg>';
-                    refreshButton.onclick = (e) => {
-                      // remove progress bar and refresh button and progress label
-                      const canSubmit = canSubmitPrompt();
-                      if (isGenerating || !canSubmit) return;
-                      const syncDiv = document.getElementById('sync-div');
-                      syncDiv.remove();
-                      const { pathname } = new URL(window.location.toString());
-                      const conversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
-                      const refreshIds = [];
-                      if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) {
-                        refreshIds.push(conversationId);
-                      }
-                      // if shift + cmnd/ctrl
-                      if (e.shiftKey && (e.metaKey || (isWindows() && e.ctrlKey))) {
-                        chrome.storage.sync.set({
-                          conversationsOrder: [],
-                        }, () => {
-                          chrome.storage.local.set({
-                            conversations: {},
-                            conversationsAreSynced: false,
-                          }, () => {
-                            window.location.reload();
-                          });
-                        });
-                      } else {
-                        initializeAutoSave(true, refreshIds);
-                      }
-                    };
-                  }
-                  const existingSyncBanner = document.querySelector('#sync-nav-wrapper');
-                  if (existingSyncBanner) {
-                    if (settings.autoRefreshAfterSync) {
-                      window.location.reload();
-                    } else {
-                      // replace the content with "sync is complete" and a refresh button
-                      const pageRefreshButton = document.createElement('button');
-                      pageRefreshButton.style = 'color: gold; cursor: pointer; border: solid 1px gold; padding: 8px; border-radius: 4px; margin-left: 16px;';
-                      pageRefreshButton.innerText = 'Refresh page';
-                      pageRefreshButton.addEventListener('click', () => {
-                        window.location.reload();
-                      });
-                      existingSyncBanner.firstChild.innerHTML = 'Sync is complete! Refresh the page to see your changes.';
-                      existingSyncBanner.firstChild.appendChild(pageRefreshButton);
-                    }
-                  } else {
-                    loadConversationList(skipInputFormReload);
+            if (typeof localConversations[localConvIds[i]].languageCode === 'undefined') {
+              localConversations[localConvIds[i]].languageCode = 'default';
+            }
+            if (typeof localConversations[localConvIds[i]].toneCode === 'undefined') {
+              localConversations[localConvIds[i]].toneCode = 'default';
+            }
+            if (typeof localConversations[localConvIds[i]].writingStyleCode === 'undefined') {
+              localConversations[localConvIds[i]].writingStyleCode = 'default';
+            }
+            if (typeof localConversations[localConvIds[i]].archived === 'undefined') {
+              localConversations[localConvIds[i]].archived = false;
+            }
+            if (localConversations[localConvIds[i]].saveHistory === undefined) {
+              localConversations[localConvIds[i]].saveHistory = true;
+            }
+            // archive deleted conversations
+            if (localConversations[localConvIds[i]].id && localConversations[localConvIds[i]].saveHistory && !remoteConvIds.includes(localConversations[localConvIds[i]].id)) {
+              localConversations[localConvIds[i]].archived = true;
+              // check conversations
+              if (newConversationsOrder.indexOf(localConversations[localConvIds[i]].id) !== -1) {
+                newConversationsOrder.splice(newConversationsOrder.indexOf(localConversations[localConvIds[i]].id), 1);
+              } else {
+                // check folders
+                // eslint-disable-next-line no-loop-func
+                newConversationsOrder.forEach((folder) => {
+                  if (typeof folder === 'object' && folder.id !== 'trash' && folder.conversationIds.indexOf(localConversations[localConvIds[i]].id) !== -1) {
+                    folder.conversationIds.splice(folder.conversationIds.indexOf(localConversations[localConvIds[i]].id), 1);
                   }
                 });
-              });
-            } else {
-              clearTimeout(initializeTimoutId);
-              initializeTimoutId = setTimeout(() => {
-                initializeAutoSave(true);
-              }, 60 * 1000);
+              }
+              const trashFolder = newConversationsOrder.find((folder) => folder?.id === 'trash');
+
+              // remove duplicate conversation from trash folder(to be safe)
+              trashFolder.conversationIds = [...new Set(trashFolder.conversationIds)];
+              // add conversation to the begining of trash folder
+              if (!settings.quickSync && !trashFolder?.conversationIds.includes(localConversations[localConvIds[i]].id)) {
+                newConversationsOrder.find((folder) => folder?.id === 'trash')?.conversationIds.unshift(localConversations[localConvIds[i]].id);
+              }
+            }
+            // update conversations if shouldRefresh is true
+            if (localConversations[localConvIds[i]].shouldRefresh) {
+              await updateConversationInStorage(localConversations[localConvIds[i]]);
+            }
+          }
+          const allVisibleConversationsOrderIds = newConversationsOrder.filter((conv) => conv.id !== 'trash').map((conv) => (typeof conv === 'object' ? conv.conversationIds : conv)).flat();
+
+          if (remoteConvIds.length > 0 && remoteConvIds.length - inSyncConversations(localConversations, remoteConversations).length > 3) {
+            initializeCopyAndCounter();
+            initializeAddToPromptLibrary();
+            initializeTimestamp();
+            updateNewChatButtonNotSynced();
+            addAsyncInputEvents();
+            addSyncBanner();
+          }
+          // Add missing conversations
+          for (let i = 0; i < remoteConvIds.length; i += 1) {
+            if (localConversations[remoteConvIds[i]]?.skipped) {
+              // make sure skipped are not archived
+              localConversations[remoteConvIds[i]].archived = false;
+              continue;
+            }
+            if (localConvIds.includes(remoteConvIds[i]) && !visibleAndNotSkippedLocalConvIds.includes(remoteConvIds[i])) {
+              localConversations[remoteConvIds[i]].archived = false;
+            }
+            if (!allVisibleConversationsOrderIds.includes(remoteConvIds[i])) {
+              if (!conversationsOrder || conversationsOrder.length === 0) { // if conversationsOrder does not exist, add to the end of it right before trash folder (last element -1)
+                newConversationsOrder.splice(newConversationsOrder.length - 1, 0, remoteConvIds[i]);
+              } else { // if conversationsOrder exists, insert it at index i in newConversationsOrder
+                newConversationsOrder.splice(i, 0, remoteConvIds[i]);
+              }
+            }
+            if (forceRefreshIds.includes(remoteConvIds[i])
+              || !visibleAndNotSkippedLocalConvIds.includes(remoteConvIds[i])
+              || typeof localConversations[remoteConvIds[i]]?.shouldRefresh === 'undefined'
+              || localConversations[remoteConvIds[i]]?.shouldRefresh
+              || !localConversations[remoteConvIds[i]].id
+              || !localConversations[remoteConvIds[i]].create_time
+              || (remoteConversations[i].current_node && !localConversations[remoteConvIds[i]].current_node)
+              || (remoteConversations[i].update_time && (localConversations[remoteConvIds[i]].update_time !== new Date(remoteConversations[i].update_time).getTime() / 1000))
+              // || (localConversations[remoteConvIds[i]].mapping[localConversations[remoteConvIds[i]].current_node].message.metadata.model_slug.includes('plugins') && typeof localConversations[remoteConvIds[i]].plugin_ids === 'undefined')
+            ) {
+              await addConversationToStorage(remoteConversations[i]);
+              const progressLabel = document.getElementById('sync-progresslabel');
+              if (progressLabel) {
+                // eslint-disable-next-line no-loop-func
+                progressLabel.innerText = `Syncing(${inSyncConversations(localConversations, remoteConversations).length}/${remoteConvIds.length})`;
+                addSyncBanner();
+              }
+              if (remoteConvIds.length - inSyncConversations(localConversations, remoteConversations).length > 3) {
+                await autoSaveCountDownAsync(isPaid);
+              }
+            }
+          }
+          // remove duplicate convids from newConversationsOrder and remove duplicates from conversationsIds in each folder
+          newConversationsOrder.forEach((folder, index) => {
+            if (typeof folder === 'string') {
+              if (newConversationsOrder.indexOf(folder) !== newConversationsOrder.lastIndexOf(folder)) {
+                newConversationsOrder.splice(newConversationsOrder.lastIndexOf(folder), 1);
+              }
+            }
+            if (typeof folder === 'object') {
+              folder.conversationIds = [...new Set(folder.conversationIds)];
+              newConversationsOrder[index] = folder;
+              // compare inside and outside folders
+              for (let i = 0; i < folder.conversationIds.length; i += 1) {
+                if (newConversationsOrder.indexOf(folder.conversationIds[i]) !== -1) {
+                  newConversationsOrder.splice(newConversationsOrder.indexOf(folder.conversationIds[i]), 1);
+                }
+              }
             }
           });
+
+          const conversationsAreSynced = checkConversationAreSynced(localConversations, remoteConversations);
+
+          if (conversationsAreSynced) {
+            chrome.storage.local.set({
+              conversations: localConversations,
+              conversationsAreSynced,
+              conversationsOrder: newConversationsOrder,
+            }, () => {
+              clearTimeout(initializeTimoutId);
+              const progressBar = document.getElementById('sync-progressbar');
+              const progressLabel = document.getElementById('sync-progresslabel');
+              const tooltip = document.getElementById('sync-tooltip');
+              if (progressBar && progressLabel && tooltip) {
+                progressBar.style.backgroundColor = 'gold';
+                progressBar.classList.remove('animate-pulse');
+                progressLabel.innerText = `Synced (${settings.quickSync ? 'Quick' : 'Full'})`;
+                tooltip.innerText = 'Your conversations are synced!';
+              }
+              const refreshButton = document.getElementById('sync-refresh-button');
+              if (refreshButton) {
+                refreshButton.title = 'Sync Conversations';
+                refreshButton.classList.add('cursor-pointer');
+                refreshButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="gold" d="M468.9 32.11c13.87 0 27.18 10.77 27.18 27.04v145.9c0 10.59-8.584 19.17-19.17 19.17h-145.7c-16.28 0-27.06-13.32-27.06-27.2c0-6.634 2.461-13.4 7.96-18.9l45.12-45.14c-28.22-23.14-63.85-36.64-101.3-36.64c-88.09 0-159.8 71.69-159.8 159.8S167.8 415.9 255.9 415.9c73.14 0 89.44-38.31 115.1-38.31c18.48 0 31.97 15.04 31.97 31.96c0 35.04-81.59 70.41-147 70.41c-123.4 0-223.9-100.5-223.9-223.9S132.6 32.44 256 32.44c54.6 0 106.2 20.39 146.4 55.26l47.6-47.63C455.5 34.57 462.3 32.11 468.9 32.11z"/></svg>';
+                refreshButton.onclick = (e) => {
+                  // remove progress bar and refresh button and progress label
+                  const canSubmit = canSubmitPrompt();
+                  if (isGenerating || !canSubmit) return;
+                  const syncDiv = document.getElementById('sync-div');
+                  syncDiv.remove();
+                  const { pathname } = new URL(window.location.toString());
+                  const conversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
+                  const refreshIds = [];
+                  if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) {
+                    refreshIds.push(conversationId);
+                  }
+                  // if shift + cmnd/ctrl
+                  if (e.shiftKey && (e.metaKey || (isWindows() && e.ctrlKey))) {
+                    chrome.storage.local.set({
+                      conversationsOrder: [],
+                      conversations: {},
+                      conversationsAreSynced: false,
+                    }, () => {
+                      window.location.reload();
+                    });
+                  } else {
+                    initializeAutoSave(true, refreshIds);
+                  }
+                };
+              }
+              const existingSyncBanner = document.querySelector('#sync-nav-wrapper');
+              if (existingSyncBanner) {
+                if (settings.autoRefreshAfterSync) {
+                  window.location.reload();
+                } else {
+                  // replace the content with "sync is complete" and a refresh button
+                  const pageRefreshButton = document.createElement('button');
+                  pageRefreshButton.style = 'color: gold; cursor: pointer; border: solid 1px gold; padding: 8px; border-radius: 4px; margin-left: 16px;';
+                  pageRefreshButton.innerText = 'Refresh page';
+                  pageRefreshButton.addEventListener('click', () => {
+                    window.location.reload();
+                  });
+                  existingSyncBanner.firstChild.innerHTML = 'Sync is complete! Refresh the page to see your changes.';
+                  existingSyncBanner.firstChild.appendChild(pageRefreshButton);
+                }
+              } else {
+                loadConversationList(skipInputFormReload);
+              }
+            });
+          } else {
+            clearTimeout(initializeTimoutId);
+            initializeTimoutId = setTimeout(() => {
+              initializeAutoSave(true);
+            }, 60 * 1000);
+          }
         });
       });
     });
@@ -591,15 +578,12 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
             }
             // if shift + cmnd/ctrl
             if (e.shiftKey && (e.metaKey || (isWindows() && e.ctrlKey))) {
-              chrome.storage.sync.set({
+              chrome.storage.local.set({
                 conversationsOrder: [],
+                conversations: {},
+                conversationsAreSynced: false,
               }, () => {
-                chrome.storage.local.set({
-                  conversations: {},
-                  conversationsAreSynced: false,
-                }, () => {
-                  window.location.reload();
-                });
+                window.location.reload();
               });
             } else {
               initializeAutoSave(true, refreshIds);
