@@ -1,5 +1,5 @@
 /* eslint-disable no-restricted-globals */
-/* global toast, setUserSystemMessage, customInstructionSettingsElement, getUserSystemMessage */
+/* global toast, setUserSystemMessage, customInstructionSettingsElement */
 
 function checkmarkIcon(placement, profileId) {
   const checkmark = document.createElement('span');

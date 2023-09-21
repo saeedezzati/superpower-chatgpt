@@ -452,7 +452,12 @@ function handleQueryParams(query) {
   const urlParams = new URLSearchParams(query);
   const promptId = urlParams.get('pid');
   if (promptId) {
-    getPrompt(promptId).then((prompt) => {
+    chrome.runtime.sendMessage({
+      getPrompt: true,
+      detail: {
+        promptId,
+      },
+    }, (prompt) => {
       const main = document.querySelector('main');
       const inputForm = main.querySelector('form');
       const textAreaElement = inputForm.querySelector('textarea');

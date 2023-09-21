@@ -1,4 +1,4 @@
-/* global createModal, getSponsor, settingsModalActions, getLatestAnnouncement, getLatestNewsletter, incrementOpenRate, incrementClickRate */
+/* global createModal, settingsModalActions */
 const titleMap = {
   general: 'Announcement',
   newsletter: 'Newsletter',
@@ -15,36 +15,7 @@ function createAnnouncementModal(data, email = '') {
   const releaseDate = new Date(data.release_date);
   createModal(title, `${subtitle} (${(new Date(releaseDate.getTime() + (releaseDate.getTimezoneOffset() * 60000))).toDateString()})`, bodyContent, actionsBarContent, true);
 }
-function addSponsorElement(sponsor) {
-  getSponsor().then((res) => {
-    const { name, image, url } = res;
 
-    const sponsorLink = document.createElement('a');
-    sponsorLink.href = url;
-    sponsorLink.target = '_blank';
-    sponsorLink.rel = 'noopener noreferrer';
-    const sponsorImage = document.createElement('img');
-    sponsorImage.src = image;
-    sponsorImage.alt = name;
-    sponsorImage.style = 'border-radius: 3px;margin:0 !important;';
-    sponsorLink.appendChild(sponsorImage);
-    const sponsorTag = document.createElement('a');
-    sponsorTag.href = 'https://www.passionfroot.me/superpower';
-    sponsorTag.target = '_blank';
-    sponsorTag.rel = 'noopener noreferrer';
-    sponsorTag.style = 'background-color:#595959;color:darkgrey;padding:0px 2px;border-radius: 0px 3px 0px 3px;font-size:10px;position:absolute;top:2px;right:2px;';
-    sponsorTag.textContent = 'sponsor';
-    sponsorTag.addEventListener('mouseover', () => {
-      sponsorTag.style.color = 'gold';
-    });
-    sponsorTag.addEventListener('mouseout', () => {
-      sponsorTag.style.color = 'darkgrey';
-    });
-    sponsor.appendChild(sponsorTag);
-
-    sponsor.appendChild(sponsorLink);
-  });
-}
 function announcementModalContent(data, email = '') {
   // create announcement modal content
   const content = document.createElement('div');
@@ -66,18 +37,15 @@ function announcementModalContent(data, email = '') {
   // add ?ref=superpower-chatgpt-chrome-extension to the end of all href links
   const updatedTextWithRef = announcement.text.replace(/href="([^"]*)"/g, 'href="$1?ref=superpower-chatgpt-extension"').replace(/\{\{email\}\}/g, email);
   announcementText.innerHTML = announcement.category === 'newsletter' ? updatedTextWithRef : `<h1 style="margin-bottom: 24px; ">${announcement.title}</h1>${announcement.text}`;
-  // if release_data is before march 21, 2023, add sponsor
-  if (announcement.category === 'newsletter' && new Date(announcement.release_date) < new Date('2023-03-20')) {
-    const sponsor = document.createElement('div');
-    sponsor.id = 'sponsor';
-    sponsor.style = 'border-radius:4px; margin-bottom:0.5rem;border:1px solid #3e3f41;line-height:11px;background-color:#595959;position:relative;margin:16px auto;';
-    addSponsorElement(sponsor);
-    announcementText.prepend(sponsor);
-  }
   content.appendChild(announcementText);
   content.addEventListener('click', (e) => {
     if (e.target.tagName === 'A' && e.target.href) {
-      incrementClickRate(data.id);
+      chrome.runtime.sendMessage({
+        incrementClickRate: true,
+        detail: {
+          newsletterId: data.id,
+        },
+      });
     }
   });
 
@@ -124,14 +92,18 @@ function initializeAnnouncement() {
       chrome.storage.local.get(['settings'], (res) => {
         const { lastSeenAnnouncementId, lastSeenNewsletterId, email } = result;
         // try getting latest announcement first
-        getLatestAnnouncement().then((announcement) => {
+        chrome.runtime.sendMessage({
+          getLatestAnnouncement: true,
+        }, (announcement) => {
           if (announcement && announcement.id && lastSeenAnnouncementId !== announcement.id) {
             createAnnouncementModal(announcement);
             chrome.storage.sync.set({ lastSeenAnnouncementId: announcement.id });
           } else {
             // if no announcement was found, try getting the latest newsletter
             if (res.settings?.hideNewsletter) return;
-            getLatestNewsletter().then((newsletter) => {
+            chrome.runtime.sendMessage({
+              getLatestNewsletter: true,
+            }, (newsletter) => {
               if (!newsletter || !newsletter.id) return;
               if (lastSeenNewsletterId !== newsletter.id) {
                 createAnnouncementModal(newsletter, email);
@@ -140,7 +112,12 @@ function initializeAnnouncement() {
                   const readNewsletterIds = results.readNewsletterIds || [];
                   chrome.storage.local.set({ readNewsletterIds: [...readNewsletterIds, newsletter.id] });
                 });
-                incrementOpenRate(newsletter.id);
+                chrome.runtime.sendMessage({
+                  incrementOpenRate: true,
+                  detail: {
+                    newsletterId: newsletter.id,
+                  },
+                });
               }
             });
           }

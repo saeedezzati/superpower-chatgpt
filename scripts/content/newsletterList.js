@@ -1,4 +1,4 @@
-/* global createModal, incrementOpenRate, settingsModalActions, getNewsletters, getNewsletter, createAnnouncementModal */
+/* global createModal, settingsModalActions, createAnnouncementModal */
 
 // eslint-disable-next-line no-unused-vars
 function createNewsletterListModal(version) {
@@ -19,8 +19,9 @@ function newsletterListModalContent() {
   content.appendChild(logoWatermark);
   const newsletterListText = document.createElement('article');
   newsletterListText.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; height: 100%; width: 100%; white-space: break-spaces; overflow-wrap: break-word;padding: 16px;position: relative;z-index:10;color: #fff;';
-  getNewsletters().then((data) => {
-    const newsletterList = data;
+  chrome.runtime.sendMessage({
+    getNewsletters: true,
+  }, (newsletterList) => {
     if (newsletterList.length === 0) {
       newsletterListText.innerHTML = '<div style="font-size:1em;">Coming soon!</div>';
     }
@@ -36,12 +37,22 @@ function newsletterListModalContent() {
         newsletterDate.style = 'border: solid 1px gold;border-radius:4px;padding:4px;color:gold;cursor:pointer;margin-right:8px;min-width:144px; text-align:center;';
         newsletterDate.textContent = releaseDateWithOffset.toDateString();
         newsletterDate.addEventListener('click', () => {
-          getNewsletter(newsletter.id).then((newsletterData) => {
+          chrome.runtime.sendMessage({
+            getNewsletter: true,
+            detail: {
+              id: newsletter.id,
+            },
+          }, (newsletterData) => {
             createAnnouncementModal(newsletterData);
             chrome.storage.local.get(['readNewsletterIds'], (res) => {
               const oldReadNewsletterIds = res.readNewsletterIds || [];
               if (!oldReadNewsletterIds.includes(newsletter.id)) {
-                incrementOpenRate(newsletter.id);
+                chrome.runtime.sendMessage({
+                  incrementOpenRate: true,
+                  detail: {
+                    newsletterId: newsletter.id,
+                  },
+                });
               }
               chrome.storage.local.set({ readNewsletterIds: [...oldReadNewsletterIds, newsletter.id] }, () => {
                 newsletterLine.style = 'font-size:1em;display:flex;margin:8px 0;align-items:flex-start; opacity:0.5;';

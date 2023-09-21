@@ -1,4 +1,4 @@
-/* global submitPrompt, createSwitch, fetchPrompts, promptLibraryPageNumber, toast, categoryList, languageList, addDropdownEventListener, dropdown */
+/* global fetchPrompts, promptLibraryPageNumber, toast, categoryList, languageList, addDropdownEventListener, dropdown */
 //
 let selectedCategories = [];
 function createCategorySelector(categories = []) {
@@ -236,7 +236,12 @@ function openSubmitPromptModal(text = '', modelSlug = '', promptId = null, title
           return;
         }
         const curHideFullPromptSwitch = document.getElementById('switch-hide-full-prompt');
-        submitPrompt(result.openai_id, textToSubmit.value, promptTitleInput.value, selectedCategories, res.settings.selectedPromptLanguage.code, modelSlug, nicknameInput.value, urlInput.value, curHideFullPromptSwitch?.checked || false, promptId).then((data) => {
+        chrome.runtime.sendMessage({
+          submitPrompt: true,
+          detail: {
+            openAiId: result.openai_id, prompt: textToSubmit.value, promptTitle: promptTitleInput.value, categories: selectedCategories, promptLangage: res.settings.selectedPromptLanguage.code, modelSlug, nickname: nicknameInput.value, url: urlInput.value, hideFullPrompt: curHideFullPromptSwitch?.checked || false, promptId,
+          },
+        }, (data) => {
           // show toast that prompt is submitted
           if (Object.keys(data).join(',').includes('error')) {
             if (Object.values(data).join(',').includes('unique_title')) {

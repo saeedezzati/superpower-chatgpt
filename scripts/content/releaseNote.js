@@ -1,4 +1,4 @@
-/* global createModal, getReleaseNote, settingsModalActions */
+/* global createModal, settingsModalActions */
 
 function createReleaseNoteModal(version) {
   const bodyContent = releaseNoteModalContent(version);
@@ -21,7 +21,12 @@ function releaseNoteModalContent(version) {
   content.appendChild(logoWatermark);
   const releaseNoteText = document.createElement('article');
   releaseNoteText.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start;height: 100%; width: 100%; white-space: break-spaces; overflow-wrap: break-word;padding:16px;position: relative;z-index:10;color: #fff;';
-  getReleaseNote(version).then((data) => {
+  chrome.runtime.sendMessage({
+    getReleaseNote: true,
+    detail: {
+      version,
+    },
+  }, (data) => {
     const releaseNote = data;
     releaseNoteText.innerHTML = `<div style="font-size:1em;">Release date: ${new Date(data.created_at).toDateString()} (<span id="previous-version" data-version="${data.previous_version}" style="color:gold;cursor:pointer;">Previous release note</span>)</div>${releaseNote.text}`;
     setTimeout(() => {

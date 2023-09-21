@@ -1,4 +1,4 @@
-/* global highlight, highlightBracket, addUserPromptToHistory, addButtonToNavFooter,createModal, debounce, deletePrompt, incrementUseCount, getPrompts, report, vote, toast, openSubmitPromptModal, dropdown, addDropdownEventListener, languageList, categoryList, sortByList, reportReasonList */
+/* global highlight, highlightBracket, addUserPromptToHistory, addButtonToNavFooter,createModal, debounce, toast, openSubmitPromptModal, dropdown, addDropdownEventListener, languageList, categoryList, sortByList, reportReasonList */
 
 let promptLibraryPageNumber = 1;
 let promptLibrarySearchTerm = '';
@@ -13,7 +13,16 @@ function createPromptLibraryModal() {
     promptLibrarySearchTerm = '';
     promptLibraryMaxPageNumber = 0;
     // fetch data
-    getPrompts(promptLibraryPageNumber, promptLibrarySearchTerm, selectedLibrarySortBy.code, selectedLibraryLanguage.code, selectedLibraryCategory.code).then((data) => {
+    chrome.runtime.sendMessage({
+      getPrompts: true,
+      detail: {
+        pageNumber: promptLibraryPageNumber,
+        searchTerm: promptLibrarySearchTerm,
+        sortBy: selectedLibrarySortBy.code,
+        language: selectedLibraryLanguage.code,
+        category: selectedLibraryCategory.code,
+      },
+    }, (data) => {
       promptLibraryMaxPageNumber = data.count % 24 === 0 ? data.count / 24 : Math.floor(data.count / 24) + 1;
       // create settings modal content
       const bodyContent = promptLibraryModalContent(data);
@@ -104,60 +113,7 @@ function promptLibraryListComponent(libraryData, loading = false) {
     libraryItemActionWrapper.classList = 'visible';
     // libraryItemActionWrapper.classList = 'invisible group-hover:visible';
     libraryItemActionWrapper.style = 'position:absolute; top: 12px; right:4px; display: flex; justify-content: flex-end; align-items: center;';
-    // thumbs up
-    // const libraryItemThumbsUp = document.createElement('span');
-    // libraryItemThumbsUp.id = `library-item-thumbs-up-${libraryPrompt.id}`;
-    // libraryItemThumbsUp.title = 'Upvote this prompt';
-    // libraryItemThumbsUp.style = 'color: lightslategray; font-size:1.2em; margin-right: 8px; cursor: pointer;';
-    // libraryItemThumbsUp.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"> <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>';
-    // libraryItemThumbsUp.addEventListener('mouseenter', () => {
-    //   libraryItemThumbsUp.style.color = '#eee';
-    // });
-    // libraryItemThumbsUp.addEventListener('mouseleave', () => {
-    //   libraryItemThumbsUp.style.color = 'lightslategray';
-    // });
-    // libraryItemThumbsUp.addEventListener('click', () => {
-    //   vote(libraryPrompt.id, 'up').then((data) => {
-    //     if (data.status === 'success') {
-    //       toast('Prompt upvoted');
-    //       const curUpvoteCount = document.getElementById(`prompt-upvotes-count-${libraryPrompt.id}`);
-    //       curUpvoteCount.textContent = parseInt(curUpvoteCount.textContent, 10) + 1;
-    //     }
-    //     if (data.status === 'same user') {
-    //       toast('You have already voted for this prompt');
-    //     }
-    //   });
-    //   const curLibraryItemActionWrapper = document.getElementById(`library-item-action-wrapper-${libraryPrompt.id}`);
-    //   curLibraryItemActionWrapper.style.opacity = '0.3';
-    //   curLibraryItemActionWrapper.style.pointerEvents = 'none';
-    // });
-    // // thumbs down
-    // const libraryItemThumbsDown = document.createElement('span');
-    // libraryItemThumbsDown.id = `library-item-thumbs-down-${libraryPrompt.id}`;
-    // libraryItemThumbsDown.title = 'Downvote this prompt';
-    // libraryItemThumbsDown.style = 'color: lightslategray; font-size:1.2em; margin-right: 12px; cursor: pointer;';
-    // libraryItemThumbsDown.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"> <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path></svg>';
-    // libraryItemThumbsDown.addEventListener('mouseenter', () => {
-    //   libraryItemThumbsDown.style.color = '#eee';
-    // });
-    // libraryItemThumbsDown.addEventListener('mouseleave', () => {
-    //   libraryItemThumbsDown.style.color = 'lightslategray';
-    // });
-    // libraryItemThumbsDown.addEventListener('click', () => {
-    //   vote(libraryPrompt.id, 'down').then((data) => {
-    //     if (data.status === 'success') {
-    //       toast('Prompt downvoted');
-    //       const curUpvoteCount = document.getElementById(`prompt-upvotes-count-${libraryPrompt.id}`);
-    //       curUpvoteCount.textContent = parseInt(curUpvoteCount.textContent, 10) - 1;
-    //     }
-    //     if (data.status === 'same user') {
-    //       toast('You have already voted for this prompt');
-    //     }
-    //   });
-    //   const curLibraryItemActionWrapper = document.getElementById(`library-item-action-wrapper-${libraryPrompt.id}`);
-    //   curLibraryItemActionWrapper.style.opacity = '0.3';
-    //   curLibraryItemActionWrapper.style.pointerEvents = 'none';
-    // });
+
     // flag
     const libraryItemFlag = document.createElement('span');
     libraryItemFlag.id = `library-item-flag-${libraryPrompt.id}`;
@@ -272,7 +228,13 @@ function promptLibraryListComponent(libraryData, loading = false) {
       libraryItemThumbsUp.style.color = 'lightslategray';
     });
     libraryItemThumbsUp.addEventListener('click', () => {
-      vote(libraryPrompt.id, 'up').then((data) => {
+      chrome.runtime.sendMessage({
+        vote: true,
+        detail: {
+          promptId: libraryPrompt.id,
+          voteType: 'up',
+        },
+      }, (data) => {
         if (data.status === 'success') {
           toast('Prompt upvoted');
           const curUpvoteCount = document.getElementById(`prompt-upvotes-count-${libraryPrompt.id}`);
@@ -309,7 +271,13 @@ function promptLibraryListComponent(libraryData, loading = false) {
       libraryItemThumbsDown.style.color = 'lightslategray';
     });
     libraryItemThumbsDown.addEventListener('click', () => {
-      vote(libraryPrompt.id, 'down').then((data) => {
+      chrome.runtime.sendMessage({
+        vote: true,
+        detail: {
+          promptId: libraryPrompt.id,
+          voteType: 'down',
+        },
+      }, (data) => {
         if (data.status === 'success') {
           toast('Prompt downvoted');
           const curUpvoteCount = document.getElementById(`prompt-upvotes-count-${libraryPrompt.id}`);
@@ -385,7 +353,12 @@ function promptLibraryListComponent(libraryData, loading = false) {
         }, 300);
       }
       document.querySelector('button[id="modal-close-button-community-prompts"]').click();
-      incrementUseCount(libraryPrompt.id);
+      chrome.runtime.sendMessage({
+        incrementUseCount: true,
+        detail: {
+          promptId: libraryPrompt.id,
+        },
+      });
     });
     // edit button
     const libraryItemEditButton = document.createElement('button');
@@ -402,7 +375,12 @@ function promptLibraryListComponent(libraryData, loading = false) {
     libraryItemDeleteButton.textContent = 'Delete';
     libraryItemDeleteButton.addEventListener('click', (e) => {
       if (e.target.textContent === 'Confirm') {
-        deletePrompt(libraryPrompt.id);
+        chrome.runtime.sendMessage({
+          deletePrompt: true,
+          detail: {
+            promptId: libraryPrompt.id,
+          },
+        });
         // remove the item from the list
         const deletedLibraryItem = document.querySelector(`#library-item-${libraryPrompt.id}`);
         deletedLibraryItem.style.display = 'none';
@@ -438,7 +416,16 @@ function promptLibraryListComponent(libraryData, loading = false) {
 function fetchPrompts(newPageNumber = 1) {
   chrome.storage.local.get(['settings'], ({ settings }) => {
     const { selectedLibrarySortBy, selectedLibraryCategory, selectedLibraryLanguage } = settings;
-    getPrompts(newPageNumber, promptLibrarySearchTerm, selectedLibrarySortBy.code, selectedLibraryLanguage.code, selectedLibraryCategory.code).then((data) => {
+    chrome.runtime.sendMessage({
+      getPrompts: true,
+      detail: {
+        pageNumber: newPageNumber,
+        searchTerm: promptLibrarySearchTerm,
+        sortBy: selectedLibrarySortBy.code,
+        language: selectedLibraryLanguage.code,
+        category: selectedLibraryCategory.code,
+      },
+    }, (data) => {
       promptLibraryMaxPageNumber = data.count % 24 === 0 ? data.count / 24 : Math.floor(data.count / 24) + 1;
       const listComponent = promptLibraryListComponent(data);
       updateLibraryList(listComponent);
@@ -503,7 +490,12 @@ function openReportPromptModal(libraryPrompt) {
   reportModalSubmitButton.style = 'font-size:0.875rem;font-weight:500;padding:8px 16px;';
   reportModalSubmitButton.textContent = 'Submit';
   reportModalSubmitButton.addEventListener('click', () => {
-    report(libraryPrompt.id).then((data) => {
+    chrome.runtime.sendMessage({
+      report: true,
+      detail: {
+        promptId: libraryPrompt.id,
+      },
+    }, (data) => {
       if (data.status === 'success') {
         toast('Prompt reported');
       }
