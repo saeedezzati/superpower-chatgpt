@@ -11,7 +11,7 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
   folderElementWrapper.classList = 'flex w-full';
   folderElementWrapper.style = 'flex-wrap: wrap;';
   folderElementWrapper.addEventListener('click', (e) => {
-    // if clicked element is not folder and not folder content,
+    // click on the sideline: if clicked element is not folder and not folder content
     if (!e.srcElement.id.startsWith('folder-') && !e.srcElement.id.startsWith('folder-content-') && !e.srcElement.id.startsWith('empty-folder-')) {
       const curFolderId = e.srcElement.id.split('wrapper-folder-')[1];
       const curFolderElement = document.querySelector(`#folder-${curFolderId}`);
@@ -41,7 +41,7 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
   });
   folderElement.addEventListener('dragenter', (e) => {
     // if folder content is not visible, show it
-    const curFolderId = e.srcElement.id.split('folder-')[1];
+    const curFolderId = e.srcElement.closest('[id^="folder-"]').id.split('folder-')[1];
     const curFolderContent = document.querySelector(`#folder-content-${curFolderId}`);
     if (curFolderContent.style.display === 'none') {
       curFolderContent.style.display = 'block';
@@ -73,14 +73,31 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
   folderContent.style.marginLeft = '16px';
   folderContent.style.display = folder.isOpen ? 'block' : 'none';
 
+  let shouldUpdateConversationOrder = false;
   if (folder.conversationIds.length > 0) {
-    folder.conversationIds.forEach((conversationId) => {
-      const conversation = Object.values(conversations).find((c) => c.id === conversationId);
-      if (conversation && !conversation.skipped) {
-        const conversationElement = createConversation(conversation, conversationTimestamp);
-        folderContent.appendChild(conversationElement);
+    folder.conversationIds.forEach((conversationId, index) => {
+      if (typeof conversationId === 'string') {
+        const conversation = Object.values(conversations).find((c) => c.id === conversationId);
+        if (conversation && !conversation.skipped) {
+          const conversationElement = createConversation(conversation, conversationTimestamp);
+          folderContent.appendChild(conversationElement);
+        }
+      } else {
+        shouldUpdateConversationOrder = true;
+        // if there a wrong type data in folder, remove conversationId from folder.conversationIds
+        folder.conversationIds.splice(index, 1);
       }
     });
+    if (shouldUpdateConversationOrder) {
+      shouldUpdateConversationOrder = false;
+      // update conversationsOrder
+      chrome.storage.local.get(['conversationsOrder'], (result) => {
+        const { conversationsOrder } = result;
+        const folderIndex = conversationsOrder.findIndex((f) => f?.id === folderId);
+        conversationsOrder[folderIndex].conversationIds = folder.conversationIds;
+        chrome.storage.local.set({ conversationsOrder });
+      });
+    }
   } else {
     folderContent.appendChild(emptyFolderElement(folderId));
   }

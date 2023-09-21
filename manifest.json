@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Superpower ChatGPT",
-  "version": "5.2.0",
+  "version": "5.5.7",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzG6ZR+j3lpHF0XrDLIXdrk25idObfq+RK7WM+pIaQmDO2nM5Y+SZJJbFwyxjWX+3V6XOgS5v9Lpnqg46OJ/W9Q5i23Usx1MXgaJBTlEFz0XG+PYK6BElhc9itS7m6oCLknin97a533tusXmm8zW7kaDGy8vycMDY6Ffbqa3sn0PqZ8bXUlAjgO91dQcB8EtlT906hwhZjtfEYvp2hdxYkRFxfuaR1WMLkxttVXv506RXJowxq0LO3aqj83QeJoXkQF1wbzCxYO1VpVGEmYIQxIKw/csusZNZs8gwJrIWtOzhMgDNOFzXNeZl0ASgoj2M9UsZp+Dunn57VT8tQyaE6QIDAQAB",
   "description": "ChatGPT with superpowers! Sync/search history locally, create folders, export all chats, pin messages, access thousands of prompts",
   "icons": {
@@ -18,10 +18,8 @@
     "128": "images/icon-128.png"
   },
   "permissions": [
-    "scripting",
     "storage",
-    "unlimitedStorage",
-    "webRequest"
+    "unlimitedStorage"
   ],
   "commands": {
     "_execute_action": {
@@ -37,6 +35,15 @@
   "content_scripts": [
     {
       "js": [
+        "scripts/interceptor/loadScript.js"
+      ],
+      "matches": [
+        "https://chat.openai.com/*"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "js": [
         "scripts/thirdParty/FileSaver.js",
         "scripts/thirdParty/jszip.js",
         "scripts/thirdParty/katex.js",
@@ -47,7 +54,8 @@
         "scripts/thirdParty/highlight.js",
         "scripts/thirdParty/sortable.js",
         "scripts/thirdParty/sse.js",
-        "scripts/content/contentMessageListeners.js",
+        "scripts/content/initialize.js",
+        "scripts/content/fetchEventListeners.js",
         "scripts/content/rowAssistant.js",
         "scripts/content/rowUser.js",
         "scripts/content/quickAccessMenu.js",
@@ -116,6 +124,7 @@
       "resources": [
         "icons/*",
         "scripts/content/*",
+        "scripts/interceptor/*",
         "v2/*"
       ]
     }

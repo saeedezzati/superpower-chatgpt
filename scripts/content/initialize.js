@@ -1,4 +1,4 @@
-/* global getAccount, getModels, getConversationLimit, initializeStorage, cleanNav, initializeContinue, initializeExport, initializeSettings, initializePromptHistory, initializePromptLibrary, initializeNewsletter, initializeAutoSave, addNavToggleButton, initializeAnnouncement, initializeReleaseNote, initializeReplaceDeleteConversationButton, initializeCopyAndCounter, initializeAddToPromptLibrary, initializeTimestamp, updateNewChatButtonNotSynced, addAsyncInputEvents, initializeContentMessageListeners, addDevIndicator, addExpandButton, openLinksInNewTab, addEnforcementTriggerElement, initializeKeyboardShortcuts, addArkoseCallback, addQuickAccessMenuEventListener, upgradeCustomInstructions, watchError, showAutoSyncToast */
+/* global navigation, initializeStorage, cleanNav, initializeContinue, initializeExport, initializeSettings, initializePromptHistory, initializePromptLibrary, initializeNewsletter, initializeAutoSave, addNavToggleButton, initializeAnnouncement, initializeReleaseNote, initializeReplaceDeleteConversationButton, initializeCopyAndCounter, initializeAddToPromptLibrary, initializeTimestamp, updateNewChatButtonNotSynced, addAsyncInputEvents, addDevIndicator, addExpandButton, openLinksInNewTab, addEnforcementTriggerElement, initializeKeyboardShortcuts, addArkoseCallback, addQuickAccessMenuEventListener, upgradeCustomInstructions, watchError, showAutoSyncToast, addAutoSyncToggleButton */
 
 // eslint-disable-next-line no-unused-vars
 function initialize() {
@@ -9,12 +9,8 @@ function initialize() {
     setTimeout(() => {
       initializeStorage().then(() => {
         // watchError();
-        getAccount();
-        getModels();
-        getConversationLimit();
         openLinksInNewTab();
         addNavToggleButton();
-        initializeContentMessageListeners();
         addQuickAccessMenuEventListener();
         cleanNav();
         upgradeCustomInstructions();
@@ -39,11 +35,17 @@ function initialize() {
               // if (typeof settings?.autoSync === 'undefined' || settings?.autoSync) {
               initializeAutoSave();
             } else {
+              addAutoSyncToggleButton();
               initializeCopyAndCounter();
               initializeAddToPromptLibrary();
               initializeTimestamp();
               updateNewChatButtonNotSynced();
               addAsyncInputEvents();
+              navigation.addEventListener('navigate', () => {
+                setTimeout(() => {
+                  addAsyncInputEvents();
+                }, 500);
+              });
             }
             initializeReplaceDeleteConversationButton();
           });

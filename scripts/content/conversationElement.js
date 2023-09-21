@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-restricted-globals */
-/* global formatDate, showAllCheckboxes, hideAllButLastCheckboxes, deleteConversation, renameConversation, loadConversation, highlight, showNewChatPage, createSearchBox, emptyFolderElement, shiftKeyPressed:true, isWindows, createShare, shareModal, addShareModalEventListener */
+/* global formatDate, showAllCheckboxes, hideAllButLastCheckboxes, deleteConversation, renameConversation, loadConversation, highlight, showNewChatPage, emptyFolderElement, shiftKeyPressed:true, isWindows, createShare, shareModal, addShareModalEventListener */
 
 const notSelectedClassList = 'flex py-3 px-3 pr-3 w-full items-center gap-3 relative rounded-md hover:bg-[#2A2B32] cursor-pointer break-all hover:pr-20 group';
 const selectedClassList = 'flex py-3 px-3 pr-3 w-full items-center gap-3 relative rounded-md cursor-pointer break-all hover:pr-20 bg-gray-800 hover:bg-gray-800 group selected border-l border-gold';
@@ -68,7 +68,6 @@ function createConversation(conversation, conversationTimestamp = false, searchV
   const timestampElement = document.createElement('div');
   timestampElement.id = 'timestamp';
   timestampElement.style = 'font-size: 10px; color: lightslategray; position: absolute; bottom: 0px; left: 40px;';
-
   const timestamp = conversationTimestamp
     ? new Date(conversation.update_time * 1000)
     : new Date(conversation.create_time * 1000);
@@ -104,7 +103,7 @@ function conversationActions(conversationId) {
       textInput.classList = 'border-0 bg-transparent p-0 focus:ring-0 focus-visible:ring-0';
       textInput.style = 'position: relative; bottom: 5px;max-width:140px;';
       textInput.value = conversations[conversationId].title;
-      conversationTitle.parentElement.replaceChild(textInput, conversationTitle);
+      conversationTitle?.parentElement?.replaceChild(textInput, conversationTitle);
       textInput.focus();
       textInput.addEventListener('click', (e) => {
         e.preventDefault();
@@ -173,7 +172,7 @@ function conversationActions(conversationId) {
     });
   });
   chrome.storage.local.get(['account'], (result) => {
-    const features = result.account?.features || [];
+    const features = result.account?.accounts?.default?.features || [];
     if (features.includes('shareable_links')) {
       shareConversationButton.style.display = 'block';
     }
@@ -468,10 +467,6 @@ function syncLocalConversation(conversationId, key, value) {
   chrome.storage.local.get(['conversations'], (result) => {
     const { conversations } = result;
     conversations[conversationId][key] = value;
-    chrome.storage.local.set({ conversations }, () => {
-      if (key === 'archived' && value === true) {
-        createSearchBox();
-      }
-    });
+    chrome.storage.local.set({ conversations });
   });
 }

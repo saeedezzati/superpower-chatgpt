@@ -135,8 +135,6 @@ function addExportButton() {
   if (!textAreaElement) return;
   const canSubmit = canSubmitPrompt();
 
-  const existingExportButton = document.querySelector('#export-button');
-  if (existingExportButton) existingExportButton.remove();
   const lastExportButton = document.querySelector('#export-conversation-button');
   if ((!canSubmit || assistantChats.length === 0) && lastExportButton) {
     lastExportButton.remove();
@@ -224,6 +222,7 @@ function addExportButton() {
       }
       inputFormActionWrapper.style.minHeight = '38px';
       exportButton.style.display = settings.showExportButton ? 'flex' : 'none';
+      const existingExportButton = document.querySelector('#export-conversation-button');
       if (!existingExportButton) inputFormActionWrapper.appendChild(exportButton);
     });
   }
@@ -598,18 +597,9 @@ function initializeExport() {
     // const submitButton = inputForm.querySelector('textarea ~ button');
     setTimeout(() => {
       addExportButton();
-    }, 100);
+    }, 500);
   });
   observer.observe(main.parentElement.parentElement, { childList: true, subtree: true });
 
   addExportAllButton();
-  // add event listener to dark mode button
-  const darkModeButton = document.querySelector('#dark-mode-button');
-  if (darkModeButton) {
-    darkModeButton.addEventListener('click', () => {
-      const lastExportButton = document.querySelector('#export-conversation-button');
-      if (lastExportButton) lastExportButton.remove();
-      // since this cause input form dom to change, the export button will be added back by the event listener above
-    });
-  }
 }

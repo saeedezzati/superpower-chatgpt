@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global getConversation, submitChat, openSubmitPromptModal, initializeRegenerateResponseButton, showHideTextAreaElement, rowAssistant, rowUser, copyRichText, messageFeedback, openFeedbackModal, refreshConversations, initializeStopGeneratingResponseButton, chatStreamIsClosed:true, generateInstructions, isGenerating:true, scrolUpDetected:true, addScrollDetector, addArkoseScript, addEnforcementTriggerElement, languageList, writingStyleList, toneList */
+/* global getConversation, submitChat, openSubmitPromptModal, initializeRegenerateResponseButton, showHideTextAreaElement, rowAssistant, rowUser, copyRichText, messageFeedback, openFeedbackModal, refreshConversations, initializeStopGeneratingResponseButton, chatStreamIsClosed:true, generateInstructions, isGenerating:true, scrolUpDetected:true, addScrollDetector, addArkoseScript, addEnforcementTriggerElement, languageList, writingStyleList, toneList, showAutoSyncWarning */
 
 function addPinNav(sortedNodes) {
   chrome.storage.local.get(['settings'], (res) => {
@@ -46,6 +46,9 @@ function updateModel(modelSlug, fullConversation) {
     const selectedModel = allModels.find((m) => m.slug === modelSlug);
     if (selectedModel.slug.includes('gpt-4')) {
       addArkoseScript();
+    }
+    if (selectedModel.slug === 'gpt-4-code-interpreter' && settings.autoSync) {
+      showAutoSyncWarning('Uploading files with <b style="color:white;">Advanced Data Analysis</b> model requires <b style="color:white;">Auto Sync to be OFF</b>. Please turn off Auto Sync if you need to upload a file. You can turn Auto Sync back ON (<b style="color:white;">CMD/CTRL+ALT+A</b>) again after submitting your file.');
     }
     const pluginsDropdownWrapper = document.querySelector('#plugins-dropdown-wrapper-navbar');
     if (pluginsDropdownWrapper) {
@@ -153,8 +156,9 @@ function loadConversation(conversationId, searchValue = '', focusOnInput = true)
         folderName = folderConatainingConversation.name;
       }
       const fullConversation = res.conversations?.[conversationId];
+
       // set page title meta to fullConversation.title
-      document.title = fullConversation.title;
+      document.title = fullConversation.title || 'New chat';
 
       if (!fullConversation || !fullConversation?.current_node) return;
       const main = document.querySelector('main');

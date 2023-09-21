@@ -267,6 +267,11 @@ input:checked + .slider:before {
   margin: 0;
 }
 
+[id^="modal-content-release-note"].markdown ol li,
+[id^="modal-content-release-note"].markdown ul li {
+  padding-left: 32px;
+}
+
 .markdown ol li p,
 .markdown ul li p {
   white-space: pre-wrap;

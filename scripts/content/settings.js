@@ -459,7 +459,10 @@ function autoSyncTabContent() {
     const showExamplePromptsSwitch = createSwitch('Show Example Prompts', 'Show the example prompts when starting a new chat', 'showExamplePrompts', false, null, 'Requires Auto-Sync', !autoSync);
     content.appendChild(showExamplePromptsSwitch);
 
-    const conversationTimestampSwitch = createSwitch('Conversation Order', 'OFF: Created time, ON: Last updated time', 'conversationTimestamp', false, reloadConversationList, 'Requires Auto-Sync', !autoSync);
+    const keepFoldersAtTheTopSwitch = createSwitch('Keep folders at the top', 'Always show the folders at the top of the history', 'keepFoldersAtTheTop', false, toggleKeepFoldersAtTheTop, 'Requires Auto-Sync', !autoSync);
+    content.appendChild(keepFoldersAtTheTopSwitch);
+
+    const conversationTimestampSwitch = createSwitch('Conversation Order', 'OFF: Created time, ON: Last updated time', 'conversationTimestamp', false, toggleConversationTimestamp, 'Requires Auto-Sync', !autoSync);
     content.appendChild(conversationTimestampSwitch);
 
     const showMessageTimestampSwitch = createSwitch('Message Timestamp', 'Show/hide timestamps on each message', 'showMessageTimestamp', false, reloadConversationList, 'Requires Auto-Sync', !autoSync);
@@ -495,6 +498,49 @@ function reloadConversationList() {
     } else {
       refreshPage();
     }
+  });
+}
+
+function sortConversationsByTimestamp(conversationsOrder, conversations, byUpdateTime) {
+  const folders = conversationsOrder.filter((c) => typeof c !== 'string' && c.id !== 'trash');
+  // close all folders
+  folders.forEach((f) => {
+    f.isOpen = false;
+  });
+  const conversationIds = conversationsOrder.filter((c) => typeof c === 'string');
+  const trash = conversationsOrder.find((c) => c.id === 'trash');
+  // close trash
+  trash.isOpen = false;
+
+  if (byUpdateTime) {
+    // sort conversationIds by last updated time
+    conversationIds.sort((a, b) => {
+      const aLastUpdated = conversations[a].update_time;
+      const bLastUpdated = conversations[b].update_time;
+      return bLastUpdated - aLastUpdated;
+    });
+  } else {
+    // sort conversations by created time
+    conversationIds.sort((a, b) => {
+      const aCreated = conversations[a].create_time;
+      const bCreated = conversations[b].create_time;
+      return bCreated - aCreated;
+    });
+  }
+  const newConversationsOrder = [...folders, ...conversationIds, trash];
+  return newConversationsOrder;
+}
+function toggleKeepFoldersAtTheTop(isChecked) {
+  chrome.storage.local.get(['settings'], (result) => {
+    const { settings } = result;
+    toggleConversationTimestamp(settings.conversationTimestamp);
+  });
+}
+function toggleConversationTimestamp(isChecked) {
+  chrome.storage.local.get(['conversationsOrder', 'conversations'], (result) => {
+    const { conversationsOrder, conversations } = result;
+    const newConversationsOrder = sortConversationsByTimestamp(conversationsOrder, conversations, isChecked);
+    chrome.storage.local.set({ conversationsOrder: newConversationsOrder }, () => reloadConversationList());
   });
 }
 function toggleGpt4Counter(show) {
@@ -537,7 +583,7 @@ function modelsTabContent() {
     } = result;
     const allModels = [...models, ...unofficialModels, ...customModels];
     const { autoSync } = result.settings;
-    modelSwitcherWrapper.innerHTML = modelSwitcher(allModels, settings.selectedModel, idPrefix, customModels, true);
+    modelSwitcherWrapper.innerHTML = modelSwitcher(allModels, settings.selectedModel, idPrefix, customModels, settings.autoSync, true);
     addModelSwitcherEventListener(idPrefix, true);
     if (autoSync) {
       modelSwitcherWrapper.style.pointerEvents = 'all';
@@ -631,7 +677,7 @@ function modelsTabContent() {
         modelSwitcherWrappers.forEach((wrapper) => {
           const curIdPrefix = wrapper.id.split('model-switcher-wrapper-')[1];
           const newAllModels = [...res.models, ...res.unofficialModels, ...newCustomModels];
-          wrapper.innerHTML = modelSwitcher(newAllModels, res.settings.selectedModel, curIdPrefix, newCustomModels, true);
+          wrapper.innerHTML = modelSwitcher(newAllModels, res.settings.selectedModel, curIdPrefix, newCustomModels, res.settings.autoSync, true);
           addModelSwitcherEventListener(curIdPrefix, true);
         });
         // clear the input fields
@@ -654,6 +700,7 @@ function modelsTabContent() {
 }
 function toggleCustomPromptsButtonVisibility(isChecked) {
   const customPromptsButton = document.querySelector('#continue-conversation-button-wrapper');
+  if (!customPromptsButton) return;
   if (isChecked) {
     customPromptsButton.style.display = 'flex';
   } else {
@@ -908,6 +955,7 @@ function createPromptRow(promptTitle, promptText, isDefault, promptObjectName) {
 }
 function toggleExportButtonVisibility(isChecked) {
   const exportButton = document.querySelector('#export-conversation-button');
+  if (!exportButton) return;
   if (isChecked) {
     exportButton.style.display = 'flex';
   } else {
@@ -1234,24 +1282,7 @@ function settingsModalActions() {
   const logo = document.createElement('img');
   logo.src = chrome.runtime.getURL('icons/logo.png');
   logo.style = 'width: 40px; height: 40px;';
-  logo.addEventListener('click', (event) => {
-    // if shift and cmnd
-    if (event.shiftKey && event.metaKey) {
-      chrome.storage.local.get('environment', ({ environment }) => {
-        if (environment === 'production') {
-          API_URL = 'https://dev.wfh.team:8000';
-          chrome.storage.local.set({ environment: 'development' }, () => {
-            refreshPage();
-          });
-        } else {
-          API_URL = 'https://api.wfh.team';
-          chrome.storage.local.set({ environment: 'production' }, () => {
-            refreshPage();
-          });
-        }
-      });
-    }
-  });
+
   actionBar.appendChild(logo);
   const textWrapper = document.createElement('div');
   textWrapper.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start; margin-left: 8px;';
@@ -1431,6 +1462,7 @@ Let's begin:
 `,
         autoSplitChunkPrompt: result.settings?.autoSplitChunkPrompt !== undefined ? result.settings?.autoSplitChunkPrompt : `Reply with OK: [CHUNK x/TOTAL]
 Don't reply with anything else!`,
+        keepFoldersAtTheTop: result.settings?.keepFoldersAtTheTop !== undefined ? result.settings.keepFoldersAtTheTop : false,
         conversationTimestamp: result.settings?.conversationTimestamp !== undefined ? result.settings.conversationTimestamp : true,
         autoHideTopNav: result.settings?.autoHideTopNav !== undefined ? result.settings.autoHideTopNav : false,
         navOpen: result.settings?.navOpen !== undefined ? result.settings.navOpen : true,

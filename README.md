@@ -166,8 +166,7 @@ with
 
 "background": {
 	"scripts": [
-		"scripts/background/initialize.js",
-		"scripts/background/login.js"
+		"scripts/background/initialize.js"
 	]
 },
 ```

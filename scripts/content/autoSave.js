@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global updateNewChatButtonNotSynced, getAllConversations, getConversation, loadConversationList, initializeCopyAndCounter, initializeAddToPromptLibrary, initializeTimestamp, addConversationsEventListeners, isGenerating, prependConversation, generateTitleForConversation, canSubmitPrompt, formatDate, userChatIsActuallySaved:true, addAsyncInputEvents, addSyncBanner, isWindows, toast */
+/* global updateNewChatButtonNotSynced, getAllConversations, getConversation, loadConversationList, initializeCopyAndCounter, initializeAddToPromptLibrary, initializeTimestamp, addConversationsEventListeners, isGenerating, prependConversation, generateTitleForConversation, canSubmitPrompt, formatDate, userChatIsActuallySaved:true, addAsyncInputEvents, addSyncBanner, isWindows, toast, sortConversationsByTimestamp */
 /* eslint-disable no-await-in-loop, */
 let localConversations = {};
 let autoSaveTimeoutId;
@@ -42,12 +42,9 @@ async function addConversationToStorage(conv) {
       update_time: new Date(conv.update_time).getTime() / 1000,
     };
     if (Object.keys(localConversations).length > 0) {
-      chrome.storage.local.get(['conversationsOrder'], (result) => {
-        const { conversationsOrder } = result;
-        chrome.storage.local.set({
-          conversations: localConversations,
-          conversationsOrder: conversationsOrder.includes(conv.id) ? conversationsOrder : [conv.id, ...conversationsOrder],
-        });
+      // conversationOrder is being updated in the parent function. No needto update here
+      chrome.storage.local.set({
+        conversations: localConversations,
       });
     }
   }, (err) => {
@@ -61,12 +58,9 @@ async function addConversationToStorage(conv) {
         update_time: new Date(conv.update_time).getTime() / 1000,
       };
       if (Object.keys(localConversations).length > 0) {
-        chrome.storage.local.get(['conversationsOrder'], (result) => {
-          const { conversationsOrder } = result;
-          chrome.storage.local.set({
-            conversations: localConversations,
-            conversationsOrder: [conv.id, ...conversationsOrder],
-          });
+        // conversationOrder is being updated in the parent function. No needto update here
+        chrome.storage.local.set({
+          conversations: localConversations,
         });
       }
     }
@@ -134,7 +128,7 @@ function updateOrCreateConversation(conversationId, message, parentId, settings,
           userChatIsActuallySaved = true;
           addConversationsEventListeners(existingConversation.id);
           const mapping = Object.values(existingConversation.mapping);
-          if (generateTitle && existingConversation.title === 'New chat' && mapping.length < 5 && mapping.filter((m) => m.message?.role === 'assistant' || m.message?.author.role === 'assistant').length === 1) { // only one assistant message
+          if (generateTitle && existingConversation.title === 'New chat' && mapping.length < 5 && mapping.filter((m) => (m.message?.role === 'assistant' || m.message?.author.role === 'assistant') && m.message.recipient === 'all').length === 1) { // only one assistant message
             if (settings.saveHistory) {
               const systemMessage = mapping.find((m) => m.message?.role === 'system' || m.message?.author.role === 'system');
               generateTitleForConversation(existingConversation.id, message.id, systemMessage?.message?.metadata?.user_context_message_data);
@@ -146,6 +140,10 @@ function updateOrCreateConversation(conversationId, message, parentId, settings,
             const conversationTimestampElement = conversationElement.querySelector('#timestamp');
             conversationTimestampElement.innerHTML = conversationCreateTime;
             const searchBoxWrapper = document.querySelector('#conversation-search-wrapper');
+            let lastFolderAtTheTop = searchBoxWrapper;
+            while (lastFolderAtTheTop.nextElementSibling.id.startsWith('wrapper-folder-')) {
+              lastFolderAtTheTop = lastFolderAtTheTop.nextElementSibling;
+            }
             if (conversationElement && searchBoxWrapper) {
               // update conversationsOrder
               chrome.storage.local.get(['conversationsOrder'], (res) => {
@@ -153,9 +151,17 @@ function updateOrCreateConversation(conversationId, message, parentId, settings,
                 const conversationIndex = conversationsOrder.findIndex((conv) => conv === conversationId);
                 if (conversationIndex !== -1) {
                   // this guarantees we only move if conversation is not in a folder
-                  searchBoxWrapper.after(conversationElement);
-                  conversationsOrder.splice(conversationIndex, 1);
-                  conversationsOrder.unshift(conversationId);
+                  if (settings.keepFoldersAtTheTop) {
+                    lastFolderAtTheTop.after(conversationElement);
+                    // find the folder with id matching the wrapper-folder id
+                    const lastFolderAtTheTopIndex = conversationsOrder.findIndex((conv) => conv.id === lastFolderAtTheTop.id.split('wrapper-folder-')[1]);
+                    conversationsOrder.splice(conversationIndex, 1);
+                    conversationsOrder.splice(lastFolderAtTheTopIndex, 0, conversationId);
+                  } else {
+                    searchBoxWrapper.after(conversationElement);
+                    conversationsOrder.splice(conversationIndex, 1);
+                    conversationsOrder.unshift(conversationId);
+                  }
                   chrome.storage.local.set({
                     conversationsOrder,
                   });
@@ -298,11 +304,11 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
     }
     chrome.storage.local.get(['conversationsOrder', 'conversations', 'account', 'settings'], (result) => {
       const { account, settings, conversationsOrder } = result;
-      const isPaid = account?.account_plan?.is_paid_subscription_active || account?.accounts?.default?.entitlement?.has_active_subscription || false;
+      const isPaid = account?.accounts?.default?.entitlement?.has_active_subscription || false;
       if (result.conversations && Object.keys(result.conversations).length > 0) {
         localConversations = result.conversations;
       }
-      const oldConversationsOrder = conversationsOrder && (conversationsOrder?.findIndex((f) => f && f.id === 'trash') !== -1)
+      let newConversationsOrder = conversationsOrder && (conversationsOrder?.findIndex((f) => f && f.id === 'trash') !== -1)
         ? conversationsOrder
         : [{
           id: 'trash',
@@ -314,22 +320,6 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
         conversationsAreSynced: false,
       }, () => {
         // check if old conversations order include at least one id longer than 4 chars
-        const oldConversationsOrderHasLongIds = oldConversationsOrder.findIndex((conv) => {
-          if (typeof conv === 'string') {
-            return conv.length > 5;
-          }
-          return conv.id.length > 5 || conv.conversationIds.findIndex((id) => id.length > 5) !== -1;
-        }) !== -1;
-
-        const newConversationsOrder = oldConversationsOrderHasLongIds
-          ? oldConversationsOrder.map((conv) => {
-            if (typeof conv === 'string') {
-              return conv;
-            }
-            if (!conv.id) return conv;
-            return { ...conv, id: conv.id, conversationIds: conv.conversationIds };
-          })
-          : oldConversationsOrder;
         chrome.storage.local.set({
           conversationsOrder: newConversationsOrder,
         }, async () => {
@@ -420,7 +410,18 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
               if (!conversationsOrder || conversationsOrder.length === 0) { // if conversationsOrder does not exist, add to the end of it right before trash folder (last element -1)
                 newConversationsOrder.splice(newConversationsOrder.length - 1, 0, remoteConvIds[i]);
               } else { // if conversationsOrder exists, insert it at index i in newConversationsOrder
-                newConversationsOrder.splice(i, 0, remoteConvIds[i]);
+                // eslint-disable-next-line no-lonely-if
+                if (settings.keepFoldersAtTheTop) {
+                  // start from the top until conv is not a folder
+                  for (let j = 0; j < newConversationsOrder.length; j += 1) {
+                    if (typeof newConversationsOrder[j] === 'string') {
+                      newConversationsOrder.splice(j, 0, remoteConvIds[i]);
+                      break;
+                    }
+                  }
+                } else {
+                  newConversationsOrder.splice(i, 0, remoteConvIds[i]);
+                }
               }
             }
             if (forceRefreshIds.includes(remoteConvIds[i])
@@ -465,6 +466,10 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
           });
 
           const conversationsAreSynced = checkConversationAreSynced(localConversations, remoteConversations);
+          // if keepFoldersAtTheTop and sort by updated, sort conversations by updatetime before saving. This is to make sure if a conversation was updated on another device, it will be sorted correctly
+          if (settings.keepFoldersAtTheTop && settings.conversationTimestamp) {
+            newConversationsOrder = sortConversationsByTimestamp(newConversationsOrder, localConversations, true);
+          }
 
           if (conversationsAreSynced) {
             chrome.storage.local.set({

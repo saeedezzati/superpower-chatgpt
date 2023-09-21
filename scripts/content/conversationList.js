@@ -53,14 +53,15 @@ function removeOriginalConversationList() {
         chrome.storage.local.get(['conversationsOrder'], (result) => {
           const { conversationsOrder } = result;
           const movingItem = conversationsOrder.splice(oldDraggableIndex, 1)[0];
-
           if (isToFolder) {
             const emptyFolder = document.querySelector(`#empty-folder-${toId}`);
             if (emptyFolder) emptyFolder.remove();
             const toFolderIndex = conversationsOrder.findIndex((c) => c.id === toId);
             const toFolder = conversationsOrder[toFolderIndex];
-            toFolder.conversationIds.splice(newDraggableIndex, 0, movingItem);
-            conversationsOrder.splice(toFolderIndex, 1, toFolder);
+            if (!isFolder && typeof movingItem === 'string') {
+              toFolder.conversationIds.splice(newDraggableIndex, 0, movingItem);
+              conversationsOrder.splice(toFolderIndex, 1, toFolder);
+            }
           } else {
             // eslint-disable-next-line no-lonely-if
             if (isFolder) {
@@ -94,125 +95,119 @@ function deleteConversationOnDragToTrash(conversationId) {
   conversationElementIcon.src = chrome.runtime.getURL('icons/trash.png');
 }
 function createSearchBox() {
-  chrome.storage.local.get(['conversations', 'settings'], (res) => {
-    const existingSearchBoxWrapper = document.querySelector('#conversation-search-wrapper');
-    if (existingSearchBoxWrapper) existingSearchBoxWrapper.remove();
-    const visibleConvs = Object.values(res.conversations).filter((c) => !c.skipped);
-    if (visibleConvs.length === 0) {
+  const existingSearchBoxWrapper = document.querySelector('#conversation-search-wrapper');
+  if (existingSearchBoxWrapper) existingSearchBoxWrapper.remove();
+  const conversationList = document.querySelector('#conversation-list');
+  const searchBoxWrapper = document.createElement('div');
+  searchBoxWrapper.id = 'conversation-search-wrapper';
+  searchBoxWrapper.classList = 'flex items-center justify-center';
+  const searchbox = document.createElement('input');
+  searchbox.type = 'search';
+  searchbox.id = 'conversation-search';
+  searchbox.tabIndex = 0;
+  searchbox.placeholder = 'Search conversations';
+  searchbox.classList = 'w-full px-4 py-2 mr-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800 conversation-search';
+  searchbox.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowDown') {
+      const focusedConversation = document.querySelector('.selected');
+      if (focusedConversation) {
+        const nextConversation = focusedConversation.nextElementSibling;
+        if (nextConversation) {
+          nextConversation.click();
+          nextConversation.scrollIntoView({ block: 'center' });
+        }
+      }
+    }
+    if (event.key === 'ArrowUp') {
+      const focusedConversation = document.querySelector('.selected');
+      if (focusedConversation) {
+        const previousConversation = focusedConversation.previousElementSibling;
+        if (previousConversation) {
+          previousConversation.click();
+          previousConversation.scrollIntoView({ block: 'center' });
+        }
+      }
+    }
+  });
+  searchbox.addEventListener('input', debounce((event) => {
+    const searchValue = event.target.value.toLowerCase();
+    chrome.storage.local.get(['conversationsOrder', 'conversations'], (result) => {
+      const { conversations, conversationsOrder } = result;
+      // remove existing conversations
+      const curConversationList = document.querySelector('#conversation-list');
+      // remove conversations list childs other than the search box wrapper (first child)
+      while (curConversationList.childNodes.length > 1) {
+        curConversationList.removeChild(curConversationList.lastChild);
+      }
+
+      const allConversations = Object.values(conversations).filter((c) => !c.skipped);
+      let filteredConversations = allConversations.sort((a, b) => b.update_time - a.update_time);
+
+      resetSelection();
+      if (searchValue) {
+        filteredConversations = allConversations.filter((c) => (
+          c.title?.toLowerCase()?.includes(searchValue.toLowerCase())
+          || Object.values(c.mapping).map((m) => m?.message?.content?.parts?.join(' ')?.replace(/## Instructions[\s\S]*## End Instructions\n\n/, ''))
+            .join(' ')?.toLowerCase()
+            .includes(searchValue.toLowerCase())));
+        const filteredConversationIds = filteredConversations.map((c) => c.id);
+        // convert filtered conversations to object with id as key
+        const filteredConversationsObj = filteredConversations.reduce((acc, cur) => {
+          acc[cur.id] = cur;
+          return acc;
+        }, {});
+        loadStorageConversations(filteredConversationsObj, filteredConversationIds, searchValue);
+      } else {
+        loadStorageConversations(conversations, conversationsOrder, searchValue);
+        const { pathname } = new URL(window.location.toString());
+        const conversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
+        if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) {
+          loadConversation(conversationId, '', false);
+        }
+      }
+    });
+  }), 500);
+
+  const newFolderButton = document.createElement('button');
+  newFolderButton.id = 'new-folder-button';
+  newFolderButton.classList = 'w-12 h-full flex items-center justify-center rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800 border border-gray-800';
+  const newFoolderIcon = document.createElement('img');
+  newFoolderIcon.classList = 'w-5 h-5';
+  newFoolderIcon.src = chrome.runtime.getURL('icons/new-folder.png');
+  newFolderButton.append(newFoolderIcon);
+  newFolderButton.addEventListener('mouseover', () => {
+    newFolderButton.classList.remove('border-gray-800');
+    newFolderButton.classList.add('bg-gray-600', 'border-gray-300');
+  });
+  newFolderButton.addEventListener('mouseout', () => {
+    newFolderButton.classList.add('border-gray-800');
+
+    newFolderButton.classList.remove('bg-gray-600', 'border-gray-300');
+  });
+  newFolderButton.addEventListener('click', (e) => {
+    // inser a new folder at the top of the list
+    // if cmnd + shift
+    if (e.shiftKey && (e.metaKey || (isWindows() && e.ctrlKey))) {
+      chrome.storage.local.remove('conversationsOrder');
+      window.location.reload();
       return;
     }
-    const conversationList = document.querySelector('#conversation-list');
-    const searchboxWrapper = document.createElement('div');
-    searchboxWrapper.id = 'conversation-search-wrapper';
-    searchboxWrapper.classList = 'flex items-center justify-center';
-    const searchbox = document.createElement('input');
-    searchbox.type = 'search';
-    searchbox.id = 'conversation-search';
-    searchbox.tabIndex = 0;
-    searchbox.placeholder = 'Search conversations';
-    searchbox.classList = 'w-full px-4 py-2 mr-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800 conversation-search';
-    searchbox.addEventListener('keydown', (event) => {
-      if (event.key === 'ArrowDown') {
-        const focusedConversation = document.querySelector('.selected');
-        if (focusedConversation) {
-          const nextConversation = focusedConversation.nextElementSibling;
-          if (nextConversation) {
-            nextConversation.click();
-            nextConversation.scrollIntoView({ block: 'center' });
-          }
-        }
-      }
-      if (event.key === 'ArrowUp') {
-        const focusedConversation = document.querySelector('.selected');
-        if (focusedConversation) {
-          const previousConversation = focusedConversation.previousElementSibling;
-          if (previousConversation) {
-            previousConversation.click();
-            previousConversation.scrollIntoView({ block: 'center' });
-          }
-        }
-      }
+    chrome.storage.local.get(['settings', 'conversationsOrder'], (result) => {
+      const newFolder = {
+        id: self.crypto.randomUUID(), name: 'New Folder', conversationIds: [], isOpen: true,
+      };
+      const { settings, conversationsOrder } = result;
+      chrome.storage.local.set({ conversationsOrder: [newFolder, ...conversationsOrder] });
+      const newFolderElement = createFolder(newFolder, settings.conversationTimestamp, [], true);
+      const curConversationList = document.querySelector('#conversation-list');
+      curConversationList.insertBefore(newFolderElement, searchBoxWrapper.nextSibling);
+      curConversationList.scrollTop = 0;
     });
-    searchbox.addEventListener('input', debounce((event) => {
-      const searchValue = event.target.value.toLowerCase();
-      chrome.storage.local.get(['conversationsOrder', 'conversations'], (result) => {
-        const { conversations, conversationsOrder } = result;
-        // remove existing conversations
-        const curConversationList = document.querySelector('#conversation-list');
-        // remove conversations list childs other than the search box wrapper (first child)
-        while (curConversationList.childNodes.length > 1) {
-          curConversationList.removeChild(curConversationList.lastChild);
-        }
-
-        const allConversations = Object.values(conversations).filter((c) => !c.skipped);
-        let filteredConversations = allConversations.sort((a, b) => b.update_time - a.update_time);
-
-        resetSelection();
-        if (searchValue) {
-          filteredConversations = allConversations.filter((c) => (
-            c.title?.toLowerCase()?.includes(searchValue.toLowerCase())
-            || Object.values(c.mapping).map((m) => m?.message?.content?.parts?.join(' ')?.replace(/## Instructions[\s\S]*## End Instructions\n\n/, ''))
-              .join(' ')?.toLowerCase()
-              .includes(searchValue.toLowerCase())));
-          const filteredConversationIds = filteredConversations.map((c) => c.id);
-          // convert filtered conversations to object with id as key
-          const filteredConversationsObj = filteredConversations.reduce((acc, cur) => {
-            acc[cur.id] = cur;
-            return acc;
-          }, {});
-          loadStorageConversations(filteredConversationsObj, filteredConversationIds, searchValue);
-        } else {
-          loadStorageConversations(conversations, conversationsOrder, searchValue);
-          const { pathname } = new URL(window.location.toString());
-          const conversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
-          if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) {
-            loadConversation(conversationId, '', false);
-          }
-        }
-      });
-    }), 500);
-
-    const newFolderButton = document.createElement('button');
-    newFolderButton.id = 'new-folder-button';
-    newFolderButton.classList = 'w-12 h-full flex items-center justify-center rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800 border border-gray-800';
-    const newFoolderIcon = document.createElement('img');
-    newFoolderIcon.classList = 'w-5 h-5';
-    newFoolderIcon.src = chrome.runtime.getURL('icons/new-folder.png');
-    newFolderButton.append(newFoolderIcon);
-    newFolderButton.addEventListener('mouseover', () => {
-      newFolderButton.classList.remove('border-gray-800');
-      newFolderButton.classList.add('bg-gray-600', 'border-gray-300');
-    });
-    newFolderButton.addEventListener('mouseout', () => {
-      newFolderButton.classList.add('border-gray-800');
-
-      newFolderButton.classList.remove('bg-gray-600', 'border-gray-300');
-    });
-    newFolderButton.addEventListener('click', (e) => {
-      // inser a new folder at the top of the list
-      // if cmnd + shift
-      if (e.shiftKey && (e.metaKey || (isWindows() && e.ctrlKey))) {
-        chrome.storage.local.remove('conversationsOrder');
-        window.location.reload();
-        return;
-      }
-      chrome.storage.local.get(['settings', 'conversationsOrder'], (result) => {
-        const newFolder = {
-          id: self.crypto.randomUUID(), name: 'New Folder', conversationIds: [], isOpen: true,
-        };
-        const { settings, conversationsOrder } = result;
-        chrome.storage.local.set({ conversationsOrder: [newFolder, ...conversationsOrder] });
-        const newFolderElement = createFolder(newFolder, settings.conversationTimestamp, [], true);
-        const curConversationList = document.querySelector('#conversation-list');
-        curConversationList.insertBefore(newFolderElement, searchboxWrapper.nextSibling);
-        curConversationList.scrollTop = 0;
-      });
-    });
-    searchboxWrapper.append(newFolderButton);
-    // add conversation search box to the top of the list
-    searchboxWrapper.prepend(searchbox);
-    conversationList.prepend(searchboxWrapper);
   });
+  searchBoxWrapper.append(newFolderButton);
+  // add conversation search box to the top of the list
+  searchBoxWrapper.prepend(searchbox);
+  conversationList.prepend(searchBoxWrapper);
 }
 // add new conversation to the top of the list
 // eslint-disable-next-line no-unused-vars
@@ -220,7 +215,7 @@ function prependConversation(conversation) {
   const existingConversationElement = document.querySelector(`#conversation-button-${conversation.id}`);
   if (existingConversationElement) existingConversationElement.remove();
   const conversationList = document.querySelector('#conversation-list');
-  const searchboxWrapper = document.querySelector('#conversation-search-wrapper');
+  const searchBoxWrapper = document.querySelector('#conversation-search-wrapper');
   const conversationElement = document.createElement('a');
   // conversationElement.href = 'javascript:';
   conversationElement.id = `conversation-button-${conversation.id}`;
@@ -286,8 +281,20 @@ function prependConversation(conversation) {
 
   // add checkbox
   addCheckboxToConversationElement(conversationElement, conversation);
-  if (searchboxWrapper) {
-    conversationList.insertBefore(conversationElement, searchboxWrapper.nextSibling);
+  if (searchBoxWrapper) {
+    let lastFolderAtTheTop = searchBoxWrapper;
+    while (lastFolderAtTheTop.nextElementSibling.id.startsWith('wrapper-folder-')) {
+      lastFolderAtTheTop = lastFolderAtTheTop.nextElementSibling;
+    }
+    chrome.storage.local.get(['settings'], (result) => {
+      const { settings } = result;
+      if (settings.keepFoldersAtTheTop) {
+        lastFolderAtTheTop.after(conversationElement);
+      } else {
+        searchBoxWrapper.after(conversationElement);
+      }
+    });
+    // conversationList.insertBefore(conversationElement, searchBoxWrapper.nextSibling);
   } else {
     conversationList.prepend(conversationElement);
   }
@@ -296,8 +303,6 @@ function prependConversation(conversation) {
     chrome.storage.local.set({ conversationsOrder: [conversation.id, ...conversationsOrder] });
   });
 
-  // after adding first conversation
-  createSearchBox();
   // scroll to the top of the conversation list
   conversationList.scrollTop = 0;
 }
@@ -384,6 +389,7 @@ function updateNewChatButtonSynced() {
     const nav = document.querySelector('nav');
     const newChatButton = nav?.querySelector('a');
     newChatButton.classList = 'flex py-3 px-3 w-full items-center gap-3 transition-colors duration-200 text-white cursor-pointer text-sm rounded-md border border-white/20 hover:bg-gray-500/10 mb-1 flex-shrink-0';
+    if (!newChatButton) return;
     // clone newChatButton
     if (conversationsAreSynced) {
       const newChatButtonClone = newChatButton.cloneNode(true);
@@ -497,7 +503,7 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
                   if (!tmpChatStreamIsClosed) { // if not clicked on stop generating button
                     chrome.storage.local.get(['account'], (result) => {
                       const { account } = result;
-                      const isPaid = account?.account_plan?.is_paid_subscription_active || account?.accounts?.default?.entitlement?.has_active_subscription || false;
+                      const isPaid = account?.accounts?.default?.entitlement?.has_active_subscription || false;
                       if (runningPromptChainSteps && runningPromptChainSteps.length > 1 && runningPromptChainIndex < runningPromptChainSteps.length - 1) {
                         setTimeout(() => {
                           insertNextChain(runningPromptChainSteps, runningPromptChainIndex + 1);

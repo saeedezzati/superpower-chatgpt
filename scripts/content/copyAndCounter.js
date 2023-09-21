@@ -157,7 +157,7 @@ function updateCounterForResult(resultElement, index) {
       }
       counterElement.id = `result-counter-${index}`;
       const actionWrapper = document.querySelector(`#result-action-wrapper-${index}`);
-
+      if (!actionWrapper) return;
       actionWrapper.appendChild(counterElement);
     }
   });
@@ -181,18 +181,6 @@ function updateCounterEventListeners() {
     addActionWrapperToResult(resultElement, i);
     updateCounterForResult(resultElement, i);
     addCopyButtonToResult(resultElement, i);
-    // Add event listeners to all assistantChats to update counter when innertext changes
-    resultElement.addEventListener('DOMCharacterDataModified', () => {
-      addActionWrapperToResult(resultElement, i);
-      updateCounterForResult(resultElement, i);
-      addCopyButtonToResult(resultElement, i);
-    });
-    // Add event listeners to all assistantChats to update counter when content changes
-    resultElement.addEventListener('DOMSubtreeModified', () => {
-      addActionWrapperToResult(resultElement, i);
-      updateCounterForResult(resultElement, i);
-      addCopyButtonToResult(resultElement, i);
-    });
   }
 }
 // eslint-disable-next-line no-unused-vars

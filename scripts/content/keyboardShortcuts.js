@@ -53,15 +53,19 @@ function keyboardShortcutsModalContent() {
     </tr>
     <tr>
       <td>CTRL/CMD + SHIFT + K</td>
-      <td>Open Keyboard Shortcut modal</td>
+      <td>Open Keyboard Shortcut Modal</td>
     </tr>
     <tr>
       <td>CTRL/CMD + ALT + H</td>
-      <td>Hide/show the sidebar</td>
+      <td>Hide/Show the Sidebar</td>
+    </tr>
+    <tr>
+      <td>CTRL/CMD + ALT + S</td>
+      <td>Enable/Disable Auto Splitter</td>
     </tr>
     <tr>
       <td>CTRL/CMD + ALT + A</td>
-      <td>Enable/disable auto-sync</td>
+      <td>Enable/Disable Auto-Sync</td>
     </tr>
     <tr>
       <td>CTRL/CMD + SHIFT + Click on the new folder icon <span style="display:inline-block;"><img class="w-4 h-4" src="chrome-extension://amhmeenmapldpjdedekalnfifgnpfnkc/icons/new-folder.png"></span></td>
@@ -81,11 +85,11 @@ function keyboardShortcutsModalContent() {
     </tr>
     <tr>
       <td>END</td>
-      <td>Scroll to bottom</td> 
+      <td>Scroll to Bottom</td> 
     </tr>
     <tr>
       <td>ESC</td>
-      <td>Close modals or stop generating</td>
+      <td>Close Modals/Stop Generating</td>
     </tr>
   </table>
   `;

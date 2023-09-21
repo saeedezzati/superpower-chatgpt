@@ -80,7 +80,7 @@ function addContinueButton() {
   if (!canSubmit) {
     if (syncDiv) syncDiv.style.opacity = '0.3';
   }
-  if ((!canSubmit) && lastContinueButton) {
+  if (!canSubmit && lastContinueButton) {
     lastContinueButton.remove();
     return;
   }
@@ -151,6 +151,7 @@ function addContinueButton() {
   autoClickButton.type = 'button';
   autoClickButton.style = 'width:38px;border-top-left-radius:0;border-bottom-left-radius:0;border-left:0;z-index:1;padding:0;';
   chrome.storage.local.get('settings', ({ settings }) => {
+    if (!settings) return;
     autoClickButton.title = `Auto Continue is ${settings.autoClick ? 'ON' : 'OFF'}`;
     if (settings.autoClick) {
       autoClickButton.classList.add('btn', 'flex', 'justify-center', 'gap-2', 'btn-primary', 'border');
@@ -173,6 +174,7 @@ function addContinueButton() {
   });
 
   chrome.storage.local.get('settings', ({ settings }) => {
+    if (!settings) return;
     setTimeout(() => {
       continueButtonWrapper.style.display = settings.showCustomPromptsButton ? 'flex' : 'none';
       continueButtonWrapper.appendChild(shiftClickText);

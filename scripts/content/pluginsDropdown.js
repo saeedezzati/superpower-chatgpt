@@ -52,11 +52,13 @@ function createPluginsDropDown(installedPlugins, enabledPluginIds, idPrefix, for
   <span id="${idPrefix}-plugin-dropdown-option-${installedPlugin.id}" class="flex items-center gap-1.5 truncate">
     <span class="h-6 w-6 shrink-0">
       <div class="relative" style="width: 100%; height: 100%;">
-        <img src="${installedPlugin.manifest.logo_url}" alt="${installedPlugin.manifest.name_for_human} logo" class="h-full w-full bg-white rounded-sm">
+        <img id="plugin-image-${installedPlugin.id}" src="${installedPlugin.manifest.logo_url}" alt="${installedPlugin.manifest.name_for_human} logo" class="h-full w-full bg-white rounded-sm">
         <div class="absolute inset-0 ring-1 ring-inset ring-black/10 rounded-sm"></div>
       </div>
     </span>
-    <span class="flex h-6 items-center gap-1 ${forceDark ? 'text-gray-100' : 'text-gray-800'} dark:text-gray-100">${installedPlugin.manifest.name_for_human}</span>
+    <span id="plugin-desc-${installedPlugin.id}" style="display:none">${installedPlugin.manifest.description_for_human}</span>
+    <span id="plugin-status-${installedPlugin.id}" style="display:none">${installedPlugin.status}</span>
+    <span id="plugin-name-${installedPlugin.id}" class="flex h-6 items-center gap-1 ${forceDark ? 'text-gray-100' : 'text-gray-800'} dark:text-gray-100">${installedPlugin.manifest.name_for_human}</span>
     ${installedPlugin.status !== 'approved' ? '<div class="flex h-[18px] w-[18px] items-center justify-center rounded-[5px] bg-red-200 text-red-800"><svg stroke="currentColor" fill="none" stroke-width="2.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 h-3 w-3" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M19.69 14a6.9 6.9 0 0 0 .31-2V5l-8-3-3.16 1.18"></path><path d="M4.73 4.73L4 5v7c0 6 8 10 8 10a20.29 20.29 0 0 0 5.62-4.38"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg></div>' : ''}
   </span>
   <span id="${idPrefix}-plugin-checkmark-${installedPlugin.id}" class="absolute inset-y-0 right-0 flex items-center pr-3 ${forceDark ? 'text-gray-100' : 'text-gray-800'} dark:text-gray-100">
@@ -87,6 +89,10 @@ function addPluginsDropdownEventListener(idPrefix, forceDark = false) {
     const cl = pluginListDropdown?.classList;
     if (cl && cl.contains('block') && (!e.target.closest(`#${idPrefix}-plugins-dropdown-button`) && !e.target.closest(`#${idPrefix}-plugin-list-dropdown`))) {
       pluginListDropdown.classList.replace('block', 'hidden');
+      const pluginSpecifics = document.querySelectorAll('[id$=-plugin-specifics]');
+      pluginSpecifics.forEach((pluginSpecific) => {
+        pluginSpecific.classList.add('hidden');
+      });
     }
   });
 
@@ -110,28 +116,27 @@ function addPluginsDropdownEventListener(idPrefix, forceDark = false) {
   const pluginDropdownOptions = document.querySelectorAll(`[id ^= ${idPrefix}-plugins-dropdown-option-]`);
 
   pluginDropdownOptions.forEach((option) => {
-    option.addEventListener('mousemove', () => {
+    option.addEventListener('mouseenter', () => {
       const darkMode = document.querySelector('html').classList.contains('dark');
       option.classList.add((darkMode || forceDark) ? 'bg-gray-600' : 'bg-gray-200');
       const pluginSpecifics = document.querySelector(`#${idPrefix}-plugin-specifics`);
       if (pluginSpecifics.classList.contains('hidden')) {
-        chrome.storage.local.get(['installedPlugins'], (result) => {
-          const { installedPlugins } = result;
-
-          const pluginId = option.id.split(`${idPrefix}-plugins-dropdown-option-`)[1];
-          const plugin = installedPlugins.find((p) => p.id === pluginId);
-          pluginSpecifics.innerHTML = `<div class="relative" style="width: 70px; height: 70px;"><img src="${plugin.manifest.logo_url}" alt="${plugin.manifest.name_for_human} logo" class="h-full w-full bg-white rounded-sm"><div class="absolute inset-0 ring-1 ring-inset ring-black/10 rounded-sm"></div></div><div class="flex items-center gap-1">${plugin.manifest.name_for_human}  ${plugin.status !== 'approved' ? '<div class="flex h-[18px] w-[18px] items-center justify-center rounded-[5px] bg-red-200 text-red-800"><svg stroke="currentColor" fill="none" stroke-width="2.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 h-3 w-3" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M19.69 14a6.9 6.9 0 0 0 .31-2V5l-8-3-3.16 1.18"></path><path d="M4.73 4.73L4 5v7c0 6 8 10 8 10a20.29 20.29 0 0 0 5.62-4.38"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg></div>' : ''}</div><div class="whitespace-pre-line text-xs">${plugin.manifest.description_for_human}</div>`;
-
-          pluginSpecifics.classList.remove('hidden');
-        });
+        const pluginName = option.querySelector('[id^=plugin-name-]').innerText;
+        const pluginDesc = option.querySelector('[id^=plugin-desc-]').innerText;
+        const pluginImage = option.querySelector('[id^=plugin-image-]').src;
+        const pluginStatus = option.querySelector('[id^=plugin-status-]').innerText;
+        pluginSpecifics.innerHTML = `<div class="relative" style="width: 70px; height: 70px;"><img src="${pluginImage}" alt="${pluginName} logo" class="h-full w-full bg-white rounded-sm"><div class="absolute inset-0 ring-1 ring-inset ring-black/10 rounded-sm"></div></div><div class="flex items-center gap-1">${pluginName}  ${pluginStatus !== 'approved' ? '<div class="flex h-[18px] w-[18px] items-center justify-center rounded-[5px] bg-red-200 text-red-800"><svg stroke="currentColor" fill="none" stroke-width="2.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 h-3 w-3" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M19.69 14a6.9 6.9 0 0 0 .31-2V5l-8-3-3.16 1.18"></path><path d="M4.73 4.73L4 5v7c0 6 8 10 8 10a20.29 20.29 0 0 0 5.62-4.38"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg></div>' : ''}</div><div class="whitespace-pre-line text-xs">${pluginDesc}</div>`;
+        pluginSpecifics.classList.remove('hidden');
       }
     });
 
     option.addEventListener('mouseleave', () => {
       const darkMode = document.querySelector('html').classList.contains('dark');
       option.classList.remove((darkMode || forceDark) ? 'bg-gray-600' : 'bg-gray-200');
-      const pluginSpecifics = document.querySelector(`#${idPrefix}-plugin-specifics`);
-      pluginSpecifics.classList.add('hidden');
+      const pluginSpecifics = document.querySelectorAll('[id$=-plugin-specifics]');
+      pluginSpecifics.forEach((pluginSpecific) => {
+        pluginSpecific.classList.add('hidden');
+      });
     });
     option.addEventListener('click', () => {
       chrome.storage.local.get(['installedPlugins', 'enabledPluginIds'], ({

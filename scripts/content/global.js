@@ -56,6 +56,28 @@ function initializeStorage() {
   //   const allKeys = Object.keys(items);
   //   console.log('local', items);
   // });
+  chrome.storage.onChanged.addListener((e) => {
+    if (e.conversationsOrder) {
+      // get all folders
+      const folders = e.conversationsOrder.newValue.filter((conversationOrder) => typeof conversationOrder !== 'string');
+      // for each folder get the conversationIds
+      const conversationIds = folders.map((folder) => folder.conversationIds);
+      // flatten the conversationIds
+      const flattenedConversationIds = conversationIds.flat();
+      // if conversationIds are not strings (they are objects), get the id property
+      flattenedConversationIds.forEach((conversationId, index) => {
+        if (typeof conversationId !== 'string') {
+          console.warn('Bad type. Please contact the developer!');
+        }
+      });
+
+      // if there are duplicates, remove them
+      const uniqueConversationIds = [...new Set(flattenedConversationIds)];
+      if (uniqueConversationIds.length !== flattenedConversationIds.length) {
+        console.warn('Not unique. Please contact the developer!');
+      }
+    }
+  });
   return chrome.storage.local.get(['selectedConversations', 'conversationsOrder', 'customModels', 'conversations']).then((result) => {
     const localConversationsOrder = result.conversationsOrder || [];
     const allConversationKeys = Object.keys(result.conversations || []);
@@ -166,8 +188,8 @@ function escapeHtml(html) {
     .replace(/'/g, '&#039;');
 }
 function addDevIndicator() {
-  chrome.storage.local.get('environment', ({ environment }) => {
-    if (environment === 'development') {
+  chrome.storage.local.get('API_URL', ({ API_URL }) => {
+    if (API_URL?.includes('dev')) {
       const devIndicator = document.createElement('div');
       devIndicator.style = 'position:fixed;bottom:16px;right:16px;z-index:9000;background-color:#19c37d;width:4px;height:4px;border-radius:100%;';
       document.body.appendChild(devIndicator);
@@ -222,7 +244,7 @@ function addScrollButtons() {
   scrollUpButton.addEventListener('click', () => {
     const conversationTop = document.querySelector('[id^=message-wrapper-]');
     if (!conversationTop) return;
-    conversationTop.scrollIntoView({ behavior: 'smooth' });
+    conversationTop.parentElement.scrollIntoView({ behavior: 'smooth' });
   });
 
   const scrollDownButton = document.createElement('button');
@@ -354,7 +376,7 @@ function showNewChatPage() {
     runningPromptChainSteps = undefined;
     runningPromptChainIndex = 0;
     document.title = 'New Page';
-    const planName = account?.account_plan?.subscription_plan || account?.accounts?.default?.entitlement?.subscription_plan || 'chatgptfreeplan';
+    const planName = account?.accounts?.default?.entitlement?.subscription_plan || 'chatgptfreeplan';
     if (!conversationsAreSynced) return;
     const focusedConversations = document.querySelectorAll('.selected');
     focusedConversations.forEach((c) => {
@@ -728,6 +750,7 @@ function addExpandButton() {
   expandButton.style = 'bottom:-8px;margin:auto';
   chrome.storage.local.get(['settings'], (result) => {
     const { settings } = result;
+    if (!settings) return;
     const { hideBottomSidebar } = settings;
     const userMenu = document.querySelector('#user-menu');
     if (!hideBottomSidebar) {
@@ -886,6 +909,25 @@ function removeMarkTagsInsideBackticks(input) {
     const codeWithoutMarkTags = codeBlock.replace(/<\/?mark>/gi, '');
     return backticks + codeWithoutMarkTags + backticks;
   });
+}
+function addAutoSyncToggleButton() {
+  const existingAutoSyncToggleButton = document.getElementById('auto-sync-toggle-button');
+  if (existingAutoSyncToggleButton) existingAutoSyncToggleButton.remove();
+
+  const autoSyncToggleButton = document.createElement('button');
+  autoSyncToggleButton.id = 'keyboard-shortcuts-modal-button';
+  autoSyncToggleButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="1.5em" viewBox="0 0 512 512" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="0" fill="currentColor"><path d="M256 79.1C178.5 79.1 112.7 130.1 89.2 199.7C84.96 212.2 71.34 218.1 58.79 214.7C46.23 210.5 39.48 196.9 43.72 184.3C73.6 95.8 157.3 32 256 32C337.5 32 408.8 75.53 448 140.6V104C448 90.75 458.7 80 472 80C485.3 80 496 90.75 496 104V200C496 213.3 485.3 224 472 224H376C362.7 224 352 213.3 352 200C352 186.7 362.7 176 376 176H412.8C383.7 118.1 324.4 80 256 80V79.1zM280 263.1C280 277.3 269.3 287.1 256 287.1C242.7 287.1 232 277.3 232 263.1V151.1C232 138.7 242.7 127.1 256 127.1C269.3 127.1 280 138.7 280 151.1V263.1zM224 352C224 334.3 238.3 319.1 256 319.1C273.7 319.1 288 334.3 288 352C288 369.7 273.7 384 256 384C238.3 384 224 369.7 224 352zM40 432C26.75 432 16 421.3 16 408V311.1C16 298.7 26.75 287.1 40 287.1H136C149.3 287.1 160 298.7 160 311.1C160 325.3 149.3 336 136 336H99.19C128.3 393 187.6 432 256 432C333.5 432 399.3 381.9 422.8 312.3C427 299.8 440.7 293 453.2 297.3C465.8 301.5 472.5 315.1 468.3 327.7C438.4 416.2 354.7 480 256 480C174.5 480 103.2 436.5 64 371.4V408C64 421.3 53.25 432 40 432V432z"/></svg>';
+  autoSyncToggleButton.className = 'absolute flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-900 dark:hover:text-gray-200 text-xs font-sans cursor-pointer rounded-md z-10';
+  autoSyncToggleButton.style = 'bottom: 6rem;right: 3rem;width: 2rem;height: 2rem;flex-wrap:wrap;border: 1px solid;color:#e06c2b';
+  autoSyncToggleButton.title = 'Auto Sync is OFF. Click to turn ON';
+  autoSyncToggleButton.addEventListener('click', () => {
+    chrome.storage.local.get(['settings'], ({ settings }) => {
+      chrome.storage.local.set({ settings: { ...settings, autoSync: true } }, () => {
+        window.location.reload();
+      });
+    });
+  });
+  document.body.appendChild(autoSyncToggleButton);
 }
 function highlight(text, searchTerm) {
   if (!text) return '';

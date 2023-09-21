@@ -12,7 +12,7 @@ function addNavbar() {
   navbar.id = 'gptx-navbar';
   navbar.className = 'w-full flex items-center justify-between border-b h-14 border-black/10 bg-gray-50 px-3 py-1 text-gray-500 dark:border-gray-900/50 dark:bg-gray-700 dark:text-gray-300 shadow-md';
 
-  chrome.storage.local.get(['settings', 'models', 'account', 'installedPlugins', 'enabledPluginIds', 'unofficialModels', 'customModels'], (result) => {
+  chrome.storage.local.get(['settings', 'models', 'installedPlugins', 'enabledPluginIds', 'unofficialModels', 'customModels'], (result) => {
     const {
       models, settings, unofficialModels, customModels, installedPlugins, enabledPluginIds,
     } = result;
@@ -20,9 +20,6 @@ function addNavbar() {
       selectedModel, selectedLanguage, selectedTone, selectedWritingStyle, autoHideTopNav,
     } = settings;
     const allModels = [...models, ...unofficialModels, ...customModels];
-    // const planName = account?.account_plan?.subscription_plan || 'chatgptfreeplan';
-    // const isPaid = account?.account_plan?.is_paid_subscription_active || false;
-    // const features = account?.features || [];
     // Add model switcher
     if (!selectedModel) {
       // eslint-disable-next-line prefer-destructuring
@@ -39,7 +36,7 @@ function addNavbar() {
     modelSwitcherWrapper.style = 'position:relative;width:240px;z-index:1000';
     const idPrefix = 'navbar';
     modelSwitcherWrapper.id = `model-switcher-wrapper-${idPrefix}`;
-    modelSwitcherWrapper.innerHTML = modelSwitcher(allModels, settings.selectedModel, idPrefix, customModels);
+    modelSwitcherWrapper.innerHTML = modelSwitcher(allModels, settings.selectedModel, idPrefix, customModels, settings.autoSync);
     leftSection.appendChild(modelSwitcherWrapper);
 
     // Add plugins dropdown
@@ -106,7 +103,7 @@ function addNavbar() {
   });
 
   const main = document.querySelector('main');
-
+  if (!main) return;
   navWrapper.appendChild(navbar);
   main.parentNode.insertBefore(navWrapper, main);
 }
