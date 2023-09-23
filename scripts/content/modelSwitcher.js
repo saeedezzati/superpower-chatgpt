@@ -1,10 +1,7 @@
 /* eslint-disable no-unused-vars */
-/* global getInstalledPlugins, addArkoseScript, initializeRegenerateResponseButton */
+/* global getInstalledPlugins, initializeRegenerateResponseButton, arkoseTrigger */
 // eslint-disable-next-line no-unused-vars
 function modelSwitcher(models, selectedModel, idPrefix, customModels, autoSync, forceDark = false) {
-  if (selectedModel.slug.includes('gpt-4')) {
-    addArkoseScript();
-  }
   if (selectedModel.slug === 'gpt-4-code-interpreter' && autoSync) {
     showAutoSyncWarning('Uploading files with <b style="color:white;">Advanced Data Analysis</b> model requires <b style="color:white;">Auto Sync to be OFF</b>. Please turn off Auto Sync if you need to upload a file. You can turn Auto Sync back ON (<b style="color:white;">CMD/CTRL+ALT+A</b>) again after submitting your file.');
   }
@@ -197,7 +194,7 @@ function addModelSwitcherEventListener(idPrefix, forceDark = false) {
           }
           const submitButton = document.querySelector('main form textarea ~ button');
           if (submitButton && !submitButton.disabled) {
-            if (selectedModel.slug.startsWith('gpt-4')) {
+            if (selectedModel.slug.includes('gpt-4')) {
               submitButton.style.backgroundColor = '#AB68FF';
             } else {
               submitButton.style.backgroundColor = '#19C37D';
@@ -205,7 +202,13 @@ function addModelSwitcherEventListener(idPrefix, forceDark = false) {
           }
         }
         chrome.storage.local.set({ settings: { ...settings, selectedModel } }, () => {
-          addArkoseScript();
+          if (selectedModel.slug.includes('gpt-4') && !selectedModel.tags.includes('Unofficial')) {
+            const arkoseIframeWrapper = document.querySelector('[class="arkose-35536E1E-65B4-4D96-9D97-6ADB7EFF8147-wrapper"]');
+            if (!arkoseIframeWrapper) {
+              window.location.reload();
+            }
+            arkoseTrigger();
+          }
         });
       });
     });

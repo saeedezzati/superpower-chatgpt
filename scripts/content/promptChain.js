@@ -191,6 +191,7 @@ function createNewPromptChainModal(promptChainName, promptChainSteps, chainIndex
   const sortable = Sortable.create(promptInputListWrapper, {
     handle: '#prompt-chain-drag-handle',
     multiDrag: true,
+    direction: 'vertical',
     selectedClass: 'multi-drag-selected',
   });
   newPromptChainModalContent.appendChild(promptInputListWrapper);

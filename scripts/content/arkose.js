@@ -3,7 +3,6 @@ window.useArkoseSetupEnforcement = function (e) {
   e.setConfig({
     selector: '#enforcement-trigger',
     onCompleted(x) {
-      // console.warn('onCompleted', x);
       window.localStorage.setItem('arkoseToken', x.token);
     },
     onError(x) {

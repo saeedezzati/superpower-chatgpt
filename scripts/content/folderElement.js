@@ -39,17 +39,7 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
       chrome.storage.local.set({ conversationsOrder });
     });
   });
-  folderElement.addEventListener('dragenter', (e) => {
-    // if folder content is not visible, show it
-    const curFolderId = e.srcElement.closest('[id^="folder-"]').id.split('folder-')[1];
-    const curFolderContent = document.querySelector(`#folder-content-${curFolderId}`);
-    if (curFolderContent.style.display === 'none') {
-      curFolderContent.style.display = 'block';
-      const curFolderIcon = document.querySelector(`#folder-${curFolderId} img`);
-      curFolderIcon.src = chrome.runtime.getURL('icons/folder-open.png');
-      curFolderIcon.dataset.isOpen = 'true';
-    }
-  });
+
   // folder icon
   const folderIcon = document.createElement('img');
   folderIcon.classList = 'w-4 h-4';
@@ -109,6 +99,8 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
   // addCheckboxToConversationElement(conversationElement, conversation);
   const sortable = Sortable.create(folderContent, {
     draggable: '[id^="conversation-button-"]',
+    direction: 'vertical',
+    invertSwap: true,
     // multiDrag: true,
     // selectedClass: 'multi-drag-selected',
     // handle: '[id^="checkbox-wrapper-"], [id^="conversation-button-"]',

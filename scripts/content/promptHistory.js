@@ -507,7 +507,7 @@ function textAreaElementInputEventListener(event) {
         const { settings } = result;
         const { selectedModel } = settings;
         submitButton.disabled = false;
-        if (selectedModel.slug.startsWith('gpt-4')) {
+        if (selectedModel.slug.includes('gpt-4')) {
           submitButton.style.backgroundColor = '#AB68FF';
         } else {
           submitButton.style.backgroundColor = '#19C37D';

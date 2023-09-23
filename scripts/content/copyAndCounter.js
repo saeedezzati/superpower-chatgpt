@@ -6,7 +6,7 @@ const copyRichText = (element) => {
   codeHeader.forEach((header) => {
     header.remove();
   });
-  content = content.innerHTML;
+  content = content.innerHTML.trim();
   const clipboardItem = new ClipboardItem({
     'text/html': new Blob(
       [content],

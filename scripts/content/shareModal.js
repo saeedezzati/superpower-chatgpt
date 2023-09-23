@@ -488,7 +488,7 @@ function assistantRow(message) {
       delimiters: 'brackets',
       katexOptions: { macros: { '\\RR': '\\mathbb{R}' } },
     }).render(messageContentParts);
-  const avatarColor = (message.metadata.model_slug?.includes('plugins') || message.metadata.model_slug?.startsWith('gpt-4')) ? 'rgb(171, 104, 255)' : 'rgb(25, 195, 125)';
+  const avatarColor = (message.metadata.model_slug?.includes('plugins') || message.metadata.model_slug?.includes('gpt-4')) ? 'rgb(171, 104, 255)' : 'rgb(25, 195, 125)';
 
   return `<div
   class="group w-full text-gray-800 dark:text-gray-100 bg-gray-50 dark:bg-[#444654]"

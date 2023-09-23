@@ -41,7 +41,7 @@ function rowAssistant(conversation, node, childIndex, childCount, models, custom
   const charCount = messageContentParts.replace(/\n/g, '').length;
 
   // eslint-disable-next-line no-nested-ternary
-  const avatarColor = (modelSlug?.includes('plugins') || modelSlug?.startsWith('gpt-4')) ? 'rgb(171, 104, 255)' : 'rgb(25, 195, 125)';
+  const avatarColor = (modelSlug?.includes('plugins') || modelSlug?.includes('gpt-4')) ? 'rgb(171, 104, 255)' : 'rgb(25, 195, 125)';
 
   return `<div id="message-wrapper-${id}" data-role="assistant"
   class="w-full border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group ${pinned ? 'border-l-pinned bg-pinned dark:bg-pinned' : 'bg-gray-50 dark:bg-[#444654]'}">

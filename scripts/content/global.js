@@ -469,31 +469,39 @@ function handleQueryParams(query) {
   }
 }
 function addArkoseCallback() {
-  const script = document.createElement('script');
-  script.setAttribute('type', 'text/javascript');
-  script.setAttribute('src', chrome.runtime.getURL('scripts/content/arkose.js'));
-  document.body.appendChild(script);
+  setTimeout(() => {
+    const script = document.createElement('script');
+    script.setAttribute('type', 'text/javascript');
+    script.setAttribute('src', chrome.runtime.getURL('scripts/content/arkose.js'));
+    document.body.appendChild(script);
+    addArkoseScript();
+  }, 1000);
 }
 function addArkoseScript() {
-  // check if a script element with src including api.js and chrome-extension exists
-  const arkoseScript = document.querySelector('script[src*="chrome-extension"][src*="api.js"]');
-  if (arkoseScript) return;
-  const arkoseApiScript = document.createElement('script');
-  arkoseApiScript.async = !0;
-  arkoseApiScript.defer = !0;
-  arkoseApiScript.setAttribute('type', 'text/javascript');
-  arkoseApiScript.setAttribute('data-status', 'loading');
-  arkoseApiScript.setAttribute('data-callback', 'useArkoseSetupEnforcement');
-  arkoseApiScript.setAttribute('src', chrome.runtime.getURL('v2/35536E1E-65B4-4D96-9D97-6ADB7EFF8147/api.js'));
-  document.body.appendChild(arkoseApiScript);
+  setTimeout(() => {
+    // check if a script element with src including api.js and chrome-extension exists
+    const arkoseScript = document.querySelector('script[src*="chrome-extension"][src*="api.js"]');
+    if (arkoseScript) return;
+    const arkoseApiScript = document.createElement('script');
+    arkoseApiScript.async = !0;
+    arkoseApiScript.defer = !0;
+    arkoseApiScript.setAttribute('type', 'text/javascript');
+    arkoseApiScript.setAttribute('data-status', 'loading');
+    arkoseApiScript.setAttribute('data-callback', 'useArkoseSetupEnforcement');
+    arkoseApiScript.setAttribute('src', chrome.runtime.getURL('v2/35536E1E-65B4-4D96-9D97-6ADB7EFF8147/api.js'));
+    document.body.appendChild(arkoseApiScript);
+  }, 500);
 }
-function addEnforcementTriggerElement() {
-  const main = document.querySelector('main');
-  if (!main) { return; }
-  const inputForm = main.querySelector('form');
-  if (!inputForm) { return; }
-  if (inputForm.querySelector('#enforcement-trigger')) return;
-  inputForm.firstChild.insertAdjacentHTML('beforeend', '<button type="button" class="hidden" id="enforcement-trigger"></button>');
+function arkoseTrigger(trigger = true) {
+  window.localStorage.removeItem('arkoseToken');
+  const inputForm = document.querySelector('main form');
+  if (!inputForm) return;
+  if (!inputForm.querySelector('#enforcement-trigger')) {
+    inputForm.firstChild.insertAdjacentHTML('beforeend', '<button type="button" class="hidden" id="enforcement-trigger"></button>');
+  }
+  if (trigger) {
+    inputForm.querySelector('#enforcement-trigger').click();
+  }
 }
 
 function replaceTextAreaElemet(settings) {

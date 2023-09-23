@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global markdown, markdownitSup, initializeNavbar, generateInstructions, generateChat, SSE, formatDate, loadConversation, resetSelection, katex, texmath, rowUser, rowAssistant, updateOrCreateConversation, replaceTextAreaElemet, highlight, isGenerating:true, disableTextInput:true, generateTitle, debounce, initializeRegenerateResponseButton, initializeStopGeneratingResponseButton, showHideTextAreaElement, showNewChatPage, chatStreamIsClosed:true, addCopyCodeButtonsEventListeners, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams, addScrollButtons, updateTotalCounter, isWindows, loadSharedConversation, createTemplateWordsModal, addEnforcementTriggerElement, initializePromptChain, insertNextChain, runningPromptChainSteps:true, runningPromptChainIndex:true, lastPromptSuggestions, generateSuggestions */
+/* global markdown, markdownitSup, initializeNavbar, generateInstructions, generateChat, SSE, formatDate, loadConversation, resetSelection, katex, texmath, rowUser, rowAssistant, updateOrCreateConversation, replaceTextAreaElemet, highlight, isGenerating:true, disableTextInput:true, generateTitle, debounce, initializeRegenerateResponseButton, initializeStopGeneratingResponseButton, showHideTextAreaElement, showNewChatPage, chatStreamIsClosed:true, addCopyCodeButtonsEventListeners, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams, addScrollButtons, updateTotalCounter, isWindows, loadSharedConversation, createTemplateWordsModal, arkoseTrigger, initializePromptChain, insertNextChain, runningPromptChainSteps:true, runningPromptChainIndex:true, lastPromptSuggestions, generateSuggestions */
 
 // Initial state
 let userChatIsActuallySaved = false;
@@ -35,6 +35,8 @@ function removeOriginalConversationList() {
           return from.el.id !== 'folder-content-trash';
         },
       },
+      direction: 'vertical',
+      invertSwap: true,
       draggable: '[id^="conversation-button-"], [id^="wrapper-folder-"]:not([id="wrapper-folder-trash"]',
       onEnd: (event) => {
         const {
@@ -72,6 +74,18 @@ function removeOriginalConversationList() {
           }
           chrome.storage.local.set({ conversationsOrder });
         });
+      },
+      onMove: (event) => {
+        const { dragged, related } = event;
+        const isFolder = dragged.id.startsWith('wrapper-folder-');
+        const isToFolder = related.id.startsWith('wrapper-folder');
+        const curFolderContent = document.querySelector(`#folder-content-${related.id.split('wrapper-folder-')[1]}`);
+        const folderIsClosed = curFolderContent?.style.display === 'none';
+        const shiftKeyIsDown = event.originalEvent.shiftKey;
+        if (!isFolder && isToFolder && folderIsClosed && shiftKeyIsDown) {
+          related.click();
+        }
+        return true;
       },
     });
   }
@@ -434,13 +448,26 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
   const startTime = Date.now();
   const interval = setInterval(() => {
     arkoseToken = window.localStorage.getItem('arkoseToken');
-    if (Date.now() - startTime > 30000) {
+
+    if (Date.now() - startTime > 60000) {
       clearInterval(interval);
+      isGenerating = false;
+      chunkNumber = 1;
+      totalChunks = 1;
+      remainingText = '';
+      finalSummary = '';
+      shouldSubmitFinalSummary = false;
+      const syncDiv = document.getElementById('sync-div');
+      syncDiv.style.opacity = '1';
+      const main = document.querySelector('main');
+      const inputForm = main.querySelector('form');
+      const submitButton = inputForm.querySelector('textarea ~ button');
+      // submitButton.disabled = false;
+      submitButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" class="h-4 w-4" stroke-width="2"><path d="M.5 1.163A1 1 0 0 1 1.97.28l12.868 6.837a1 1 0 0 1 0 1.766L1.969 15.72A1 1 0 0 1 .5 14.836V10.33a1 1 0 0 1 .816-.983L8.5 8 1.316 6.653A1 1 0 0 1 .5 5.67V1.163Z" fill="currentColor"></path></svg>';
       return;
     }
-    if (arkoseToken || !settings.selectedModel.slug.includes('gpt-4')) {
+    if (arkoseToken || !settings.selectedModel.slug.includes('gpt-4') || settings.selectedModel.tags.includes('Unofficial')) {
       clearInterval(interval);
-
       scrolUpDetected = false;
       const curSubmitButton = document.querySelector('main').querySelector('form').querySelector('textarea ~ button');
       curSubmitButton.disabled = true;
@@ -844,7 +871,6 @@ function overrideSubmitForm() {
   const inputForm = main.querySelector('form');
   if (!inputForm) return;
   inputForm.addEventListener('submit', (e) => {
-    window.localStorage.removeItem('arkoseToken');
     const textAreaElement = inputForm.querySelector('textarea');
     e.preventDefault();
     e.stopPropagation();
@@ -854,10 +880,7 @@ function overrideSubmitForm() {
       settings, conversations, models,
     }) => {
       if (settings.selectedModel.slug.includes('gpt-4')) {
-        if (!inputForm.querySelector('#enforcement-trigger')) {
-          addEnforcementTriggerElement();
-        }
-        inputForm.querySelector('#enforcement-trigger').click();
+        arkoseTrigger();
       }
       const templateWords = textAreaElement.value.match(/{{(.*?)}}/g);
       if (settings.promptTemplate && templateWords?.length > 0) {
@@ -1025,13 +1048,9 @@ ${settings.autoSplitChunkPrompt}`;
   const submitButtonClone = submitButton.cloneNode(true);
   submitButtonClone.type = 'button';
   submitButtonClone.addEventListener('click', () => {
-    window.localStorage.removeItem('arkoseToken');
     chrome.storage.local.get(['settings'], ({ settings }) => {
       if (settings.selectedModel.slug.includes('gpt-4')) {
-        if (!inputForm.querySelector('#enforcement-trigger')) {
-          addEnforcementTriggerElement();
-        }
-        inputForm.querySelector('#enforcement-trigger').click();
+        arkoseTrigger();
       }
       const textAreaElement = inputForm.querySelector('textarea');
       if (isGenerating) return;

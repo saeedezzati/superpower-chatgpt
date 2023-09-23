@@ -195,7 +195,7 @@ function loadCustomPrompts() {
       const promptElement = document.createElement('button');
       promptElement.id = `quick-access-menu-item-${i}`;
       promptElement.classList = 'btn w-full text-left focus:outline focus:ring-2 focus:ring-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700';
-      promptElement.innerHTML = `<span style="font-weight:bold; font-size:16px; margin-right:16px;">${prompt.title}</span><span style="font-size:14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;display:block;width:100%;color:#888;">${prompt.text}</span>`;
+      promptElement.innerHTML = `<span style="font-weight:bold; font-size:16px; margin-right:16px;white-space: nowrap; overflow: hidden; text-overflow: ellipsis;display:block;width:100%;">${prompt.title}</span><span style="font-size:14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;display:block;width:100%;color:#888;">${prompt.text}</span>`;
       promptElement.addEventListener('click', () => {
         const inputForm = document.querySelector('main form');
         if (!inputForm) return;

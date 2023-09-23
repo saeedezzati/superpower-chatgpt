@@ -47,6 +47,7 @@ function createConversation(conversation, conversationTimestamp = false, searchV
       loadConversation(conversation.id, searchValue);
     }
   });
+
   const conversationElementIcon = document.createElement('img');
   conversationElementIcon.classList = 'w-4 h-4';
   if (conversation.archived) {

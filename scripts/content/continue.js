@@ -186,6 +186,7 @@ function addContinueButton() {
       }
       if (canSubmit) {
         const inputForm = document.querySelector('main form');
+        if (!inputForm) return;
         const inputFormFirstChild = inputForm.firstChild;
 
         const textAreaElement = inputForm.querySelector('textarea');
