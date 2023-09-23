@@ -123,6 +123,7 @@
       ],
       "resources": [
         "icons/*",
+        "sounds/*",
         "scripts/content/*",
         "scripts/interceptor/*",
         "v2/*"

@@ -209,6 +209,11 @@ function addModelSwitcherEventListener(idPrefix, forceDark = false) {
             }
             arkoseTrigger();
           }
+          // focus on input
+          const textInput = document.querySelector('main form textarea');
+          if (textInput) {
+            textInput.focus();
+          }
         });
       });
     });

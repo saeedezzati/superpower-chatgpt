@@ -479,6 +479,9 @@ function autoSyncTabContent() {
 
     const autoResetTopNav = createSwitch('Auto Reset Top Navbar', 'Automatically reset the tone, writing style, and language to default when switching to new chats', 'autoResetTopNav', false, toggleTopNav, 'Requires Auto-Sync', !autoSync);
     content.appendChild(autoResetTopNav);
+
+    const chatEndedSoundSwitch = createSwitch('Sound Alarm', 'Play a sound when the chat ends', 'chatEndedSound', false, null, 'Requires Auto-Sync', !autoSync);
+    content.appendChild(chatEndedSoundSwitch);
   });
   return content;
 }
@@ -1439,6 +1442,7 @@ function initializeSettings() {
         showExportButton: result.settings?.showExportButton !== undefined ? result.settings.showExportButton : true,
         showWordCount: result.settings?.showWordCount !== undefined ? result.settings.showWordCount : true,
         hideNewsletter: result.settings?.hideNewsletter !== undefined ? result.settings.hideNewsletter : false,
+        chatEndedSound: result.settings?.chatEndedSound !== undefined ? result.settings.chatEndedSound : false,
         customInstruction: result.settings?.customInstruction !== undefined ? result.settings.customInstruction : '',
         useCustomInstruction: result.settings?.useCustomInstruction !== undefined ? result.settings.useCustomInstruction : false,
         customConversationWidth: result.settings?.customConversationWidth !== undefined ? result.settings.customConversationWidth : false,

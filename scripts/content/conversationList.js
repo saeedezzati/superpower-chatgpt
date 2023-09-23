@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global markdown, markdownitSup, initializeNavbar, generateInstructions, generateChat, SSE, formatDate, loadConversation, resetSelection, katex, texmath, rowUser, rowAssistant, updateOrCreateConversation, replaceTextAreaElemet, highlight, isGenerating:true, disableTextInput:true, generateTitle, debounce, initializeRegenerateResponseButton, initializeStopGeneratingResponseButton, showHideTextAreaElement, showNewChatPage, chatStreamIsClosed:true, addCopyCodeButtonsEventListeners, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams, addScrollButtons, updateTotalCounter, isWindows, loadSharedConversation, createTemplateWordsModal, arkoseTrigger, initializePromptChain, insertNextChain, runningPromptChainSteps:true, runningPromptChainIndex:true, lastPromptSuggestions, generateSuggestions */
+/* global markdown, markdownitSup, initializeNavbar, generateInstructions, generateChat, SSE, formatDate, loadConversation, resetSelection, katex, texmath, rowUser, rowAssistant, updateOrCreateConversation, replaceTextAreaElemet, highlight, isGenerating:true, disableTextInput:true, generateTitle, debounce, initializeRegenerateResponseButton, initializeStopGeneratingResponseButton, showHideTextAreaElement, showNewChatPage, chatStreamIsClosed:true, addCopyCodeButtonsEventListeners, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams, addScrollButtons, updateTotalCounter, isWindows, loadSharedConversation, createTemplateWordsModal, arkoseTrigger, initializePromptChain, insertNextChain, runningPromptChainSteps:true, runningPromptChainIndex:true, lastPromptSuggestions, generateSuggestions, playSound */
 
 // Initial state
 let userChatIsActuallySaved = false;
@@ -457,6 +457,11 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
       remainingText = '';
       finalSummary = '';
       shouldSubmitFinalSummary = false;
+      // remove the last user message
+      const lastMessageWrapper = [...document.querySelectorAll('[id^="message-wrapper-"]')].pop();
+      if (lastMessageWrapper?.dataset?.role !== 'assistant') {
+        lastMessageWrapper.remove();
+      }
       const syncDiv = document.getElementById('sync-div');
       syncDiv.style.opacity = '1';
       const main = document.querySelector('main');
@@ -558,6 +563,9 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
             initializeStopGeneratingResponseButton();
             initializeRegenerateResponseButton();
             updateTotalCounter();
+            if (settings.chatEndedSound) {
+              playSound('beep');
+            }
             // generateSuggestions(finalConversationId, messageId, settings.selectedModel.slug);
           } else if (e.event === 'ping') {
             // console.error('PING RECEIVED', e);
@@ -745,6 +753,9 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
           const isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
           // if firefox and no error data, do nothing
           if (isFirefox && !err.data) return;
+          if (settings.chatEndedSound) {
+            playSound('beep');
+          }
           isGenerating = false;
           chunkNumber = 1;
           totalChunks = 1;

@@ -87,6 +87,14 @@ function initializePluginStoreModal(plugins) {
                       Installed
                     </div>
                   </button>
+                  <button
+                    id="plugin-filter-not-installed"
+                    class="btn relative btn-neutral focus:ring-0 text-black/50"
+                  >
+                    <div class="flex w-full gap-2 items-center justify-center">
+                      Not Installed
+                    </div>
+                  </button>
                   <div class="relative">
                     <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                       <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 text-gray-500 dark:text-gray-400" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
@@ -352,6 +360,18 @@ function addPluginStoreEventListener(plugins) {
             addInstallButtonEventListener(filteredPlugins);
             addPaginationEventListener(filteredPlugins);
           });
+        } else if (filterType === 'not-installed') {
+          chrome.storage.local.get(['installedPlugins'], (res) => {
+            const { installedPlugins } = res;
+            filteredPlugins = allPlugins.filter((plugin) => !installedPlugins.map((p) => p.id).includes(plugin.id));
+            if (searchValue.trim() !== '') {
+              filteredPlugins = filteredPlugins.filter((plugin) => `${plugin.manifest.name_for_human} ${plugin.manifest.description_for_human}`.toLowerCase().includes(searchValue.toLowerCase()));
+            }
+            pluginListWrapper.innerHTML = renderPluginList(filteredPlugins);
+            pluginStorePaginationWrapper.innerHTML = renderPageNumbers(filteredPlugins);
+            addInstallButtonEventListener(filteredPlugins);
+            addPaginationEventListener(filteredPlugins);
+          });
         } else {
           if (searchValue.trim() !== '') {
             filteredPlugins = filteredPlugins.filter((plugin) => `${plugin.manifest.name_for_human} ${plugin.manifest.description_for_human}`.toLowerCase().includes(searchValue.toLowerCase()));
@@ -457,6 +477,18 @@ function addInstallButtonEventListener(plugins) {
               const pluginsDropdownWrapper = document.getElementById(`plugins-dropdown-wrapper-${idPrefix}`);
               pluginsDropdownWrapper.innerHTML = pluginsDropdown(newInstalledPlugins, enabledPluginIds, idPrefix);
               addPluginsDropdownEventListener(idPrefix);
+              const selectedFilter = document.querySelector('[id^="plugin-filter-"].btn-light');
+              const filter = selectedFilter ? selectedFilter.id.split('plugin-filter-')[1] : 'all';
+              if (filter === 'not-installed') {
+                document.querySelector(`#${pluginId}`).remove();
+                const pluginListWrapper = document.getElementById('plugin-list-wrapper');
+                const pluginStorePaginationWrapper = document.getElementById('plugin-store-pagination-wrapper');
+                const notIinstalledPlugins = allPlugins.filter((p1) => !newInstalledPlugins.map((p2) => p2.id).includes(p1.id));
+                pluginListWrapper.innerHTML = renderPluginList(notIinstalledPlugins);
+                pluginStorePaginationWrapper.innerHTML = renderPageNumbers(notIinstalledPlugins);
+                addInstallButtonEventListener(notIinstalledPlugins);
+                addPaginationEventListener(notIinstalledPlugins);
+              }
             });
           });
         }
