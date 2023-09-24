@@ -599,7 +599,7 @@ function initializeExport() {
       addExportButton();
     }, 500);
   });
-  observer.observe(main.parentElement.parentElement, { childList: true, subtree: true });
+  observer.observe(main, { childList: true, subtree: true });
 
   addExportAllButton();
 }

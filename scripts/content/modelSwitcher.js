@@ -189,7 +189,7 @@ function addModelSwitcherEventListener(idPrefix, forceDark = false) {
           const textInput = document.querySelector('main form textarea');
           if (selectedModel.slug !== 'gpt-4-code-interpreter' && textInput) {
             textInput.style.paddingLeft = '1rem';
-            const uploadButton = textInput.parentElement.querySelector('[data-state=closed]');
+            const uploadButton = textInput.parentElement.querySelector('button[aria-label="Attach files"]');
             if (uploadButton) uploadButton.remove();
           }
           const submitButton = document.querySelector('main form textarea ~ button');

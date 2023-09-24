@@ -52,7 +52,8 @@ function promptDropdown() {
         textAreaElement.dispatchEvent(new Event('input', { bubbles: true }));
         textAreaElement.dispatchEvent(new Event('change', { bubbles: true }));
         if (e.shiftKey) return;
-        const curSubmitButton = document.querySelector('main').querySelector('form').querySelector('textarea ~ button');
+        const curSubmitButton = document.querySelector('main form textarea ~ button');
+
         setTimeout(() => {
           curSubmitButton.click();
         }, 300);
@@ -247,5 +248,5 @@ function initializeContinue() {
       addContinueButton();
     }, 500);
   });
-  observer.observe(main.parentElement.parentElement, { childList: true, subtree: true });
+  observer.observe(main, { childList: true, subtree: true });
 }

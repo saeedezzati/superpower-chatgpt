@@ -207,9 +207,9 @@ function upgradeCustomInstructions() {
     mutationsList.forEach((mutation) => {
       if (mutation.type === 'childList') {
         setTimeout(() => {
+          const customInstructionsDialog = document.querySelector('[role="dialog"][data-state="open"][tabindex="-1"]');
+          if (!customInstructionsDialog) return;
           chrome.storage.local.get(['customInstructionProfiles'], (result) => {
-            const customInstructionsDialog = document.querySelector('[role="dialog"][data-state="open"][tabindex="-1"]');
-            if (!customInstructionsDialog) return;
             const customInstructionsDialogHeader = customInstructionsDialog.querySelector('h2');
             const existingProfileButtonWrapper = customInstructionsDialog.querySelector('#custom-instructions-profile-button-wrapper-settings');
             const textAreaFields = customInstructionsDialog.querySelectorAll('textarea');

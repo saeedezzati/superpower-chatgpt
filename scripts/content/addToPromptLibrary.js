@@ -314,5 +314,5 @@ function initializeAddToPromptLibrary() {
   const observer = new MutationObserver(() => {
     addSubmitButtonToAllUserInputs();
   });
-  observer.observe(main.parentElement.parentElement, { childList: true, subtree: true });
+  observer.observe(main, { childList: true, subtree: true });
 }

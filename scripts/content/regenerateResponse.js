@@ -108,11 +108,9 @@ function toggleOriginalRegenerateResponseButton() {
     inputFormActionWrapper.appendChild(newRegenerateResponseButton);
   } else {
     inputFormActionWrapper.appendChild(newRegenerateResponseButton);
-    chrome.storage.local.get(['settings'], (result) => {
-      if (!result.settings.selectedModel.slug.includes('plugins')) {
-        inputFormActionWrapper.appendChild(newContinueGeneratingButton);
-      }
-    });
+    if (document.querySelector('#plugins-dropdown-wrapper-navbar').style.display === 'none') {
+      inputFormActionWrapper.appendChild(newContinueGeneratingButton);
+    }
   }
 }
 
