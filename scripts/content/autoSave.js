@@ -141,7 +141,7 @@ function updateOrCreateConversation(conversationId, message, parentId, settings,
             conversationTimestampElement.innerHTML = conversationCreateTime;
             const searchBoxWrapper = document.querySelector('#conversation-search-wrapper');
             let lastFolderAtTheTop = searchBoxWrapper;
-            while (lastFolderAtTheTop.nextElementSibling.id.startsWith('wrapper-folder-')) {
+            while (lastFolderAtTheTop.nextElementSibling.id.startsWith('wrapper-folder-') && lastFolderAtTheTop.nextElementSibling.id !== 'wrapper-folder-trash') {
               lastFolderAtTheTop = lastFolderAtTheTop.nextElementSibling;
             }
             if (conversationElement && searchBoxWrapper) {

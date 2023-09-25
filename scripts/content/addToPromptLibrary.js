@@ -94,7 +94,7 @@ function openSubmitPromptModal(text = '', modelSlug = '', promptId = null, title
     }
   });
   const submitPromptModalContent = document.createElement('div');
-  submitPromptModalContent.style = 'width:700px;background-color:#0b0d0e;border-radius:4px;padding:16px;display:flex;flex-direction:column;align-items:start;justify-content:start;border:solid 2px lightslategray;';
+  submitPromptModalContent.style = 'width:800px;max-width:90%;background-color:#0b0d0e;border-radius:4px;padding:16px;display:flex;flex-direction:column;align-items:start;justify-content:start;border:solid 2px lightslategray;';
   submitPromptModalContent.id = 'submit-prompt-modal-content';
   const modalTitle = document.createElement('div');
   modalTitle.style = 'color:white;font-size:1.25rem;margin-bottom: 8px;';

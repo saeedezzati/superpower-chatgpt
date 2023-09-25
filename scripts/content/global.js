@@ -521,6 +521,9 @@ function arkoseTrigger() {
 function replaceTextAreaElemet(settings) {
   const inputForm = document.querySelector('main form');
   if (!inputForm) { return false; }
+  if (!inputForm.querySelector('#enforcement-trigger')) {
+    inputForm.firstChild.insertAdjacentHTML('beforeend', '<button type="button" class="hidden" id="enforcement-trigger"></button>');
+  }
   if (settings.customConversationWidth) {
     inputForm.style = `${inputForm.style.cssText}; max-width:${settings.conversationWidth}%;`;
   }
@@ -568,6 +571,7 @@ function replaceTextAreaElemet(settings) {
   newTextAreaElement.addEventListener('keydown', (event) => {
     if (event.key === 'Enter' && event.which === 13 && !event.shiftKey && !isGenerating) {
       disableTextInput = true;
+      textAreaElementOldValue = '';
       if (newTextAreaElement.value.trim().length === 0) {
         event.preventDefault();
         event.stopPropagation();
