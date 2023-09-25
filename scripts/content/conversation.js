@@ -75,9 +75,6 @@ function updateModel(modelSlug, fullConversation) {
       document.querySelector(`#language-list-dropdown li#language-selector-option-${languageCode}`)?.click();
       document.querySelector(`#tone-list-dropdown li#tone-selector-option-${toneCode}`)?.click();
       document.querySelector(`#writing-style-list-dropdown li#writing-style-selector-option-${writingStyleCode}`)?.click();
-      if (selectedModel.slug.includes('gpt-4')) {
-        arkoseTrigger();
-      }
     });
   });
 }
@@ -352,7 +349,7 @@ function addConversationsEventListeners(conversationId) {
         saveButton.classList = 'btn flex justify-center gap-2 btn-primary mr-2';
         saveButton.innerText = 'Save & Submit';
         saveButton.addEventListener('click', () => {
-          if (result.settings.selectedModel.slug.includes('gpt-4')) {
+          if (result.settings.selectedModel.tags.includes('gpt4')) {
             arkoseTrigger();
           }
           let newMessage = textArea.value;

@@ -46,7 +46,7 @@ function toggleOriginalRegenerateResponseButton() {
   newRegenerateResponseButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="1.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg> Regenerate';
   newRegenerateResponseButton.addEventListener('click', () => {
     chrome.storage.local.get(['conversations', 'settings', 'models'], (result) => {
-      if (result.settings.selectedModel.slug.includes('gpt-4')) {
+      if (result.settings.selectedModel.tags.includes('gpt4')) {
         arkoseTrigger();
       }
       const { pathname } = new URL(window.location.toString());
@@ -82,7 +82,7 @@ function toggleOriginalRegenerateResponseButton() {
   newContinueGeneratingButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="1.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3 -rotate-180" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polygon points="11 19 2 12 11 5 11 19"></polygon><polygon points="22 19 13 12 22 5 22 19"></polygon></svg> Continue';
   newContinueGeneratingButton.addEventListener('click', () => {
     chrome.storage.local.get(['conversations', 'settings', 'models'], (result) => {
-      if (result.settings.selectedModel.slug.includes('gpt-4')) {
+      if (result.settings.selectedModel.tags.includes('gpt4')) {
         arkoseTrigger();
       }
       const { pathname } = new URL(window.location.toString());

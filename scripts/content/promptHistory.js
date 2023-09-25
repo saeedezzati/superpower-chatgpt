@@ -507,7 +507,7 @@ function textAreaElementInputEventListener(event) {
         const { settings } = result;
         const { selectedModel } = settings;
         submitButton.disabled = false;
-        if (selectedModel.slug.includes('gpt-4')) {
+        if (selectedModel.tags.includes('gpt4')) {
           submitButton.style.backgroundColor = '#AB68FF';
         } else {
           submitButton.style.backgroundColor = '#19C37D';
@@ -549,7 +549,7 @@ function textAreaElementInputEventListener(event) {
   });
 }
 // Add keyboard event listener to text area
-function textAreaElementKeydownEventListenerASync(event) {
+function textAreaElementKeydownEventListenerAsync(event) {
   const textAreaElement = event.target;
 
   if (event.key === 'Enter' && event.which === 13 && !event.shiftKey && !isGenerating) {
@@ -806,6 +806,6 @@ function addAsyncInputEvents() {
 
   if (textAreaElement) {
     textAreaElement.addEventListener('input', textAreaElementInputEventListener);
-    textAreaElement.addEventListener('keydown', textAreaElementKeydownEventListenerASync);
+    textAreaElement.addEventListener('keydown', textAreaElementKeydownEventListenerAsync);
   }
 }

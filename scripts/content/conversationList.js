@@ -471,7 +471,7 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
       submitButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" class="h-4 w-4" stroke-width="2"><path d="M.5 1.163A1 1 0 0 1 1.97.28l12.868 6.837a1 1 0 0 1 0 1.766L1.969 15.72A1 1 0 0 1 .5 14.836V10.33a1 1 0 0 1 .816-.983L8.5 8 1.316 6.653A1 1 0 0 1 .5 5.67V1.163Z" fill="currentColor"></path></svg>';
       return;
     }
-    if (arkoseToken || !settings.selectedModel.slug.includes('gpt-4') || settings.selectedModel.tags.includes('Unofficial')) {
+    if (arkoseToken || !settings.selectedModel.tags.includes('gpt4') || settings.selectedModel.tags.includes('Unofficial')) {
       clearInterval(interval);
       scrolUpDetected = false;
       const curSubmitButton = document.querySelector('main').querySelector('form').querySelector('textarea ~ button');
@@ -890,9 +890,6 @@ function overrideSubmitForm() {
     chrome.storage.local.get(['settings', 'conversations', 'models'], ({
       settings, conversations, models,
     }) => {
-      if (settings.selectedModel.slug.includes('gpt-4')) {
-        arkoseTrigger();
-      }
       const templateWords = textAreaElement.value.match(/{{(.*?)}}/g);
       if (settings.promptTemplate && templateWords?.length > 0) {
         // open template words modal and wait for user to select a word. the when user submit, submit the input form with the replacement
@@ -1060,9 +1057,6 @@ ${settings.autoSplitChunkPrompt}`;
   submitButtonClone.type = 'button';
   submitButtonClone.addEventListener('click', () => {
     chrome.storage.local.get(['settings'], ({ settings }) => {
-      if (settings.selectedModel.slug.includes('gpt-4')) {
-        arkoseTrigger();
-      }
       const textAreaElement = inputForm.querySelector('textarea');
       if (isGenerating) return;
       const templateWords = textAreaElement.value.match(/{{(.*?)}}/g);

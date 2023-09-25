@@ -1,4 +1,4 @@
-/* global navigation, initializeStorage, cleanNav, initializeContinue, initializeExport, initializeSettings, initializePromptHistory, initializePromptLibrary, initializeNewsletter, initializeAutoSave, addNavToggleButton, initializeAnnouncement, initializeReleaseNote, initializeReplaceDeleteConversationButton, initializeCopyAndCounter, initializeAddToPromptLibrary, initializeTimestamp, updateNewChatButtonNotSynced, addAsyncInputEvents, addDevIndicator, addExpandButton, openLinksInNewTab, arkoseTrigger, initializeKeyboardShortcuts, addArkoseCallback, addQuickAccessMenuEventListener, upgradeCustomInstructions, watchError, showAutoSyncToast, addAutoSyncToggleButton, addSounds */
+/* global navigation, initializeStorage, cleanNav, initializeContinue, initializeExport, initializeSettings, initializePromptHistory, initializePromptLibrary, initializeNewsletter, initializeAutoSave, addNavToggleButton, initializeAnnouncement, initializeReleaseNote, initializeReplaceDeleteConversationButton, initializeCopyAndCounter, initializeAddToPromptLibrary, initializeTimestamp, updateNewChatButtonNotSynced, addAsyncInputEvents, addDevIndicator, addExpandButton, openLinksInNewTab, initializeKeyboardShortcuts, addArkoseCallback, addQuickAccessMenuEventListener, upgradeCustomInstructions, watchError, showAutoSyncToast, addAutoSyncToggleButton, addSounds */
 
 // eslint-disable-next-line no-unused-vars
 function initialize() {
@@ -26,7 +26,6 @@ function initialize() {
         addDevIndicator();
         initializeKeyboardShortcuts();
         addSounds();
-        arkoseTrigger(false);
         addArkoseCallback();
         // showAutoSyncToast();
         setTimeout(() => {

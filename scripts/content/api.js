@@ -51,7 +51,7 @@ function generateChat(message, conversationId, messageId, parentMessageId, token
   return chrome.storage.local.get(['settings', 'enabledPluginIds', 'installedPlugins']).then((res) => chrome.storage.sync.get(['accessToken']).then((result) => {
     const payload = {
       action,
-      arkose_token: res.settings.selectedModel.slug.includes('gpt-4') && !res.settings.selectedModel.tags.includes('Unofficial') ? token : null,
+      arkose_token: res.settings.selectedModel.tags.includes('gpt4') && !res.settings.selectedModel.tags.includes('Unofficial') ? token : null,
       model: res.settings.selectedModel.slug,
       parent_message_id: parentMessageId,
       history_and_training_disabled: !saveHistory,

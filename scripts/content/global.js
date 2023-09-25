@@ -17,6 +17,8 @@ let disableTextInput = false;// to prevent input from showing extra line right b
 let chatStreamIsClosed = false; // to force close the chat stream
 // eslint-disable-next-line prefer-const
 let shiftKeyPressed = false;
+// eslint-disable-next-line prefer-const
+let textAreaElementOldValue = '';
 // chrome.storage.local.get(['environment'], (result) => {
 //   if (result.environment === 'development') {
 //     chrome.storage.onChanged.addListener((changes, namespace) => {
@@ -502,16 +504,18 @@ function addArkoseScript() {
     document.body.appendChild(arkoseApiScript);
   }, 500);
 }
-function arkoseTrigger(trigger = true) {
-  window.localStorage.removeItem('arkoseToken');
-  const inputForm = document.querySelector('main form');
-  if (!inputForm) return;
-  if (!inputForm.querySelector('#enforcement-trigger')) {
-    inputForm.firstChild.insertAdjacentHTML('beforeend', '<button type="button" class="hidden" id="enforcement-trigger"></button>');
-  }
-  if (trigger) {
-    inputForm.querySelector('#enforcement-trigger').click();
-  }
+function arkoseTrigger() {
+  chrome.storage.local.get('settings', ({ settings }) => {
+    if (settings.selectedModel.tags.includes('gpt4')) {
+      window.localStorage.removeItem('arkoseToken');
+      const inputForm = document.querySelector('main form');
+      if (!inputForm) return;
+      if (!inputForm.querySelector('#enforcement-trigger')) {
+        inputForm.firstChild.insertAdjacentHTML('beforeend', '<button type="button" class="hidden" id="enforcement-trigger"></button>');
+      }
+      inputForm.querySelector('#enforcement-trigger').click();
+    }
+  });
 }
 
 function replaceTextAreaElemet(settings) {
@@ -547,6 +551,17 @@ function replaceTextAreaElemet(settings) {
   newTextAreaElement.style.minHeight = '56px';
   newTextAreaElement.style.paddingRight = '40px';
   newTextAreaElement.style.overflowY = 'hidden';
+
+  // keydown is triggered before input event and before value is changed.
+  newTextAreaElement.addEventListener('input', (event) => {
+    // console.warn('input event', 'old: ', textAreaElementOldValue, 'new: ', newTextAreaElement.value);
+    if (textAreaElementOldValue === '' && newTextAreaElement.value !== textAreaElementOldValue) {
+      textAreaElementOldValue = newTextAreaElement.value;
+      arkoseTrigger();
+    } else if (newTextAreaElement.value !== textAreaElementOldValue) {
+      textAreaElementOldValue = newTextAreaElement.value;
+    }
+  });
 
   newTextAreaElement.addEventListener('keydown', textAreaElementKeydownEventListenerSync);
   // also async
