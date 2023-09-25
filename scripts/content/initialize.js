@@ -26,7 +26,6 @@ function initialize() {
         addDevIndicator();
         initializeKeyboardShortcuts();
         addSounds();
-        addArkoseCallback();
         // showAutoSyncToast();
         setTimeout(() => {
           chrome.storage.local.get(['settings'], (result) => {
@@ -34,6 +33,7 @@ function initialize() {
             if ((typeof settings?.autoSync === 'undefined' || settings?.autoSync) && !window.location.pathname.startsWith('/share/')) {
               // if (typeof settings?.autoSync === 'undefined' || settings?.autoSync) {
               initializeAutoSave();
+              addArkoseCallback();
             } else {
               addAutoSyncToggleButton();
               initializeCopyAndCounter();

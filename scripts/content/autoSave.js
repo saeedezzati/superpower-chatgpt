@@ -128,9 +128,9 @@ function updateOrCreateConversation(conversationId, message, parentId, settings,
           userChatIsActuallySaved = true;
           addConversationsEventListeners(existingConversation.id);
           const mapping = Object.values(existingConversation.mapping);
-          if (generateTitle && existingConversation.title === 'New chat' && mapping.length < 5 && mapping.filter((m) => (m.message?.role === 'assistant' || m.message?.author.role === 'assistant') && m.message.recipient === 'all').length === 1) { // only one assistant message
+          if (generateTitle && existingConversation.title === 'New chat' && mapping.length < 5 && mapping.filter((m) => (m.message?.role === 'assistant' || m.message?.author?.role === 'assistant') && m.message.recipient === 'all').length === 1) { // only one assistant message
             if (settings.saveHistory) {
-              const systemMessage = mapping.find((m) => m.message?.role === 'system' || m.message?.author.role === 'system');
+              const systemMessage = mapping.find((m) => m.message?.role === 'system' || m.message?.author?.role === 'system');
               generateTitleForConversation(existingConversation.id, message.id, systemMessage?.message?.metadata?.user_context_message_data);
             }
           } else if (settings.conversationTimestamp) { // === updated

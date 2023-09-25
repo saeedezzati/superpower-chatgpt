@@ -662,7 +662,7 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
               if (!conversation?.id || userChatSavedLocally) {
                 // save assistant chat locally
                 finalMessage = message;
-                if (!assistantChatSavedLocally && (message.role === 'assistant' || message.author.role === 'assistant') && message.recipient === 'all') {
+                if (!assistantChatSavedLocally && (message.role === 'assistant' || message.author?.role === 'assistant') && message.recipient === 'all') {
                   assistantChatSavedLocally = true;
                   const tempId = setInterval(() => {
                     if (userChatIsActuallySaved) {

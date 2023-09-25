@@ -175,7 +175,7 @@ function loadConversation(conversationId, searchValue = '', focusOnInput = true)
       let currentNodeId = fullConversation.current_node;
       // mapping: {id: message, id: message }
       // remove all the nodes that are not user or assistant
-      // (node) => ['user', 'assistant'].includes(node.author.role) && node.recipient === 'all');
+      // (node) => ['user', 'assistant'].includes(node.author?.role) && node.recipient === 'all');
 
       while (currentNodeId) {
         const currentNode = fullConversation.mapping[currentNodeId];
@@ -500,10 +500,10 @@ function addConversationsEventListeners(conversationId) {
         const conversation = result.conversations[conversationId];
         // while parent is not user, keep going up
         let parentId = conversation.mapping[messageId].parent;
-        let parentRole = conversation.mapping[parentId].message.author.role || conversation.mapping[parentId].message.role;
+        let parentRole = conversation.mapping[parentId].message.author?.role || conversation.mapping[parentId].message.role;
         while (parentRole !== 'user') {
           parentId = conversation.mapping[parentId].parent;
-          parentRole = conversation.mapping[parentId].message.author.role || conversation.mapping[parentId].message.role;
+          parentRole = conversation.mapping[parentId].message.author?.role || conversation.mapping[parentId].message.role;
         }
         const parentMessage = conversation.mapping[parentId].message.content.parts.join('\n');
         const codeHeaders = document.querySelectorAll('#code-header');
@@ -530,10 +530,10 @@ function addConversationsEventListeners(conversationId) {
       chrome.storage.local.get(['conversations', 'settings'], (result) => {
         const conversation = result.conversations[conversationId];
         let parentId = conversation.mapping[messageId].parent;
-        let parentRole = conversation.mapping[parentId].message.author.role || conversation.mapping[parentId].message.role;
+        let parentRole = conversation.mapping[parentId].message.author?.role || conversation.mapping[parentId].message.role;
         while (parentRole !== 'user') {
           parentId = conversation.mapping[parentId].parent;
-          parentRole = conversation.mapping[parentId].message.author.role || conversation.mapping[parentId].message.role;
+          parentRole = conversation.mapping[parentId].message.author?.role || conversation.mapping[parentId].message.role;
         }
         const parentMessage = conversation.mapping[parentId].message.content.parts.join('\n');
         const newElement = element.cloneNode(true);
@@ -556,10 +556,10 @@ function addConversationsEventListeners(conversationId) {
         getConversation(conversationId).then((conversation) => {
           const { message } = conversation.mapping[messageId];
           let parentId = conversation.mapping[messageId].parent;
-          let parentRole = conversation.mapping[parentId].message.author.role || conversation.mapping[parentId].message.role;
+          let parentRole = conversation.mapping[parentId].message.author?.role || conversation.mapping[parentId].message.role;
           while (parentRole !== 'user') {
             parentId = conversation.mapping[parentId].parent;
-            parentRole = conversation.mapping[parentId].message.author.role || conversation.mapping[parentId].message.role;
+            parentRole = conversation.mapping[parentId].message.author?.role || conversation.mapping[parentId].message.role;
           }
           const parentMessage = conversation.mapping[parentId].message.content.parts.join('\n');
           const text = `${result.settings.copyMode ? `##USER:\n${parentMessage}\n\n##ASSISTANT:\n` : ''}${message.content.parts.join('\n')}`;
