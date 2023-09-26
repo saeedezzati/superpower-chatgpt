@@ -533,6 +533,7 @@ function sortConversationsByTimestamp(conversationsOrder, conversations, byUpdat
   const newConversationsOrder = [...folders, ...conversationIds, trash];
   return newConversationsOrder;
 }
+// eslint-disable-next-line no-unused-vars
 function toggleKeepFoldersAtTheTop(isChecked) {
   chrome.storage.local.get(['settings'], (result) => {
     const { settings } = result;

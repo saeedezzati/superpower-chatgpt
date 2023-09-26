@@ -83,6 +83,7 @@ function validateFields() {
   return valid;
 }
 
+// eslint-disable-next-line no-unused-vars
 function openSubmitPromptModal(text = '', modelSlug = '', promptId = null, title = '', categories = [], language = '', refreshPromptLibrary = false, hideFullPrompt = false) {
   selectedCategories = categories;
   const submitPromptModal = document.createElement('div');

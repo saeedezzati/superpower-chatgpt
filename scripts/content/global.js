@@ -69,6 +69,7 @@ function initializeStorage() {
       // if conversationIds are not strings (they are objects), get the id property
       flattenedConversationIds.forEach((conversationId, index) => {
         if (typeof conversationId !== 'string') {
+          // eslint-disable-next-line no-console
           console.warn('Bad type. Please contact the developer!');
         }
       });
@@ -76,12 +77,13 @@ function initializeStorage() {
       // if there are duplicates, remove them
       const uniqueConversationIds = [...new Set(flattenedConversationIds)];
       if (uniqueConversationIds.length !== flattenedConversationIds.length) {
+        // eslint-disable-next-line no-console
         console.warn('Not unique. Please contact the developer!');
       }
     }
   });
   return chrome.storage.local.get(['selectedConversations', 'conversationsOrder', 'customModels', 'conversations']).then((result) => {
-    const localConversationsOrder = result.conversationsOrder || [];
+    const localConversationsOrder = (result.conversationsOrder || []).filter((conversationOrder) => typeof conversationOrder !== 'string' || conversationOrder.length > 6);
     const allConversationKeys = Object.keys(result.conversations || []);
     return chrome.storage.sync.get(['conversationsOrder']).then((res) => {
       const syncConversationsOrder = res.conversationsOrder || [];

@@ -14,6 +14,7 @@ chrome.management.getSelf(
 );
 
 chrome.runtime.onMessage.addListener(
+  // eslint-disable-next-line no-unused-vars
   (request, sender, sendResponse) => {
     if (request.setUninstallURL) {
       chrome.runtime.setUninstallURL(`${API_URL}/gptx/uninstall?p=${request.userId}`);
@@ -90,19 +91,20 @@ function registerUser(data) {
   });
 }
 chrome.runtime.onMessage.addListener(
+  // eslint-disable-next-line no-unused-vars
   (request, sender, sendResponse) => {
     if (request.authReceived) {
       const data = request.detail;
       chrome.storage.sync.get(['user_id', 'openai_id', 'version', 'avatar', 'lastUserSync', 'accessToken'], (result) => {
         // or conditionor
         const { version } = chrome.runtime.getManifest();
-
         const shouldRegister = !result.lastUserSync
           || result.lastUserSync < Date.now() - 1000 * 60 * 60 * 24
           || !result.avatar
           || !result.user_id
           || !result.openai_id
           || !result.accessToken
+          || result.accessToken !== `Bearer ${data.accessToken}`
           || result.version !== version;
 
         if (result.openai_id !== data.user.id) {
@@ -120,7 +122,7 @@ chrome.runtime.onMessage.addListener(
                 readNewsletterIds,
                 promptChains,
                 userInputValueHistory,
-              }, () => registerUser(data));
+              });
             });
           });
           // remove any key from syncstorage except the following keys: lastSeenAnnouncementId, lastSeenNewsletterId, lastSeenReleaseNoteVersion

@@ -1,6 +1,7 @@
 // intercept fetch requests
 const originalFetch = window.fetch;
 
+// eslint-disable-next-line func-names
 window.fetch = async function (...args) {
   const input = args[0];
   let url;

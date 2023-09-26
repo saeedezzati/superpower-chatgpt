@@ -399,7 +399,7 @@ function promptLibraryListComponent(libraryData, loading = false) {
     });
 
     chrome.storage.sync.get(['user_id'], (res) => {
-      if (res.user_id === libraryPrompt.created_by.id) {
+      if (res.user_id === libraryPrompt?.created_by?.id) {
         libraryItemActionButtons.appendChild(libraryItemDeleteButton);
         libraryItemActionButtons.appendChild(libraryItemEditButton);
       }

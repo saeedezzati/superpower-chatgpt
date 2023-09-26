@@ -198,6 +198,7 @@ function profileDropdownButton(customInstructionProfiles, placement) {
   });
   return button;
 }
+// eslint-disable-next-line no-unused-vars
 function upgradeCustomInstructions() {
   // observe the body and wait for the custom instructions dialog to be added
   // there should be a div with role="dialog" and a h2 with text "Custom instructions"
