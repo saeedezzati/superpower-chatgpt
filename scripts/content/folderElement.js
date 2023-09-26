@@ -98,9 +98,10 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
   // add checkbox
   // addCheckboxToConversationElement(conversationElement, conversation);
   const sortable = Sortable.create(folderContent, {
-    draggable: '[id^="conversation-button-"]',
+    draggable: '[id^="conversation-button-"]:not(:has([id^=conversation-rename-]))',
     direction: 'vertical',
     invertSwap: true,
+    disabled: false,
     // multiDrag: true,
     // selectedClass: 'multi-drag-selected',
     // handle: '[id^="checkbox-wrapper-"], [id^="conversation-button-"]',

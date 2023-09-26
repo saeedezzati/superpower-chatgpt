@@ -37,7 +37,7 @@ function removeOriginalConversationList() {
       },
       direction: 'vertical',
       invertSwap: true,
-      draggable: '[id^="conversation-button-"], [id^="wrapper-folder-"]:not([id="wrapper-folder-trash"]',
+      draggable: '[id^="conversation-button-"]:not(:has([id^=conversation-rename-])), [id^="wrapper-folder-"]:not([id="wrapper-folder-trash"]):not(:has([id^=rename-folder-])):not(:has([id^=conversation-rename-]))',
       onEnd: (event) => {
         const {
           item, to, oldDraggableIndex, newDraggableIndex,
@@ -894,13 +894,13 @@ function overrideSubmitForm() {
       if (settings.promptTemplate && templateWords?.length > 0) {
         // open template words modal and wait for user to select a word. the when user submit, submit the input form with the replacement
         createTemplateWordsModal(templateWords);
-        const firstTemplateWordInput = document.querySelector('[id^=template-input-]');
-        if (firstTemplateWordInput) {
-          firstTemplateWordInput.focus();
-          setTimeout(() => {
+        setTimeout(() => {
+          const firstTemplateWordInput = document.querySelector('[id^=template-input-]');
+          if (firstTemplateWordInput) {
+            firstTemplateWordInput.focus();
             firstTemplateWordInput.value = '';
-          }, 100);
-        }
+          }
+        }, 100);
       } else {
         const { pathname } = new URL(window.location.toString());
         // const isSharedConversation = pathname.startsWith('/share/') && window.location.href.endsWith('/continue');
@@ -1063,13 +1063,13 @@ ${settings.autoSplitChunkPrompt}`;
       if (settings.promptTemplate && templateWords?.length > 0) {
         // open template words modal and wait for user to select a word. the when user submit, submit the input form with the replacement
         createTemplateWordsModal(templateWords);
-        const firstTemplateWordInput = document.querySelector('[id^=template-input-]');
-        if (firstTemplateWordInput) {
-          firstTemplateWordInput.focus();
-          setTimeout(() => {
+        setTimeout(() => {
+          const firstTemplateWordInput = document.querySelector('[id^=template-input-]');
+          if (firstTemplateWordInput) {
+            firstTemplateWordInput.focus();
             firstTemplateWordInput.value = '';
-          }, 100);
-        }
+          }
+        }, 100);
       } else {
         textAreaElement.style.height = '56px';
         if (textAreaElement.value.trim().length === 0) return;
