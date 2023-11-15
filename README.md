@@ -3,6 +3,11 @@
 [link-chrome]: https://chrome.google.com/webstore/detail/superpower-chatgpt/amhmeenmapldpjdedekalnfifgnpfnkc "Chrome Web Store"
 [link-firefox]: https://addons.mozilla.org/en-US/firefox/addon/superpower-chatgpt "Firefox Addons"
 
+<div align="center">
+<a href="https://www.buymeacoffee.com/ezii"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a pizza&emoji=🍕&slug=ezii&button_colour=FFDD00&font_colour=000000&font_family=Poppins&outline_colour=000000&coffee_colour=ffffff" /></a>
+</div>
+
+
 # Superpower ChatGPT ⚡️
 
 A browser extension to add the missing features like **Folders**, **Search**, and **Community Prompts** to ChatGPT
@@ -15,9 +20,14 @@ A browser extension to add the missing features like **Folders**, **Search**, an
 [![Mozilla Add-on](https://img.shields.io/amo/users/superpower-chatgpt.svg)]([link-firefox])
 [![Mozilla Add-on](https://img.shields.io/amo/rating/superpower-chatgpt.svg)]([link-firefox])
 
-[![Discord](https://img.shields.io/discord/1060110102188797992?color=green&label=Discord&logo=discord)](https://discord.gg/superpower-chatgpt-1083455984489476220)
+
 [![Twitter Follow](https://img.shields.io/twitter/follow/eeeziii?label=follow%20me&style=social)](https://twitter.com/intent/user?screen_name=eeeziii)
 
+#### To **report a bug** or make a **feature request** please join our Discord
+
+[![Discord](https://img.shields.io/discord/1060110102188797992?color=green&label=Discord&logo=discord)](https://discord.gg/superpower-chatgpt-1083455984489476220) 
+
+#### Please get the latest and most up to date version of the extension with all the new features from below links
 <div align="center">
 
 [<img src="https://user-images.githubusercontent.com/574142/232173820-eea32262-2b0f-4ec6-8a38-b1c872981d75.png" height="67" alt="Chrome" valign="middle">][link-chrome]
