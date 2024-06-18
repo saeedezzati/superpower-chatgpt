@@ -35,7 +35,7 @@ A browser extension to add the missing features like **Folders**, **Search**, an
 
 </div>
 
-https://user-images.githubusercontent.com/574142/232172841-50f1b114-ef47-4533-a6e6-fd630e7b30a2.mov
+https://github.com/saeedezzati/superpower-chatgpt/assets/574142/b4a6d746-b7ea-4c49-ac08-ecaca5f74264
 
 # Features
 
